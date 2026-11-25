@@ -53,6 +53,14 @@ func find_node_in_edited_scene(node_path: String) -> Variant:
 	return found_node
 
 
+## Calls an EditorInterface method that may not exist in older Godot versions.
+## Calling it directly would stop the whole addon from compiling there.
+func call_editor_interface(method_name: String, arguments: Array = [], fallback: Variant = null) -> Variant:
+	if EditorInterface.has_method(method_name):
+		return EditorInterface.callv(method_name, arguments)
+	return fallback
+
+
 func describe_node_path(node: Node) -> String:
 	return ValueCodec.describe_node_path(node, get_edited_scene_root())
 

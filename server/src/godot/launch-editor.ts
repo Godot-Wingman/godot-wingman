@@ -3,9 +3,11 @@
  * and waits until the addon reports that it is ready.
  */
 import { spawn } from "node:child_process";
-import { existsSync } from "node:fs";
-import { resolve } from "node:path";
+import { closeSync, existsSync, openSync } from "node:fs";
+import { mkdir } from "node:fs/promises";
+import { basename, dirname, join, resolve } from "node:path";
 import { type AddonInstallResult, getProjectFilePath, installAddon } from "../addon/addon-installer.ts";
+import { getProductHomeDirectory } from "../paths.ts";
 import { updateSettings } from "../settings.ts";
 import {
   type EditorRegistration,
@@ -79,18 +81,23 @@ export async function launchEditor(options: LaunchEditorOptions): Promise<Launch
   if (options.headless) {
     editorArguments.unshift("--headless");
   }
+  // Godot's console output goes to a log file, so startup problems can be explained.
+  const logFilePath = join(getProductHomeDirectory(), "logs", `${basename(projectPath) || "project"}.log`);
+  await mkdir(dirname(logFilePath), { recursive: true });
+  const logFileDescriptor = openSync(logFilePath, "w");
   // Detached and unreferenced: the editor keeps running when this server stops.
   const editorProcess = spawn(godotExecutable, editorArguments, {
     detached: true,
-    stdio: "ignore",
+    stdio: ["ignore", logFileDescriptor, logFileDescriptor],
     env: { ...process.env, ...options.environment },
   });
   editorProcess.unref();
+  closeSync(logFileDescriptor);
 
   const registration = await waitForEditorRegistration(projectPath, options.waitSeconds ?? 120);
   if (!registration) {
     throw new LaunchEditorError(
-      `Godot started but the addon did not report back within ${options.waitSeconds ?? 120} seconds.`,
+      `Godot started but the addon did not report back within ${options.waitSeconds ?? 120} seconds.${await describeLogTail(logFilePath)}`,
       "The project may still be importing assets: call get_status in a moment. If the editor shows an error, the addon may be disabled in Project Settings > Plugins.",
     );
   }
@@ -112,4 +119,16 @@ async function waitForEditorRegistration(
     await Bun.sleep(REGISTRY_POLL_INTERVAL_MILLISECONDS);
   }
   return null;
+}
+
+/** The last lines Godot printed, to explain why the addon did not start. */
+async function describeLogTail(logFilePath: string): Promise<string> {
+  const LINES_TO_SHOW = 40;
+  try {
+    const logLines = (await Bun.file(logFilePath).text()).trim().split("\n");
+    const lastLines = logLines.slice(-LINES_TO_SHOW).join("\n");
+    return lastLines ? `\nLast lines from Godot (${logFilePath}):\n${lastLines}` : "";
+  } catch {
+    return "";
+  }
 }
