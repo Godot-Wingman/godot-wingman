@@ -15,6 +15,7 @@ import { existsSync } from "node:fs";
 import { readdir, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import { basename, dirname, join } from "node:path";
+import { normalizePathForComparison } from "../paths.ts";
 import { GODOT_PATH_ENVIRONMENT_VARIABLE } from "../product.ts";
 import { readSettings } from "../settings.ts";
 import { readEditorRegistrations } from "./editor-registry.ts";
@@ -33,7 +34,10 @@ export async function findGodotExecutables(explicitPath?: string): Promise<Found
   const candidates: FoundGodotExecutable[] = [];
   const addCandidate = (path: string, source: string) => {
     const resolvedPath = resolveMacApplicationBundle(path);
-    if (existsSync(resolvedPath) && !candidates.some((candidate) => candidate.path === resolvedPath)) {
+    const isAlreadyListed = candidates.some(
+      (candidate) => normalizePathForComparison(candidate.path) === normalizePathForComparison(resolvedPath),
+    );
+    if (existsSync(resolvedPath) && !isAlreadyListed) {
       candidates.push({
         path: resolvedPath,
         versionFromFileName: readVersionFromFileName(resolvedPath),

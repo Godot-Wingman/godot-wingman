@@ -1,0 +1,21 @@
+# Security policy
+
+## Reporting a vulnerability
+
+Please do **not** open a public issue for security problems. Use GitHub's private reporting instead: open the **Security** tab of this repository and click **Report a vulnerability**. You will get an answer as soon as possible, usually within a week.
+
+## Supported versions
+
+Godot Pilot is in early development (0.x). Only the latest release receives fixes.
+
+## Security model
+
+Knowing what Godot Pilot is designed to do helps to tell a bug from a feature:
+
+- **The AI can run any code inside the Godot editor** (`execute_editor_script`). This is intentional: it gives the AI the same power as a person sitting at the editor. Use the `confirm` or `read-only` permission mode if you want to limit it.
+- **The editor bridge only listens on 127.0.0.1.** Other computers cannot connect.
+- **Every connection must present a random token** that the editor writes to a file in the user's data folder. Other users of the same computer cannot read that file on a normally configured system.
+- **The addon never runs in exported games.**
+- **Nothing is sent over the internet.** Godot Pilot has no telemetry and no online services.
+
+Things we consider vulnerabilities: connecting to the bridge without the token, reaching the bridge from another computer, the addon running in an exported game, bypassing the `read-only` or `confirm` modes, or Godot Pilot sending data anywhere.
