@@ -1,0 +1,25 @@
+# Dependencies and build output
+node_modules/
+dist/
+
+# Generated from addon/ by scripts/bundle-addon.ts
+server/src/addon/addon-files.generated.ts
+
+# Godot files created when the test project is opened
+test-project/.godot/
+test-project/addons/
+*.uid
+*.import
+
+# Editors and operating systems
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local environment
+.env
+*.log
+
+# Local Claude Code settings
+.claude/
