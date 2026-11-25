@@ -18,6 +18,14 @@ const EditorContext := preload("editor_context.gd")
 ## Every group of request handlers. A group is a script with `register_methods(dispatcher)`.
 const HANDLER_GROUP_SCRIPTS: Array[Script] = [
 	preload("handlers/core_handlers.gd"),
+	preload("handlers/scene_handlers.gd"),
+	preload("handlers/inspector_handlers.gd"),
+	preload("handlers/script_handlers.gd"),
+	preload("handlers/project_handlers.gd"),
+	preload("handlers/signal_handlers.gd"),
+	preload("handlers/resource_handlers.gd"),
+	preload("handlers/filesystem_handlers.gd"),
+	preload("handlers/viewport_handlers.gd"),
 ]
 
 const TOKEN_BYTE_COUNT := 24
