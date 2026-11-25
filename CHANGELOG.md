@@ -13,3 +13,19 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - Core tools: `get_status`, `launch_editor`, `install_addon`, `select_editor`, `list_toolsets`, `toggle_toolsets`, `get_editor_state`, `execute_editor_script`, `get_logs`, `take_editor_screenshot`, `get_class_docs`, `search_docs`, `get_guide`.
 - Godot class reference taken from the installed Godot version, plus live class information for GDExtension and script classes.
 - Guides for the AI: workflow, editor scripts, C# and GDExtension.
+- Editing toolsets, all undoable with Ctrl+Z where the editor supports it:
+  - `scene`: scene tree, open/create/save/close scenes, add/delete/duplicate/move/rename/select nodes, batch edits.
+  - `inspector`: read and set properties with automatic type conversion and sub-properties (`shape:radius`), reset, groups.
+  - `script`: create, read, edit, validate and attach GDScript and C# scripts; GDScript is checked by Godot's parser and the open Script editor is updated.
+  - `project`: project settings, input map, autoloads, editor plugins.
+  - `signals`: list, connect (adds the handler method to the script) and disconnect.
+  - `resources`: create and edit resources and .tres files.
+  - `filesystem`: list, read, write, search, move with reference updates, delete to the trash, dependencies, reimport.
+  - `viewport`: switch main screens and render the scene from any angle without moving the editor camera.
+- Playtesting toolsets:
+  - `play`: run and stop the game, pause, step frames, time scale, wait until a condition is true.
+  - `input`: real input events (keys, actions, gamepad, mouse clicks and drags, typing, timed sequences, clicking UI by text), timed inside the game.
+  - `game_inspect`: screenshots, frame series, live node tree and values, method calls, GDScript in the game, UI control list.
+  - `debug`: game output and errors with stack traces, performance monitors.
+- An export plugin keeps the addon out of exported games.
+- `launch_editor` keeps Godot's console output in a log and shows its end when startup fails.
