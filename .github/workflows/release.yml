@@ -1,0 +1,30 @@
+# Publishes a release when a version tag is pushed, for example: git tag v0.2.0 && git push --tags
+# Builds one executable per platform and a zip of the Godot addon.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run lint && bun run typecheck && bun test tests/unit
+      - run: bun run build
+      - name: Zip the addon for manual installation
+        run: cd addon && zip -r ../dist/godot-pilot-addon.zip godot_pilot
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          prerelease_flag=""
+          # Versions below 1.0 are pre-releases.
+          if [[ "${GITHUB_REF_NAME}" == v0.* ]]; then prerelease_flag="--prerelease"; fi
+          gh release create "${GITHUB_REF_NAME}" dist/* --generate-notes ${prerelease_flag}

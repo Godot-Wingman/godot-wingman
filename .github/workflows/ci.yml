@@ -1,0 +1,66 @@
+# Runs on every push and pull request. A pull request can only be merged when all
+# jobs pass.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Lint, types and unit tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run bundle-addon
+      - run: bun run lint
+      - run: bun run typecheck
+      - run: bun test tests/unit
+
+  godot:
+    name: End-to-end tests with Godot ${{ matrix.godot-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Oldest supported version (log capture needs 4.5), the previous one and the newest.
+        godot-version: ["4.5.2-stable", "4.6.3-stable", "4.7.2-stable"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - name: Download Godot ${{ matrix.godot-version }}
+        run: |
+          file_name="Godot_v${{ matrix.godot-version }}_linux.x86_64"
+          curl --fail --location --silent --show-error \
+            "https://github.com/godotengine/godot/releases/download/${{ matrix.godot-version }}/${file_name}.zip" \
+            --output godot.zip
+          unzip -q godot.zip -d "$RUNNER_TEMP/godot"
+          chmod +x "$RUNNER_TEMP/godot/${file_name}"
+          echo "GODOT_PATH=$RUNNER_TEMP/godot/${file_name}" >> "$GITHUB_ENV"
+      - run: bun run test
+
+  build:
+    name: Build binaries
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+      - name: The Linux binary starts
+        run: ./dist/godot-pilot-linux-x64 --version
