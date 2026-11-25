@@ -1,18 +1,18 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://c6t4o8jd8pu8e"]
 
-[ext_resource type="Script" path="res://player.gd" id="1_player"]
+[ext_resource type="Script" uid="uid://d05b76inrg33q" path="res://player.gd" id="1_player"]
 
-[node name="Main" type="Node2D"]
+[node name="Main" type="Node2D" unique_id=62628548]
 
-[node name="Player" type="CharacterBody2D" parent="."]
+[node name="Player" type="CharacterBody2D" parent="." unique_id=1441612765]
 position = Vector2(100, 200)
 script = ExtResource("1_player")
 
-[node name="Sprite2D" type="Sprite2D" parent="Player"]
+[node name="Sprite2D" type="Sprite2D" parent="Player" unique_id=587953742]
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Player"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player" unique_id=578084602]
 
-[node name="Label" type="Label" parent="."]
+[node name="Label" type="Label" parent="." unique_id=71697112]
 offset_right = 200.0
 offset_bottom = 40.0
 text = "Hello"
