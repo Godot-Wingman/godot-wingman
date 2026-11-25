@@ -52,6 +52,17 @@ export async function startTestEditor(options: StartTestEditorOptions = {}): Pro
     filter: (sourcePath) => !/[\\/](\.godot|addons)([\\/]|$)/.test(sourcePath),
   });
   process.env[HOME_OVERRIDE_ENVIRONMENT_VARIABLE] = homeDirectory;
+  // Games started by the test editor run without a window too (no screen on CI machines).
+  const projectFilePath = join(projectPath, "project.godot");
+  const projectFileText = await Bun.file(projectFilePath).text();
+  await Bun.write(
+    projectFilePath,
+    `${projectFileText}
+[editor]
+
+run/main_run_args="--headless"
+`,
+  );
 
   const launchResult = await launchEditor({
     projectPath,
@@ -69,6 +80,17 @@ export async function startTestEditor(options: StartTestEditorOptions = {}): Pro
   await server.connect(serverTransport);
   const client = new Client({ name: "godot-pilot-tests", version: "0.0.0" });
   await client.connect(clientTransport);
+
+  // The editor reopens the main scene a moment after the addon is ready; wait for it so
+  // the first test does not run against an empty editor.
+  for (let attempt = 0; attempt < 40; attempt++) {
+    const stateResult = await client.callTool({ name: "get_editor_state", arguments: {} });
+    const stateText = (stateResult.content as { text?: string }[])[0]?.text ?? "{}";
+    if ((JSON.parse(stateText) as { edited_scene?: string | null }).edited_scene) {
+      break;
+    }
+    await Bun.sleep(250);
+  }
 
   return {
     projectPath,

@@ -6,6 +6,8 @@ extends RefCounted
 const PilotError := preload("../utils/pilot_error.gd")
 const ValueCodec := preload("../utils/value_codec.gd")
 const ConfirmationPrompt := preload("../ui/confirmation_prompt.gd")
+const ImageEncoding := preload("../utils/image_encoding.gd")
+const ScriptSource := preload("../utils/script_source.gd")
 
 const DEFAULT_LOG_LIMIT := 100
 const DEFAULT_SCREENSHOT_MAX_SIZE := 1280
@@ -65,14 +67,14 @@ func _execute_script(params: Dictionary) -> Variant:
 	if code.strip_edges() == "":
 		return PilotError.new("EMPTY_CODE", "The code is empty.")
 
-	var prepared_source := _prepare_script_source(code)
+	var prepared_source := ScriptSource.prepare(code, _context.addon_directory.path_join("scripting/script_context.gd"), true)
 	var first_log_id: int = _context.get_next_log_id()
 
 	var script := GDScript.new()
 	script.source_code = prepared_source["source"]
 	var compile_result := script.reload()
 	if compile_result != OK:
-		var compile_errors := _clean_script_log_entries(_context.get_logs_since(first_log_id, ["error", "script_error", "warning"]), prepared_source["line_offset"])
+		var compile_errors := ScriptSource.clean_log_entries(_context.get_logs_since(first_log_id, ["error", "script_error", "warning"]), prepared_source["line_offset"])
 		return PilotError.new(
 			"SCRIPT_COMPILE_ERROR",
 			"The code did not compile (%s)." % error_string(compile_result),
@@ -92,14 +94,9 @@ func _execute_script(params: Dictionary) -> Variant:
 
 	var returned_value: Variant = await script_instance.run()
 
-	var logged_entries: Array = _clean_script_log_entries(_context.get_logs_since(first_log_id), prepared_source["line_offset"])
-	var printed_lines: Array[String] = []
-	var problems: Array = []
-	for entry in logged_entries:
-		if entry["level"] == "info":
-			printed_lines.append(entry["message"])
-		else:
-			problems.append(entry)
+	var log_summary := ScriptSource.split_printed_and_problems(ScriptSource.clean_log_entries(_context.get_logs_since(first_log_id), prepared_source["line_offset"]))
+	var printed_lines: Array = log_summary["printed"]
+	var problems: Array = log_summary["problems"]
 
 	var result := {"result": ValueCodec.to_json_value(returned_value, _context.get_edited_scene_root())}
 	if script_instance.has_method("get_output_lines") and not script_instance.get_output_lines().is_empty():
@@ -110,60 +107,6 @@ func _execute_script(params: Dictionary) -> Variant:
 		result["errors_and_warnings"] = problems
 	return result
 
-
-## Wraps the AI's code into a complete script. Returns the source and how many lines
-## were added before the first line of the AI's code (to fix error line numbers).
-func _prepare_script_source(code: String) -> Dictionary:
-	var has_run_function := RegEx.create_from_string("(?m)^func\\s+run\\s*\\(").search(code) != null
-	var has_extends_line := RegEx.create_from_string("(?m)^extends\\s").search(code) != null
-	var has_tool_annotation := RegEx.create_from_string("(?m)^@tool").search(code) != null
-
-	var header_lines: Array[String] = []
-	# Without @tool, Godot does not run scripts inside the editor.
-	if not has_tool_annotation:
-		header_lines.append("@tool")
-	if not has_extends_line:
-		header_lines.append("extends \"%s\"" % _context.addon_directory.path_join("scripting/script_context.gd"))
-
-	var body := code
-	if not has_run_function:
-		header_lines.append("func run():")
-		var indented_lines: Array[String] = []
-		for code_line in code.split("\n"):
-			indented_lines.append("\t" + code_line)
-		body = "\n".join(indented_lines)
-
-	return {"source": "\n".join(header_lines) + "\n" + body + "\n", "line_offset": header_lines.size()}
-
-
-## Makes log entries about the AI's code easy to read:
-## - errors of the in-memory script ("gdscript://...") report lines of the wrapped
-##   source, so they are shifted to match the lines the AI wrote;
-## - the in-memory file name and the addon's own stack frames are noise, so they go.
-func _clean_script_log_entries(entries: Array, line_offset: int) -> Array:
-	for entry in entries:
-		var file_name := String(entry.get("file", ""))
-		var is_from_executed_code := file_name == "" or file_name.begins_with("gdscript://")
-		if is_from_executed_code:
-			entry["file"] = "<your code>"
-			if entry.has("line") and int(entry["line"]) > line_offset:
-				entry["line"] = int(entry["line"]) - line_offset
-		if entry.has("stack"):
-			var useful_frames: Array[String] = []
-			for frame in entry["stack"]:
-				if String(frame).contains("addons/godot_pilot/"):
-					continue
-				if String(frame).begins_with("gdscript://"):
-					var frame_line := int(String(frame).get_slice(":", 2).get_slice(" ", 0))
-					useful_frames.append("<your code>:%d" % (frame_line - line_offset))
-				else:
-					useful_frames.append(frame)
-			if useful_frames.is_empty():
-				entry.erase("stack")
-			else:
-				entry["stack"] = useful_frames
-		entry.erase("function")
-	return entries
 
 #endregion
 
@@ -218,36 +161,10 @@ func _take_screenshot(params: Dictionary) -> Variant:
 
 ## Scales the image down to `max_size` and encodes it. Shared with other handlers.
 static func encode_image(image: Image, params: Dictionary) -> Dictionary:
-	var max_size := int(params.get("max_size", DEFAULT_SCREENSHOT_MAX_SIZE))
-	var longest_side := maxi(image.get_width(), image.get_height())
-	if max_size > 0 and longest_side > max_size:
-		var scale_factor := float(max_size) / float(longest_side)
-		image.resize(
-			maxi(1, roundi(image.get_width() * scale_factor)),
-			maxi(1, roundi(image.get_height() * scale_factor)),
-			Image.INTERPOLATE_LANCZOS
-		)
-
-	var format := String(params.get("format", "jpeg"))
-	var encoded_bytes: PackedByteArray
-	var mime_type := "image/jpeg"
-	if format == "png":
-		encoded_bytes = image.save_png_to_buffer()
-		mime_type = "image/png"
-	elif format == "webp":
-		encoded_bytes = image.save_webp_to_buffer(true, float(params.get("quality", DEFAULT_JPEG_QUALITY)))
-		mime_type = "image/webp"
-	else:
-		image.convert(Image.FORMAT_RGB8)
-		encoded_bytes = image.save_jpg_to_buffer(float(params.get("quality", DEFAULT_JPEG_QUALITY)))
-
-	return {
-		"mime_type": mime_type,
-		"data_base64": Marshalls.raw_to_base64(encoded_bytes),
-		"width": image.get_width(),
-		"height": image.get_height(),
-	}
-
+	var encoded := ImageEncoding.encode_bytes(image, params)
+	encoded["data_base64"] = Marshalls.raw_to_base64(encoded["bytes"])
+	encoded.erase("bytes")
+	return encoded
 #endregion
 
 

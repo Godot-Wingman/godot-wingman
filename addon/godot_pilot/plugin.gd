@@ -26,21 +26,40 @@ const HANDLER_GROUP_SCRIPTS: Array[Script] = [
 	preload("handlers/resource_handlers.gd"),
 	preload("handlers/filesystem_handlers.gd"),
 	preload("handlers/viewport_handlers.gd"),
+	preload("handlers/play_handlers.gd"),
 ]
 
-const TOKEN_BYTE_COUNT := 24
+const GameDebuggerBridge := preload("bridge/game_debugger_bridge.gd")
+const ExportFilter := preload("bridge/export_filter.gd")
 
+const TOKEN_BYTE_COUNT := 24
+## Name of the temporary autoload that runs inside the game (runtime/game_bridge.gd).
+const GAME_BRIDGE_AUTOLOAD_NAME := "GodotPilotGameBridge"
+
+var _addon_directory: String
 var _log_capture: Object
 var _handler_groups: Array[RefCounted] = []
 var _bridge_server: BridgeServer
 var _registry_file: EditorRegistryFile
+var _game_debugger_bridge: GameDebuggerBridge
+var _export_filter: ExportFilter
 
 
 func _enter_tree() -> void:
-	var addon_directory: String = get_script().resource_path.get_base_dir()
+	_addon_directory = get_script().resource_path.get_base_dir()
+	var addon_directory := _addon_directory
 	_log_capture = _start_log_capture(addon_directory)
+	# Left behind if the editor crashed while a game was running.
+	_remove_game_bridge_autoload()
+
+	_game_debugger_bridge = GameDebuggerBridge.new(get_tree())
+	_game_debugger_bridge.game_stopped.connect(_remove_game_bridge_autoload)
+	add_debugger_plugin(_game_debugger_bridge)
+	_export_filter = ExportFilter.new(addon_directory)
+	add_export_plugin(_export_filter)
 
 	var context := EditorContext.new(self, _log_capture, _read_addon_version(addon_directory), addon_directory)
+	context.game_bridge = _game_debugger_bridge
 	var dispatcher := RequestDispatcher.new()
 	for handler_group_script in HANDLER_GROUP_SCRIPTS:
 		var handler_group: RefCounted = handler_group_script.new(context)
@@ -70,7 +89,30 @@ func _enter_tree() -> void:
 	print("Godot Pilot %s: ready for AI connections on port %d." % [context.addon_version, _bridge_server.port])
 
 
+## Godot calls this right before the game starts (Play button or run_game). The game
+## bridge is added as an autoload only for this run; it is removed when the game stops.
+func _build() -> bool:
+	if not ProjectSettings.has_setting("autoload/" + GAME_BRIDGE_AUTOLOAD_NAME):
+		add_autoload_singleton(GAME_BRIDGE_AUTOLOAD_NAME, _addon_directory.path_join("runtime/game_bridge.gd"))
+		# The game reads project.godot from disk when it starts, so it must be saved now.
+		ProjectSettings.save()
+	return true
+
+
+func _remove_game_bridge_autoload() -> void:
+	if ProjectSettings.has_setting("autoload/" + GAME_BRIDGE_AUTOLOAD_NAME):
+		remove_autoload_singleton(GAME_BRIDGE_AUTOLOAD_NAME)
+		ProjectSettings.save()
+
+
 func _exit_tree() -> void:
+	_remove_game_bridge_autoload()
+	if _game_debugger_bridge != null:
+		remove_debugger_plugin(_game_debugger_bridge)
+		_game_debugger_bridge = null
+	if _export_filter != null:
+		remove_export_plugin(_export_filter)
+		_export_filter = null
 	if _registry_file != null:
 		_registry_file.remove()
 		_registry_file = null

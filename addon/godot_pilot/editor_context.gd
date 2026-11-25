@@ -14,6 +14,8 @@ var log_capture: Object
 var addon_version: String
 ## Folder of the addon, for example "res://addons/godot_pilot".
 var addon_directory: String
+## Connection to the running game (bridge/game_debugger_bridge.gd). Set by the plugin.
+var game_bridge: EditorDebuggerPlugin
 
 
 func _init(owning_plugin: EditorPlugin, captured_logs: Object, version: String, directory: String) -> void:

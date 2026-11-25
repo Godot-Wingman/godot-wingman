@@ -22,6 +22,7 @@ import { INSPECTOR_TOOLS, SCRIPT_TOOLS } from "./editing/inspector-and-script-to
 import { PROJECT_TOOLS, SIGNAL_TOOLS } from "./editing/project-and-signal-tools.ts";
 import { FILESYSTEM_TOOLS, RESOURCE_TOOLS, VIEWPORT_TOOLS } from "./editing/resource-file-viewport-tools.ts";
 import { SCENE_TOOLS } from "./editing/scene-tools.ts";
+import { DEBUG_TOOLS, GAME_INSPECT_TOOLS, INPUT_TOOLS, PLAY_TOOLS } from "./playtesting/playtesting-tools.ts";
 
 export const ALL_TOOLSETS: Toolset[] = [
   {
@@ -100,5 +101,32 @@ export const ALL_TOOLSETS: Toolset[] = [
     title: "Viewport",
     description: "Switch the editor between 2D, 3D and Script, and render the scene from any angle.",
     tools: VIEWPORT_TOOLS,
+  },
+  {
+    name: "play",
+    title: "Play",
+    description:
+      "Run and stop the game, pause it, step frame by frame, change its speed, and wait until something happens.",
+    tools: PLAY_TOOLS,
+  },
+  {
+    name: "input",
+    title: "Input",
+    description:
+      "Play the game like a person: press and hold keys, actions and gamepad buttons, click, drag, type, timed sequences.",
+    tools: INPUT_TOOLS,
+  },
+  {
+    name: "game_inspect",
+    title: "Game inspection",
+    description:
+      "Look inside the running game: screenshots, frame series, live node tree, live values, method calls, GDScript, UI controls.",
+    tools: GAME_INSPECT_TOOLS,
+  },
+  {
+    name: "debug",
+    title: "Debug",
+    description: "The running game's printed output and errors with stack traces, and performance numbers.",
+    tools: DEBUG_TOOLS,
   },
 ];

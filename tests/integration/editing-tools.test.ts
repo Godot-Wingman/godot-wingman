@@ -57,7 +57,10 @@ describe("scene and inspector", () => {
 
   test("set_properties rejects unknown properties and suggests names", async () => {
     if (!editor) return;
-    const outcome = await editor.callTool("set_properties", { node_path: "Player", properties: { postion: [1, 2] } });
+    const outcome = await editor.callTool("set_properties", {
+      node_path: "Player",
+      properties: { postion: [1, 2] },
+    });
     expect(outcome.isError).toBe(true);
     expect(outcome.text).toContain("position");
   });
@@ -88,7 +91,9 @@ describe("scene and inspector", () => {
       }),
     );
     expect(outcome.completed).toBe(5);
-    const tree = parseJson<{ tree: string }>(await editor.callTool("get_scene_tree", { node_path: "Pickups" }));
+    const tree = parseJson<{ tree: string }>(
+      await editor.callTool("get_scene_tree", { node_path: "Pickups" }),
+    );
     expect(tree.tree).toContain("Coin2 (Sprite2D)");
   });
 
@@ -104,7 +109,9 @@ describe("scene and inspector", () => {
   test("save_scene writes the new nodes to the file", async () => {
     if (!editor) return;
     expect((await editor.callTool("save_scene")).isError).toBe(false);
-    const file = parseJson<{ content: string }>(await editor.callTool("read_file", { path: "res://main.tscn" }));
+    const file = parseJson<{ content: string }>(
+      await editor.callTool("read_file", { path: "res://main.tscn" }),
+    );
     expect(file.content).toContain('name="Hat"');
     expect(file.content).toContain("CircleShape2D");
   });
@@ -116,7 +123,7 @@ describe("scripts and signals", () => {
     const created = parseJson<{ valid: boolean; attached_to: string }>(
       await editor.callTool("create_script", {
         path: "res://scripts/main.gd",
-        content: "extends Node2D\n\n\nfunc _ready() -> void:\n\tprint(\"ready\")\n",
+        content: 'extends Node2D\n\n\nfunc _ready() -> void:\n\tprint("ready")\n',
         attach_to: ".",
       }),
     );
@@ -135,7 +142,11 @@ describe("scripts and signals", () => {
     );
     expect(edited.valid).toBe(false);
     expect(edited.problems[0]?.line).toBe(5);
-    await editor.callTool("edit_script", { path: "res://scripts/main.gd", old_text: "\tvar broken = ", new_text: "\tpass" });
+    await editor.callTool("edit_script", {
+      path: "res://scripts/main.gd",
+      old_text: "\tvar broken = ",
+      new_text: "\tpass",
+    });
   });
 
   test("connect_signal adds the handler method to the script", async () => {
@@ -150,7 +161,9 @@ describe("scripts and signals", () => {
       }),
     );
     expect(connected.method_created_in_script).toBe(true);
-    const script = parseJson<{ content: string }>(await editor.callTool("read_script", { path: "res://scripts/main.gd" }));
+    const script = parseJson<{ content: string }>(
+      await editor.callTool("read_script", { path: "res://scripts/main.gd" }),
+    );
     expect(script.content).toContain("func _on_start_pressed() -> void:");
     const signals = parseJson<{ signals: { signal: string; connected_to?: string[] }[] }>(
       await editor.callTool("list_signals", { node_path: "StartButton", only_connected: true }),
@@ -163,13 +176,17 @@ describe("project, resources and files", () => {
   test("set_input_action creates an action with keys and buttons", async () => {
     if (!editor) return;
     await editor.callTool("set_input_action", { name: "jump", events: ["key:Space", "joy_button:a"] });
-    const inputMap = parseJson<{ actions: Record<string, { events: string[] }> }>(await editor.callTool("get_input_map"));
+    const inputMap = parseJson<{ actions: Record<string, { events: string[] }> }>(
+      await editor.callTool("get_input_map"),
+    );
     expect(inputMap.actions.jump?.events).toEqual(["key:Space", "joy_button:a"]);
   });
 
   test("set_project_settings changes and saves settings", async () => {
     if (!editor) return;
-    await editor.callTool("set_project_settings", { settings: { "display/window/size/viewport_width": 1280 } });
+    await editor.callTool("set_project_settings", {
+      settings: { "display/window/size/viewport_width": 1280 },
+    });
     const settings = parseJson<{ settings: Record<string, unknown> }>(
       await editor.callTool("get_project_settings", { names: ["display/window/size/viewport_width"] }),
     );
@@ -194,12 +211,17 @@ describe("project, resources and files", () => {
     const files = parseJson<{ files: string[] }>(await editor.callTool("list_files", { filter: "*.tscn" }));
     expect(files.files.some((entry) => entry.startsWith("res://main.tscn"))).toBe(true);
 
-    const search = parseJson<{ matches: string[] }>(await editor.callTool("search_project", { query: "SPEED" }));
+    const search = parseJson<{ matches: string[] }>(
+      await editor.callTool("search_project", { query: "SPEED" }),
+    );
     expect(search.matches.some((match) => match.startsWith("res://player.gd:"))).toBe(true);
 
     await editor.callTool("write_file", { path: "res://data/levels.json", content: '{"levels": 3}' });
     const moved = parseJson<{ to: string }>(
-      await editor.callTool("move_file", { from: "res://data/levels.json", to: "res://data/level_list.json" }),
+      await editor.callTool("move_file", {
+        from: "res://data/levels.json",
+        to: "res://data/level_list.json",
+      }),
     );
     expect(moved.to).toBe("res://data/level_list.json");
   });
