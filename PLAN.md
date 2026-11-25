@@ -140,7 +140,7 @@ Ayrıntılı liste için yukarıdaki grup tablosuna bakın. Öne çıkanlar:
 
 ## Fazlar
 
-**Faz 1 — Temel ve kaçış kapısı**
+**Faz 1 — Temel ve kaçış kapısı** ✅ (26 Kasım 2026)
 
 - Repo, TypeScript + Bun sunucu ve addon.
 - WebSocket protokolü: el sıkışma, token, kopunca yeniden bağlanma.
@@ -150,12 +150,12 @@ Ayrıntılı liste için yukarıdaki grup tablosuna bakın. Öne çıkanlar:
 
 _Sonuç:_ AI editörü görür ve script ile her şeyi yapabilir.
 
-**Faz 2 — Editörde insan gibi**
+**Faz 2 — Editörde insan gibi** ✅ (26 Kasım 2026)
 
 - Gruplar: `scene`, `inspector`, `script`, `project`, `signals`, `resources`, `filesystem`, `viewport`.
 - UndoRedo ve toplu işlem.
 
-**Faz 3 — Oyunu gerçekten oynamak**
+**Faz 3 — Oyunu gerçekten oynamak** ✅ (26 Kasım 2026)
 
 - Debugger köprüsü.
 - Gruplar: `play`, `input`, `game_inspect`, `debug`.
