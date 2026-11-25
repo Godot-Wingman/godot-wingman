@@ -7,9 +7,9 @@ import { parsePermissionMode } from "../../server/src/mcp/permission-mode.ts";
 
 describe("bbcodeToMarkdown", () => {
   test("converts inline tags", () => {
-    expect(bbcodeToMarkdown("Call [method add_child] on [Node] with [param node]. [b]Note:[/b] [code]true[/code]")).toBe(
-      "Call `add_child()` on `Node` with `node`. **Note:** `true`",
-    );
+    expect(
+      bbcodeToMarkdown("Call [method add_child] on [Node] with [param node]. [b]Note:[/b] [code]true[/code]"),
+    ).toBe("Call `add_child()` on `Node` with `node`. **Note:** `true`");
   });
 
   test("keeps only the preferred language of code examples", () => {

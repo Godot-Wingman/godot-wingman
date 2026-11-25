@@ -26,7 +26,8 @@ const ALL_TARGETS: BuildTarget[] = [
 ];
 
 function currentPlatformTarget(): BuildTarget {
-  const platformName = { win32: "windows", darwin: "darwin", linux: "linux" }[process.platform as string] ?? "linux";
+  const platformName =
+    { win32: "windows", darwin: "darwin", linux: "linux" }[process.platform as string] ?? "linux";
   const architecture = process.arch === "arm64" ? "arm64" : "x64";
   const extension = process.platform === "win32" ? ".exe" : "";
   const readablePlatform = platformName === "darwin" ? "macos" : platformName;
@@ -42,7 +43,16 @@ const targets = onlyCurrentPlatform ? [currentPlatformTarget()] : ALL_TARGETS;
 for (const target of targets) {
   const outputPath = join(outputDirectory, target.outputName);
   const buildProcess = Bun.spawn(
-    ["bun", "build", entryPoint, "--compile", "--minify", `--target=${target.bunTarget}`, "--outfile", outputPath],
+    [
+      "bun",
+      "build",
+      entryPoint,
+      "--compile",
+      "--minify",
+      `--target=${target.bunTarget}`,
+      "--outfile",
+      outputPath,
+    ],
     { stdout: "inherit", stderr: "inherit" },
   );
   if ((await buildProcess.exited) !== 0) {

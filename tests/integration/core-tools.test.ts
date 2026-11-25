@@ -54,7 +54,9 @@ describe("core toolset", () => {
   test("execute_editor_script reports compile errors with the line of the AI's code", async () => {
     const testEditor = requireEditor();
     if (!testEditor) return;
-    const outcome = await testEditor.callTool("execute_editor_script", { code: "var fine = 1\nvar broken = \nreturn 1" });
+    const outcome = await testEditor.callTool("execute_editor_script", {
+      code: "var fine = 1\nvar broken = \nreturn 1",
+    });
     expect(outcome.isError).toBe(true);
     expect(outcome.text).toContain("SCRIPT_COMPILE_ERROR");
     expect(outcome.text).toContain('"line":2');
@@ -120,7 +122,10 @@ describe("core toolset", () => {
   test("toggle_toolsets reports unknown names and keeps core enabled", async () => {
     const testEditor = requireEditor();
     if (!testEditor) return;
-    const outcome = await testEditor.callTool("toggle_toolsets", { enable: ["does_not_exist"], disable: ["core"] });
+    const outcome = await testEditor.callTool("toggle_toolsets", {
+      enable: ["does_not_exist"],
+      disable: ["core"],
+    });
     expect(outcome.text).toContain("Unknown toolsets: does_not_exist");
     expect(outcome.text).toContain("Always enabled, not changed: core");
     expect(await testEditor.listToolNames()).toContain("get_status");
