@@ -110,3 +110,29 @@ export async function forwardToEditor(
   const result = await context.editors.request(method, params, timeoutMilliseconds);
   return jsonResult(result);
 }
+
+interface EditorToolDefinitionInput<Shape extends z.ZodRawShape> {
+  name: string;
+  title: string;
+  description: string;
+  inputShape: Shape;
+  access: ToolAccess;
+  destructive?: boolean;
+  /** Name of the request handler in the Godot addon. */
+  editorMethod: string;
+  timeoutSeconds?: number;
+}
+
+/**
+ * Most tools only check their input and pass it on to the addon, which does the work
+ * inside the editor. This builds such a tool without repeating the forwarding code.
+ */
+export function defineEditorTool<Shape extends z.ZodRawShape>(
+  definition: EditorToolDefinitionInput<Shape>,
+): PilotTool {
+  const timeoutMilliseconds = definition.timeoutSeconds ? definition.timeoutSeconds * 1000 : undefined;
+  return defineTool({
+    ...definition,
+    run: (input, context) => forwardToEditor(context, definition.editorMethod, input, timeoutMilliseconds),
+  });
+}
