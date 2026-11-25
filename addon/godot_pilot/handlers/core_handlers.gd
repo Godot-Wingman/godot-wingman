@@ -46,7 +46,7 @@ func _get_editor_state(_params: Dictionary) -> Dictionary:
 		"edited_scene": scene_root.scene_file_path if scene_root != null else null,
 		"edited_scene_root": {"name": scene_root.name, "class": scene_root.get_class()} if scene_root != null else null,
 		"open_scenes": Array(EditorInterface.get_open_scenes()),
-		"unsaved_scenes": Array(EditorInterface.get_unsaved_scenes()),
+		"unsaved_scenes": Array(_context.call_editor_interface("get_unsaved_scenes", [], PackedStringArray())),
 		"selected_nodes": selected_node_paths,
 		"is_playing": EditorInterface.is_playing_scene(),
 		"playing_scene": EditorInterface.get_playing_scene(),

@@ -156,11 +156,14 @@ func _close_scene(params: Dictionary) -> Variant:
 	var scene_root: Node = _context.get_edited_scene_root()
 	if scene_root == null:
 		return PilotError.new("NO_OPEN_SCENE", "No scene is open.")
-	var has_unsaved_changes := EditorInterface.get_unsaved_scenes().has(scene_root.scene_file_path)
+	var unsaved_scenes: PackedStringArray = _context.call_editor_interface("get_unsaved_scenes", [], PackedStringArray())
+	var has_unsaved_changes := unsaved_scenes.has(scene_root.scene_file_path)
 	if has_unsaved_changes and not bool(params.get("discard_changes", false)):
 		return PilotError.new("UNSAVED_CHANGES", "The scene has unsaved changes.", "Save it with save_scene first, or pass discard_changes: true.")
 	var closed_path := scene_root.scene_file_path
-	EditorInterface.close_scene()
+	if not EditorInterface.has_method("close_scene"):
+		return PilotError.new("NOT_SUPPORTED", "This Godot version cannot close scenes from a plugin.", "Close the tab by hand, or update Godot.")
+	_context.call_editor_interface("close_scene")
 	await _context.get_scene_tree().process_frame
 	return {"closed": closed_path}
 
