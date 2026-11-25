@@ -5,14 +5,18 @@ const PLUGIN = "res://addons/godot_pilot/plugin.cfg";
 
 describe("addEnabledEditorPlugin", () => {
   test("adds the section when the project has no plugins", () => {
-    const { text, changed } = addEnabledEditorPlugin('config_version=5\n\n[application]\n\nconfig/name="Game"\n', PLUGIN);
+    const { text, changed } = addEnabledEditorPlugin(
+      'config_version=5\n\n[application]\n\nconfig/name="Game"\n',
+      PLUGIN,
+    );
     expect(changed).toBe(true);
     expect(text).toContain(`[editor_plugins]\n\nenabled=PackedStringArray("${PLUGIN}")`);
     expect(text).toContain('config/name="Game"');
   });
 
   test("keeps other enabled plugins", () => {
-    const original = '[editor_plugins]\n\nenabled=PackedStringArray("res://addons/other/plugin.cfg")\n\n[rendering]\n';
+    const original =
+      '[editor_plugins]\n\nenabled=PackedStringArray("res://addons/other/plugin.cfg")\n\n[rendering]\n';
     const { text } = addEnabledEditorPlugin(original, PLUGIN);
     expect(text).toContain(`enabled=PackedStringArray("res://addons/other/plugin.cfg", "${PLUGIN}")`);
     expect(text).toContain("[rendering]");

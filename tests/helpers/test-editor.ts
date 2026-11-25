@@ -73,7 +73,9 @@ export async function startTestEditor(options: StartTestEditorOptions = {}): Pro
   return {
     projectPath,
     async callTool(name, toolArguments = {}) {
-      const result = await client.callTool({ name, arguments: toolArguments }, undefined, { timeout: 120_000 });
+      const result = await client.callTool({ name, arguments: toolArguments }, undefined, {
+        timeout: 120_000,
+      });
       const content = (result.content ?? []) as { type: string; text?: string }[];
       return {
         text: content
@@ -98,7 +100,9 @@ export async function startTestEditor(options: StartTestEditorOptions = {}): Pro
       }
       // Windows keeps files locked for a moment after the process ends.
       await Bun.sleep(1000);
-      await rm(temporaryRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 500 }).catch(() => {});
+      await rm(temporaryRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 500 }).catch(
+        () => {},
+      );
     },
   };
 }
