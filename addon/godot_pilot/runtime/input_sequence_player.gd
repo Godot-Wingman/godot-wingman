@@ -13,33 +13,72 @@ extends RefCounted
 ##   {"mouse_move": [x, y]}            {"mouse_click": [x, y], "button": "left", "double": false}
 ##   {"mouse_drag": {"from": [x, y], "to": [x, y], "seconds": 0.3}}
 ##   {"type_text": "hello"}
+##   {"wait_until": "node(\"Player\").position.x > 200", "timeout_seconds": 5}
+## wait_until is checked every physics frame, so a sequence can react to the game (jump
+## when the player reaches the edge) instead of guessing times. If a step fails, the
+## inputs the sequence still holds are released.
 ## Mouse positions are pixels of the game viewport (the size shown with screenshots).
 
 const InputEventText := preload("../utils/input_event_text.gd")
 
 const DRAG_STEPS_PER_SECOND := 60
+const DEFAULT_CONDITION_TIMEOUT_SECONDS := 10.0
 
 var _tree: SceneTree
 var _viewport: Viewport
+## Object whose methods wait_until expressions can call, like node("Player").
+var _expression_base: Object
 
 
-func _init(tree: SceneTree) -> void:
+func _init(tree: SceneTree, expression_base: Object = null) -> void:
 	_tree = tree
 	_viewport = tree.root
+	_expression_base = expression_base
 
 
 ## Plays every step and returns a log of what happened, or {"error": ...} on a bad step.
 func play(steps: Array) -> Dictionary:
 	var performed_steps: Array[String] = []
+	var held_inputs: Array[String] = []
 	for step_index in steps.size():
 		var step: Variant = steps[step_index]
 		if not step is Dictionary:
+			await _release_all(held_inputs)
 			return {"error": "Step %d is not an object." % step_index, "performed": performed_steps}
 		var outcome: Variant = await _play_step(step)
 		if outcome is String and outcome.begins_with("ERROR:"):
-			return {"error": "Step %d: %s" % [step_index, outcome.trim_prefix("ERROR: ")], "performed": performed_steps}
+			var released_text := await _release_all(held_inputs)
+			return {"error": "Step %d: %s%s" % [step_index, outcome.trim_prefix("ERROR: "), released_text], "performed": performed_steps}
+		if step.has("press"):
+			held_inputs.append(String(step["press"]))
+		elif step.has("release"):
+			held_inputs.erase(String(step["release"]))
 		performed_steps.append(outcome)
 	return {"performed": performed_steps}
+
+
+## Lets go of inputs a failed sequence still holds, so the game does not keep running.
+func _release_all(held_inputs: Array[String]) -> String:
+	if held_inputs.is_empty():
+		return ""
+	for input_text in held_inputs:
+		await _send_input(input_text, false, "")
+	return " (released %s)" % ", ".join(held_inputs)
+
+
+func _wait_until_condition(condition: String, timeout_seconds: float) -> String:
+	var expression := Expression.new()
+	if expression.parse(condition, ["scene", "tree"]) != OK:
+		return "ERROR: could not parse '%s': %s" % [condition, expression.get_error_text()]
+	var start_milliseconds := Time.get_ticks_msec()
+	while (Time.get_ticks_msec() - start_milliseconds) / 1000.0 < timeout_seconds:
+		var value: Variant = expression.execute([_tree.current_scene, _tree], _expression_base, false)
+		if expression.has_execute_failed():
+			return "ERROR: '%s' failed: %s" % [condition, expression.get_error_text()]
+		if value:
+			return "waited until %s (%ss)" % [condition, snappedf((Time.get_ticks_msec() - start_milliseconds) / 1000.0, 0.01)]
+		await _tree.physics_frame
+	return "ERROR: '%s' was still false after %ss" % [condition, timeout_seconds]
 
 
 func _play_step(step: Dictionary) -> String:
@@ -51,7 +90,11 @@ func _play_step(step: Dictionary) -> String:
 		var pressed_outcome := await _send_input(String(step["tap"]), true, "tapped")
 		if pressed_outcome.begins_with("ERROR:"):
 			return pressed_outcome
+		# Also held for two physics ticks: games often read is_action_just_pressed() in
+		# _physics_process, which runs less often than frames on fast screens.
 		await _wait_frames(2)
+		for physics_tick in 2:
+			await _tree.physics_frame
 		await _send_input(String(step["tap"]), false, "")
 		return pressed_outcome
 	if step.has("hold"):
@@ -64,6 +107,8 @@ func _play_step(step: Dictionary) -> String:
 	if step.has("wait_seconds"):
 		await _wait_seconds(float(step["wait_seconds"]))
 		return "waited %ss" % step["wait_seconds"]
+	if step.has("wait_until"):
+		return await _wait_until_condition(String(step["wait_until"]), float(step.get("timeout_seconds", DEFAULT_CONDITION_TIMEOUT_SECONDS)))
 	if step.has("wait_frames"):
 		await _wait_frames(int(step["wait_frames"]))
 		return "waited %d frames" % int(step["wait_frames"])
@@ -80,7 +125,7 @@ func _play_step(step: Dictionary) -> String:
 		return await _drag(step["mouse_drag"])
 	if step.has("type_text"):
 		return await _type_text(String(step["type_text"]))
-	return "ERROR: unknown step %s. Use press, release, tap, hold, wait_seconds, wait_frames, mouse_move, mouse_click, mouse_drag or type_text." % JSON.stringify(step)
+	return "ERROR: unknown step %s. Use press, release, tap, hold, wait_seconds, wait_frames, wait_until, mouse_move, mouse_click, mouse_drag or type_text." % JSON.stringify(step)
 
 
 ## Sends a press or release of "key:...", "mouse:...", "joy_button:...", "joy_axis:..." or "action:...".
