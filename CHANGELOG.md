@@ -4,6 +4,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-26
+
 ### Added
 
 - News for the AI at the end of its tool results: when the person undoes or redoes a change (saying whether it was that AI's change), changes things by hand, or goes back to an earlier step in the panel.
@@ -12,6 +14,10 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - Releases include a `SHA256SUMS` file.
 - End-to-end tests with a C# project and a Rust GDExtension, run every night and before releases.
 - The addon folder contains a copy of the license.
+
+## [0.1.0] - 2026-11-26
+
+### Added
 
 - MCP server (Bun, TypeScript) shipped as a single executable per platform, with the Godot addon built in.
 - Godot editor addon with a localhost WebSocket bridge, secret token and an editor registry, so the server finds running editors by itself.
