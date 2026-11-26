@@ -7,6 +7,7 @@ extends RefCounted
 
 const PilotError := preload("utils/pilot_error.gd")
 const ValueCodec := preload("utils/value_codec.gd")
+const NodeSearch := preload("utils/node_search.gd")
 
 var plugin: EditorPlugin
 ## Collects editor output. Null on Godot versions older than 4.5 (no Logger class).
@@ -16,6 +17,8 @@ var addon_version: String
 var addon_directory: String
 ## Connection to the running game (bridge/game_debugger_bridge.gd). Set by the plugin.
 var game_bridge: EditorDebuggerPlugin
+## Permissions, activity list and checkpoints (session/pilot_session.gd). Set by the plugin.
+var session: RefCounted
 
 
 func _init(owning_plugin: EditorPlugin, captured_logs: Object, version: String, directory: String) -> void:
@@ -47,10 +50,14 @@ func find_node_in_edited_scene(node_path: String) -> Variant:
 		return scene_root
 	var found_node := scene_root.get_node_or_null(NodePath(node_path.trim_prefix("./")))
 	if found_node == null:
+		var similar_paths := NodeSearch.find_similar_node_paths(scene_root, node_path)
+		var hint := "Paths are relative to the scene root, for example \"Player/Sprite2D\". Use get_scene_tree to see the paths."
+		if not similar_paths.is_empty():
+			hint = "Did you mean: %s? " % ", ".join(similar_paths) + hint
 		return PilotError.new(
 			"NODE_NOT_FOUND",
 			"No node at '%s' in the scene '%s'." % [node_path, scene_root.scene_file_path],
-			"Paths are relative to the scene root, for example \"Player/Sprite2D\". Use get_scene_tree to see the paths."
+			hint
 		)
 	return found_node
 
