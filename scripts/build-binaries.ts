@@ -1,6 +1,7 @@
 /**
  * Compiles the MCP server into one standalone executable per platform with
- * `bun build --compile`. The executables contain Bun itself, the addon and the guides,
+ * `bun build --compile`, plus godot-wingman.js for computers that already have Bun. The
+ * executables contain Bun itself, the addon and the guides,
  * so people need nothing else installed.
  *
  * Usage: bun run build                    (all platforms)
@@ -10,6 +11,7 @@
  */
 import { join } from "node:path";
 import packageJson from "../package.json" with { type: "json" };
+import { BUNDLE_ASSET_NAME } from "../server/src/installation.ts";
 
 const repositoryRoot = join(import.meta.dir, "..");
 const entryPoint = join(repositoryRoot, "server", "src", "main.ts");
@@ -100,3 +102,18 @@ for (const target of targets) {
   }
 }
 console.log(`Built ${targets.length} executable(s) in dist/`);
+
+// The small build for computers that have Bun: one JavaScript file, the same on every
+// platform. Not part of the Windows-only build, which the release makes on Windows.
+if (!process.argv.includes("windows")) {
+  const bundlePath = join(outputDirectory, BUNDLE_ASSET_NAME);
+  const bundleProcess = Bun.spawn(
+    ["bun", "build", entryPoint, "--target=bun", "--minify", "--outfile", bundlePath],
+    { stdout: "inherit", stderr: "inherit" },
+  );
+  if ((await bundleProcess.exited) !== 0) {
+    console.error("Build failed for the JavaScript bundle.");
+    process.exit(1);
+  }
+  console.log(`Built ${BUNDLE_ASSET_NAME} in dist/`);
+}
