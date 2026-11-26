@@ -27,6 +27,13 @@ const HANDLER_GROUP_SCRIPTS: Array[Script] = [
 	preload("handlers/filesystem_handlers.gd"),
 	preload("handlers/viewport_handlers.gd"),
 	preload("handlers/play_handlers.gd"),
+	preload("handlers/animation_handlers.gd"),
+	preload("handlers/tilemap_handlers.gd"),
+	preload("handlers/ui_handlers.gd"),
+	preload("handlers/spatial_handlers.gd"),
+	preload("handlers/shader_handlers.gd"),
+	preload("handlers/audio_handlers.gd"),
+	preload("handlers/export_handlers.gd"),
 ]
 
 const GameDebuggerBridge := preload("bridge/game_debugger_bridge.gd")
@@ -57,6 +64,10 @@ func _enter_tree() -> void:
 	add_debugger_plugin(_game_debugger_bridge)
 	_export_filter = ExportFilter.new(addon_directory)
 	add_export_plugin(_export_filter)
+	# A command-line export (export_project) also loads editor plugins. It must not look
+	# like a second editor to the MCP server, so only the export filter is needed then.
+	if _is_command_line_export():
+		return
 
 	var context := EditorContext.new(self, _log_capture, _read_addon_version(addon_directory), addon_directory)
 	context.game_bridge = _game_debugger_bridge
@@ -134,6 +145,13 @@ func _start_log_capture(addon_directory: String) -> Object:
 	var log_capture: Object = log_capture_script.new()
 	OS.call("add_logger", log_capture)
 	return log_capture
+
+
+func _is_command_line_export() -> bool:
+	for argument in OS.get_cmdline_args():
+		if argument in ["--export-release", "--export-debug", "--export-pack", "--export-patch"]:
+			return true
+	return false
 
 
 func _read_addon_version(addon_directory: String) -> String:

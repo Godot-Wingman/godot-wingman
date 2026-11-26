@@ -133,7 +133,7 @@ func _create_scene(params: Dictionary) -> Variant:
 		return PilotError.new("ALREADY_EXISTS", "'%s' already exists." % scene_path, "Open it with open_scene, or pass overwrite: true.")
 
 	var root_type := String(params.get("root_type", "Node2D"))
-	var root_node: Variant = _instantiate_node_type(root_type)
+	var root_node: Variant = instantiate_node_type(root_type)
 	if root_node is PilotError:
 		return root_node
 	root_node.name = String(params.get("root_name", scene_path.get_file().get_basename().to_pascal_case()))
@@ -186,7 +186,7 @@ func _add_node(params: Dictionary) -> Variant:
 		return parent
 
 	var node_type := String(params.get("type", ""))
-	var new_node: Variant = _instantiate_node_type(node_type)
+	var new_node: Variant = instantiate_node_type(node_type)
 	if new_node is PilotError:
 		return new_node
 	if params.has("name"):
@@ -216,7 +216,8 @@ func _add_node(params: Dictionary) -> Variant:
 
 ## Creates a node from a class name ("Sprite2D"), a script class ("Player") or a scene
 ## file ("res://enemy.tscn", which becomes an instance of that scene).
-func _instantiate_node_type(node_type: String) -> Variant:
+## Shared with the ui handlers (build_ui).
+static func instantiate_node_type(node_type: String) -> Variant:
 	if node_type == "":
 		return PilotError.new("MISSING_TYPE", "No node type given.", "Use a class like \"Sprite2D\" or a scene path like \"res://enemy.tscn\".")
 

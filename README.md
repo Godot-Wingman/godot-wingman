@@ -24,7 +24,7 @@ Most Godot MCP servers edit scene files in the background and can take a screens
 ## Features
 
 - **Core** (always on): status, opening projects, editor state, running GDScript in the editor, Output panel and errors with stack traces, editor screenshots, version-matched Godot documentation and search, usage guides for the AI.
-- **Toolsets** switched on when needed: scene, inspector, script, project settings, signals, resources, file system, viewport, playing the game, input, live game inspection, debugging, animation, tile maps, UI, 3D, shaders, audio and export. See the [roadmap](PLAN.md); not all are finished yet.
+- **Toolsets** switched on when needed: scene, inspector, script, project settings, signals, resources, file system, viewport, playing the game, input, live game inspection, debugging, animation, tile maps, UI, 3D, shaders, audio and export. 118 tools in 20 toolsets; see the [changelog](CHANGELOG.md).
 - **Permission modes**: `full`, `confirm` (an Allow / Deny dialog in Godot before each change) and `read-only`.
 - **Any language**: GDScript, C# and GDExtension (Rust, C++) projects.
 - **Private by design**: everything runs on your computer. No accounts, no cloud, **no telemetry**.

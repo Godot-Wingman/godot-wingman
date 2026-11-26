@@ -15,7 +15,7 @@ How to work well:
 - Do not guess Godot APIs, they change between versions. Use search_docs and get_class_docs; they match the installed version.
 - Change in small steps and verify each one: read get_logs (levels ["error","script_error"]) after writing scripts, take a screenshot after visual changes, run and play the game after gameplay changes.
 - Prefer specific tools over execute_editor_script: they record undo history so the person can press Ctrl+Z. execute_editor_script is the fallback for anything else.
-- Tools come in toolsets. Only some are enabled to save context; call list_toolsets and toggle_toolsets to switch (for example enable "animation" before animating, "play" + "input" before playtesting).
+- Tools come in toolsets. Only some are enabled to save context; call list_toolsets and toggle_toolsets to switch (for example enable "animation" before animating, "tilemap" for levels, "ui" for menus and HUDs, "3d" for 3D scenes, "play" + "input" before playtesting, "export" to build the game).
 - The project may use C# or GDExtension (Rust, C++) besides GDScript; see get_guide topic "csharp-and-gdextension".
 - Paths: "res://" is the project folder. Node paths are relative to the open scene's root, for example "Player/Sprite2D".
 

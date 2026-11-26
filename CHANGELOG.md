@@ -8,7 +8,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 - MCP server (Bun, TypeScript) shipped as a single executable per platform, with the Godot addon built in.
 - Godot editor addon with a localhost WebSocket bridge, secret token and an editor registry, so the server finds running editors by itself.
-- Toolsets that can be switched on and off while running, with profiles (`minimal`, `default`, `edit`, `play`, `all`).
+- Toolsets that can be switched on and off while running, with profiles (`minimal`, `default`, `edit`, `2d`, `3d`, `play`, `all`).
 - Permission modes `full`, `confirm` (Allow / Deny dialog in the editor) and `read-only`.
 - Core tools: `get_status`, `launch_editor`, `install_addon`, `select_editor`, `list_toolsets`, `toggle_toolsets`, `get_editor_state`, `execute_editor_script`, `get_logs`, `take_editor_screenshot`, `get_class_docs`, `search_docs`, `get_guide`.
 - Godot class reference taken from the installed Godot version, plus live class information for GDExtension and script classes.
@@ -20,12 +20,20 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
   - `project`: project settings, input map, autoloads, editor plugins.
   - `signals`: list, connect (adds the handler method to the script) and disconnect.
   - `resources`: create and edit resources and .tres files.
-  - `filesystem`: list, read, write, search, move with reference updates, delete to the trash, dependencies, reimport.
+  - `filesystem`: list, read, write, search, move with reference updates, delete to the trash, dependencies, import options, reimport.
   - `viewport`: switch main screens and render the scene from any angle without moving the editor camera.
 - Playtesting toolsets:
   - `play`: run and stop the game, pause, step frames, time scale, wait until a condition is true.
   - `input`: real input events (keys, actions, gamepad, mouse clicks and drags, typing, timed sequences, clicking UI by text), timed inside the game.
   - `game_inspect`: screenshots, frame series, live node tree and values, method calls, GDScript in the game, UI control list.
   - `debug`: game output and errors with stack traces, performance monitors.
+- Building toolsets:
+  - `animation`: create and edit AnimationPlayer animations (any property, 3D transforms, method calls, sounds) with type-checked keys, pose preview, AnimationTree state machines.
+  - `tilemap`: TileSets from tile sheets (empty cells skipped, optional collision), placing and erasing tiles, terrain painting, levels shown as a text grid.
+  - `ui`: build a whole tree of Control nodes in one step, anchor presets, theme overrides, layout check that points out broken controls.
+  - `3d`: primitive meshes with material and collision, sky and sun presets, collision from imported models, measuring nodes (2D too), aiming cameras and lights.
+  - `shader`: write .gdshader files with compile errors, read uniforms, set ShaderMaterial values.
+  - `audio`: audio buses and effects, sound file details.
+  - `export`: export presets, export template check, building the game in a separate Godot process.
 - An export plugin keeps the addon out of exported games.
 - `launch_editor` keeps Godot's console output in a log and shows its end when startup fails.

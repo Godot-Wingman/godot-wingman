@@ -59,6 +59,11 @@ export class EditorManager {
     return connection.request<Result>(method, params, timeoutMilliseconds);
   }
 
+  /** The registry entry of the editor the tools use (project folder, Godot executable...). */
+  getActiveRegistration(): Promise<EditorRegistration> {
+    return this.chooseEditor();
+  }
+
   closeAll(): void {
     for (const connection of this.connectionsByProcessId.values()) {
       connection.close();

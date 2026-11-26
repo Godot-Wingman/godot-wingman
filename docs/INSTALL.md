@@ -122,7 +122,7 @@ Add options as arguments (`"args": [...]` in JSON configs, after `--` for Claude
 | `--mode full` | Default. The AI may use every enabled tool. Editor changes can be undone with Ctrl+Z. |
 | `--mode confirm` | Before every change, Godot shows an Allow / Deny dialog. |
 | `--mode read-only` | Tools that change anything are hidden. The AI can only look. |
-| `--toolsets edit` | Toolsets enabled at start: a profile (`minimal`, `default`, `edit`, `play`, `all`) or names like `core,scene,animation`. The AI can still switch toolsets later. |
+| `--toolsets edit` | Toolsets enabled at start: a profile (`minimal`, `default`, `edit`, `2d`, `3d`, `play`, `all`) or names like `core,scene,animation`. The AI can still switch toolsets later. |
 | `--project /path` | Which editor to use when several projects are open. |
 
 Example for Claude Desktop with confirmation and the playtesting tools:

@@ -3,6 +3,15 @@
  * add it to the list below.
  */
 import type { Toolset } from "../mcp/toolset-controller.ts";
+import { ANIMATION_TOOLS } from "./building/animation-tools.ts";
+import {
+  AUDIO_TOOLS,
+  EXPORT_TOOLS,
+  IMPORT_TOOLS,
+  SHADER_TOOLS,
+} from "./building/shader-audio-export-tools.ts";
+import { SPATIAL_TOOLS } from "./building/spatial-tools.ts";
+import { TILEMAP_TOOLS, UI_TOOLS } from "./building/tilemap-and-ui-tools.ts";
 import {
   executeEditorScriptTool,
   getEditorStateTool,
@@ -93,8 +102,8 @@ export const ALL_TOOLSETS: Toolset[] = [
     name: "filesystem",
     title: "File system",
     description:
-      "List, read, write, search, move (with reference updates) and delete project files; dependencies; reimport.",
-    tools: FILESYSTEM_TOOLS,
+      "List, read, write, search, move (with reference updates) and delete project files; dependencies; import options and reimport.",
+    tools: [...FILESYSTEM_TOOLS, ...IMPORT_TOOLS],
   },
   {
     name: "viewport",
@@ -128,5 +137,53 @@ export const ALL_TOOLSETS: Toolset[] = [
     title: "Debug",
     description: "The running game's printed output and errors with stack traces, and performance numbers.",
     tools: DEBUG_TOOLS,
+  },
+  {
+    name: "animation",
+    title: "Animation",
+    description:
+      "AnimationPlayer animations (tracks and keys for any property, sprite frames, 3D transforms, method calls, sounds), pose preview, and AnimationTree state machines.",
+    tools: ANIMATION_TOOLS,
+  },
+  {
+    name: "tilemap",
+    title: "Tilemaps",
+    description:
+      "TileSets from tile sheets (with collision), placing and erasing tiles, terrain painting, and reading a level as a text grid.",
+    tools: TILEMAP_TOOLS,
+  },
+  {
+    name: "ui",
+    title: "User interface",
+    description:
+      "Menus and HUDs: build a tree of Control nodes in one step, anchor presets, theme overrides (colors, fonts, styles), and a layout check.",
+    tools: UI_TOOLS,
+  },
+  {
+    name: "3d",
+    title: "3D",
+    description:
+      "Primitive meshes with materials and collision, sky and sun presets, collision for imported models, measuring sizes (also 2D), aiming cameras and lights.",
+    tools: SPATIAL_TOOLS,
+  },
+  {
+    name: "shader",
+    title: "Shaders",
+    description:
+      "Write .gdshader files (with compile errors), read their uniforms, set ShaderMaterial values.",
+    tools: SHADER_TOOLS,
+  },
+  {
+    name: "audio",
+    title: "Audio",
+    description: "Audio buses and effects (Music, SFX, reverb...) and sound file details.",
+    tools: AUDIO_TOOLS,
+  },
+  {
+    name: "export",
+    title: "Export",
+    description:
+      "Export presets, export template check, and building the finished game for Windows, Linux, macOS, Web, Android.",
+    tools: EXPORT_TOOLS,
   },
 ];
