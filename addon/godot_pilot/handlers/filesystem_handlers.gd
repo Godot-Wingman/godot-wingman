@@ -15,6 +15,9 @@ const DEFAULT_SEARCH_LIMIT := 100
 const TEXT_FILE_EXTENSIONS := ["gd", "cs", "tscn", "tres", "gdshader", "gdshaderinc", "cfg", "godot", "json", "md", "txt", "import", "gdextension", "csv", "xml", "yaml", "yml", "ini"]
 const COMPANION_SUFFIXES := [".uid", ".import"]
 
+const MAXIMUM_SCAN_WAIT_SECONDS := 20.0
+const SCAN_POLL_SECONDS := 0.1
+
 var _context: RefCounted
 
 
@@ -92,7 +95,7 @@ func _write_file(params: Dictionary) -> Variant:
 		return PilotError.new("WRITE_FAILED", "Could not write '%s': %s." % [file_path, error_string(FileAccess.get_open_error())])
 	file.store_string(String(params.get("content", "")))
 	file.close()
-	EditorInterface.get_resource_filesystem().update_file(file_path)
+	await _make_files_known(PackedStringArray([file_path]))
 	return {"written": file_path}
 
 
@@ -238,5 +241,43 @@ func _reimport_files(params: Dictionary) -> Variant:
 	var file_paths := PackedStringArray(params.get("paths", []))
 	if file_paths.is_empty():
 		return PilotError.new("NO_FILES", "paths is empty.")
-	EditorInterface.get_resource_filesystem().reimport_files(file_paths)
-	return {"reimported": Array(file_paths)}
+	for file_path in file_paths:
+		if not FileAccess.file_exists(file_path):
+			return PilotError.new("FILE_NOT_FOUND", "No file at '%s'." % file_path)
+	var file_system := EditorInterface.get_resource_filesystem()
+	var newly_found := await _make_files_known(file_paths)
+	var known_files := PackedStringArray()
+	for file_path in file_paths:
+		if not newly_found.has(file_path):
+			known_files.append(file_path)
+	if not known_files.is_empty():
+		file_system.reimport_files(known_files)
+	var types := {}
+	for file_path in file_paths:
+		var file_type := file_system.get_file_type(file_path)
+		types[file_path] = file_type if file_type != "" else "not a resource (not importable)"
+	return {"imported": types}
+
+
+## Tells the editor about new or changed files. Files in folders it has not scanned yet
+## (for example a folder just created by a script) need a full scan, which also imports
+## new assets. Returns the files that were found by that scan.
+func _make_files_known(file_paths: PackedStringArray) -> PackedStringArray:
+	var file_system := EditorInterface.get_resource_filesystem()
+	var unknown_files := PackedStringArray()
+	for file_path in file_paths:
+		if file_system.get_filesystem_path(file_path.get_base_dir()) == null or file_system.get_file_type(file_path) == "":
+			unknown_files.append(file_path)
+	for file_path in file_paths:
+		if not unknown_files.has(file_path):
+			file_system.update_file(file_path)
+	if unknown_files.is_empty():
+		return unknown_files
+	var scene_tree: SceneTree = _context.get_scene_tree()
+	file_system.scan()
+	var waited_seconds := 0.0
+	await scene_tree.process_frame
+	while (file_system.is_scanning() or file_system.get_file_type(unknown_files[0]) == "") and waited_seconds < MAXIMUM_SCAN_WAIT_SECONDS:
+		await scene_tree.create_timer(SCAN_POLL_SECONDS).timeout
+		waited_seconds += SCAN_POLL_SECONDS
+	return unknown_files

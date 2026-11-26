@@ -304,23 +304,32 @@ describe("audio and import options", () => {
     expect(information.mix_rate).toBe(22050);
   });
 
-  test("set_import_options changes how an image is imported", async () => {
+  test("reimport_files imports new images in a folder the editor has not scanned yet", async () => {
     if (!editor) return;
     await callAndExpectSuccess("execute_editor_script", {
       code: [
+        'DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://new_art"))',
         "var image := Image.create(8, 8, false, Image.FORMAT_RGBA8)",
         "image.fill(Color.GREEN)",
-        'image.save_png("res://green.png")',
-        'EditorInterface.get_resource_filesystem().update_file("res://green.png")',
-        'EditorInterface.get_resource_filesystem().reimport_files(PackedStringArray(["res://green.png"]))',
+        'image.save_png("res://new_art/green.png")',
       ].join("\n"),
     });
-    const options = JSON.parse(await callAndExpectSuccess("get_import_options", { path: "res://green.png" }));
+    const imported = JSON.parse(
+      await callAndExpectSuccess("reimport_files", { paths: ["res://new_art/green.png"] }),
+    );
+    expect(imported.imported["res://new_art/green.png"]).toBe("CompressedTexture2D");
+  });
+
+  test("set_import_options changes how an image is imported", async () => {
+    if (!editor) return;
+    const options = JSON.parse(
+      await callAndExpectSuccess("get_import_options", { path: "res://new_art/green.png" }),
+    );
     expect(options.importer).toBe("texture");
     expect(options.options["mipmaps/generate"]).toBe(false);
     const changed = JSON.parse(
       await callAndExpectSuccess("set_import_options", {
-        path: "res://green.png",
+        path: "res://new_art/green.png",
         options: { "mipmaps/generate": true },
       }),
     );

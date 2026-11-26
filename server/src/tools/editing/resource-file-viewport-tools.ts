@@ -142,7 +142,8 @@ export const getDependenciesTool = defineEditorTool({
 export const reimportFilesTool = defineEditorTool({
   name: "reimport_files",
   title: "Reimport files",
-  description: "Re-imports assets (images, sounds, 3D models) after their files or .import settings changed.",
+  description:
+    "Imports new asset files (images, sounds, 3D models), also in folders the editor has not scanned yet, and re-imports changed ones. Returns the resource type of each file.",
   inputShape: { paths: z.array(resourcePathField).min(1) },
   access: "write",
   editorMethod: "reimport_files",

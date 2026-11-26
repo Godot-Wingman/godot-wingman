@@ -34,7 +34,7 @@ func _ready() -> void:
 	# Keep answering while the game is paused.
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_start_log_capture()
-	_input_player = InputSequencePlayer.new(get_tree())
+	_input_player = InputSequencePlayer.new(get_tree(), self)
 	_register_handlers()
 	EngineDebugger.register_message_capture(CAPTURE_NAME, _on_debugger_message)
 	EngineDebugger.send_message("%s:ready" % CAPTURE_NAME, [OS.get_process_id()])

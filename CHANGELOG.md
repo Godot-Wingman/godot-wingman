@@ -37,3 +37,9 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
   - `export`: export presets, export template check, building the game in a separate Godot process.
 - An export plugin keeps the addon out of exported games.
 - `launch_editor` keeps Godot's console output in a log and shows its end when startup fails.
+- `input_sequence` steps can wait for game conditions (`wait_until`), and a failed sequence releases the keys it still holds.
+
+### Fixed
+
+- Taps are held for at least two physics ticks, so games that read `is_action_just_pressed()` in `_physics_process` do not miss them on high refresh rate screens.
+- `reimport_files` and `write_file` also work for files in folders the editor has not scanned yet.

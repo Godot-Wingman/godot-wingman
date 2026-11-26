@@ -65,6 +65,31 @@ describe("playing the game", () => {
     expect(await readPlayerX(editor)).toBeLessThan(startX);
   });
 
+  test("input_sequence waits for game conditions and releases held keys when a step fails", async () => {
+    if (!editor) return;
+    const startX = await readPlayerX(editor);
+    const outcome = parseJson<{ performed: string[] }>(
+      await editor.callTool("input_sequence", {
+        steps: [
+          { press: "key:Right" },
+          { wait_until: `node("Player").position.x > ${startX + 40}`, timeout_seconds: 5 },
+          { release: "key:Right" },
+        ],
+      }),
+    );
+    expect(outcome.performed[1]).toContain("waited until");
+    expect(await readPlayerX(editor)).toBeGreaterThan(startX + 40);
+
+    const failed = await editor.callTool("input_sequence", {
+      steps: [{ press: "key:Right" }, { wait_until: "false", timeout_seconds: 0.3 }],
+    });
+    expect(failed.isError).toBe(true);
+    expect(failed.text).toContain("released key:Right");
+    const stoppedX = await readPlayerX(editor);
+    await editor.callTool("wait_game", { seconds: 0.3 });
+    expect(await readPlayerX(editor)).toBeCloseTo(stoppedX, 0);
+  });
+
   test("wait_until returns once a condition becomes true", async () => {
     if (!editor) return;
     const result = parseJson<{ met: boolean }>(
