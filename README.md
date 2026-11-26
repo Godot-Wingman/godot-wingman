@@ -26,11 +26,11 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Godot-Wingman/godot-wingman/releases"><img alt="Latest release" src="https://img.shields.io/github/v/release/Godot-Wingman/godot-wingman?include_prereleases&style=for-the-badge&cacheSeconds=3600&logoColor=white&logo=github&color=8b5cf6&labelColor=2a1f3d&label=release"></a>
-  <a href="https://github.com/Godot-Wingman/godot-wingman/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/Godot-Wingman/godot-wingman/total?style=for-the-badge&cacheSeconds=3600&logoColor=white&logo=github&color=22c55e&labelColor=14301f"></a>
-  <a href="https://github.com/Godot-Wingman/godot-wingman/actions/workflows/ci.yml"><img alt="Tests" src="https://img.shields.io/github/actions/workflow/status/Godot-Wingman/godot-wingman/ci.yml?branch=main&style=for-the-badge&cacheSeconds=3600&logoColor=white&logo=githubactions&labelColor=1b2a40&label=tests"></a>
-  <a href="https://github.com/Godot-Wingman/godot-wingman/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/Godot-Wingman/godot-wingman?style=for-the-badge&cacheSeconds=3600&logoColor=white&logo=github&color=f0b400&labelColor=3a2f0a"></a>
-  <a href="https://github.com/Godot-Wingman/godot-wingman/commits/main"><img alt="Last commit" src="https://img.shields.io/github/last-commit/Godot-Wingman/godot-wingman?style=for-the-badge&cacheSeconds=3600&logoColor=white&logo=git&color=e5534b&labelColor=3a1d1d"></a>
+  <a href="https://github.com/Godot-Wingman/godot-wingman/releases"><img alt="Latest release" src="https://raw.githubusercontent.com/Godot-Wingman/godot-wingman/badges/release.svg"></a>
+  <a href="https://github.com/Godot-Wingman/godot-wingman/releases"><img alt="Downloads" src="https://raw.githubusercontent.com/Godot-Wingman/godot-wingman/badges/downloads.svg"></a>
+  <a href="https://github.com/Godot-Wingman/godot-wingman/actions/workflows/ci.yml"><img alt="Tests" src="https://raw.githubusercontent.com/Godot-Wingman/godot-wingman/badges/tests.svg"></a>
+  <a href="https://github.com/Godot-Wingman/godot-wingman/stargazers"><img alt="Stars" src="https://raw.githubusercontent.com/Godot-Wingman/godot-wingman/badges/stars.svg"></a>
+  <a href="https://github.com/Godot-Wingman/godot-wingman/commits/main"><img alt="Last commit" src="https://raw.githubusercontent.com/Godot-Wingman/godot-wingman/badges/last-commit.svg"></a>
 </p>
 
 <p align="center">
