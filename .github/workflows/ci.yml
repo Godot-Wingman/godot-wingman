@@ -75,7 +75,7 @@ jobs:
       - name: Screenshots, panel, approval dialog and a game window
         run: xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" bun test tests/windowed
         env:
-          GODOT_PILOT_WINDOWED: "1"
+          GODOT_WINGMAN_WINDOWED: "1"
 
   build:
     name: Build binaries
@@ -86,4 +86,4 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run build
       - name: The Linux binary starts
-        run: ./dist/godot-pilot-linux-x64 --version
+        run: ./dist/godot-wingman-linux-x64 --version

@@ -16,10 +16,10 @@ body:
       description: The tool name, its arguments and the error text, if you have them.
       render: text
   - type: input
-    id: godot-pilot-version
+    id: godot-wingman-version
     attributes:
-      label: Godot Pilot version
-      description: Output of `godot-pilot --version`.
+      label: Godot Wingman version
+      description: Output of `godot-wingman --version`.
     validations:
       required: true
   - type: input

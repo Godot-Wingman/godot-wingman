@@ -37,7 +37,7 @@ jobs:
           echo "GODOT_PATH=$executable" >> "$GITHUB_ENV"
       - run: bun test tests/languages/csharp.test.ts
         env:
-          GODOT_PILOT_CSHARP: "1"
+          GODOT_WINGMAN_CSHARP: "1"
 
   gdextension:
     name: Rust GDExtension (Godot 4.7.2)
@@ -61,4 +61,4 @@ jobs:
           echo "GODOT_PATH=$RUNNER_TEMP/godot/${file_name}" >> "$GITHUB_ENV"
       - run: bun test tests/languages/gdextension.test.ts
         env:
-          GODOT_PILOT_GDEXTENSION: "1"
+          GODOT_WINGMAN_GDEXTENSION: "1"

@@ -25,9 +25,9 @@ jobs:
         run: sh install/install.sh
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          GODOT_PILOT_INSTALL_DIR: ${{ runner.temp }}/godot-pilot
-          GODOT_PILOT_NO_SETUP: "1"
-      - run: '"$RUNNER_TEMP/godot-pilot/godot-pilot" --version'
+          GODOT_WINGMAN_INSTALL_DIR: ${{ runner.temp }}/godot-wingman
+          GODOT_WINGMAN_NO_SETUP: "1"
+      - run: '"$RUNNER_TEMP/godot-wingman/godot-wingman" --version'
 
   windows:
     name: install.ps1 (windows-latest)
@@ -39,7 +39,7 @@ jobs:
         run: ./install/install.ps1
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          GODOT_PILOT_INSTALL_DIR: ${{ runner.temp }}\godot-pilot
-          GODOT_PILOT_NO_SETUP: "1"
+          GODOT_WINGMAN_INSTALL_DIR: ${{ runner.temp }}\godot-wingman
+          GODOT_WINGMAN_NO_SETUP: "1"
       - shell: powershell
-        run: '& "$env:RUNNER_TEMP\godot-pilot\godot-pilot.exe" --version'
+        run: '& "$env:RUNNER_TEMP\godot-wingman\godot-wingman.exe" --version'
