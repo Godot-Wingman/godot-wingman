@@ -1,4 +1,31 @@
-# Godot Wingman
+<p align="center">
+  <img src="docs/images/logo.png" alt="Godot Wingman logo: a W with two wings" width="112">
+</p>
+
+<h1 align="center">Godot Wingman</h1>
+
+<p align="center">
+  <a href="https://github.com/Godot-wingman/godot-wingman/releases"><img alt="Latest release" src="https://img.shields.io/github/v/release/Godot-wingman/godot-wingman?style=flat-square&color=478cbf"></a>
+  <a href="LICENSE"><img alt="License: AGPL-3.0" src="https://img.shields.io/badge/license-AGPL--3.0-478cbf?style=flat-square"></a>
+  <img alt="Godot 4.5 or newer" src="https://img.shields.io/badge/Godot-4.5%2B-478cbf?style=flat-square&logo=godotengine&logoColor=white">
+  <img alt="No telemetry" src="https://img.shields.io/badge/telemetry-none-2ea043?style=flat-square">
+  <a href="https://github.com/Godot-wingman/godot-wingman/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/Godot-wingman/godot-wingman/actions/workflows/ci.yml/badge.svg"></a>
+</p>
+
+<p align="center">
+  <a href="https://godot-wingman.pages.dev"><b>Website</b></a> ·
+  <a href="README.md#quick-start"><b>Quick start</b></a> ·
+  <a href="docs/INSTALL.md"><b>Installation guide</b></a> ·
+  <a href="CHANGELOG.md"><b>Changelog</b></a>
+</p>
+
+<p align="center">
+  <img src="docs/images/editor.png" alt="The Godot editor with the Godot Wingman panel listing the AI's script edits" width="880">
+</p>
+
+<p align="center"><sub>
+  <a href="README.md">English</a> · <a href="README.tr.md">Türkçe</a> · <a href="README.es.md">Español</a> · <a href="README.pt-BR.md">Português (Brasil)</a> · <a href="README.de.md">Deutsch</a> · <a href="README.fr.md">Français</a> · <a href="README.ru.md">Русский</a> · <a href="README.zh-CN.md">简体中文</a> · <a href="README.ja.md">日本語</a> · <a href="README.ko.md">한국어</a>
+</sub></p>
 
 **Um servidor MCP que roda no seu computador e permite que qualquer assistente de IA use o editor do Godot do mesmo jeito que uma pessoa usaria.** Ele consegue ver o editor, montar cenas, mudar propriedades no inspetor, escrever e verificar scripts, rodar o jogo e jogá-lo com entradas reais de teclado, além de ler os erros e corrigi-los.
 

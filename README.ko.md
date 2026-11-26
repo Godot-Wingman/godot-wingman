@@ -1,4 +1,31 @@
-# Godot Wingman
+<p align="center">
+  <img src="docs/images/logo.png" alt="Godot Wingman logo: a W with two wings" width="112">
+</p>
+
+<h1 align="center">Godot Wingman</h1>
+
+<p align="center">
+  <a href="https://github.com/Godot-wingman/godot-wingman/releases"><img alt="Latest release" src="https://img.shields.io/github/v/release/Godot-wingman/godot-wingman?style=flat-square&color=478cbf"></a>
+  <a href="LICENSE"><img alt="License: AGPL-3.0" src="https://img.shields.io/badge/license-AGPL--3.0-478cbf?style=flat-square"></a>
+  <img alt="Godot 4.5 or newer" src="https://img.shields.io/badge/Godot-4.5%2B-478cbf?style=flat-square&logo=godotengine&logoColor=white">
+  <img alt="No telemetry" src="https://img.shields.io/badge/telemetry-none-2ea043?style=flat-square">
+  <a href="https://github.com/Godot-wingman/godot-wingman/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/Godot-wingman/godot-wingman/actions/workflows/ci.yml/badge.svg"></a>
+</p>
+
+<p align="center">
+  <a href="https://godot-wingman.pages.dev"><b>Website</b></a> ·
+  <a href="README.md#quick-start"><b>Quick start</b></a> ·
+  <a href="docs/INSTALL.md"><b>Installation guide</b></a> ·
+  <a href="CHANGELOG.md"><b>Changelog</b></a>
+</p>
+
+<p align="center">
+  <img src="docs/images/editor.png" alt="The Godot editor with the Godot Wingman panel listing the AI's script edits" width="880">
+</p>
+
+<p align="center"><sub>
+  <a href="README.md">English</a> · <a href="README.tr.md">Türkçe</a> · <a href="README.es.md">Español</a> · <a href="README.pt-BR.md">Português (Brasil)</a> · <a href="README.de.md">Deutsch</a> · <a href="README.fr.md">Français</a> · <a href="README.ru.md">Русский</a> · <a href="README.zh-CN.md">简体中文</a> · <a href="README.ja.md">日本語</a> · <a href="README.ko.md">한국어</a>
+</sub></p>
 
 **어떤 AI 어시스턴트든 사람처럼 Godot 편집기를 사용할 수 있게 해 주는, 내 컴퓨터에서 실행되는 MCP 서버입니다.** 편집기를 볼 수 있고, 씬을 만들고, 인스펙터에서 속성을 바꾸고, 스크립트를 작성해서 확인할 수 있습니다. 게임을 실제 입력으로 플레이하고, 오류를 읽고 고칠 수도 있습니다.
 

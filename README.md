@@ -1,12 +1,54 @@
-# Godot Wingman
+<p align="center">
+  <img src="docs/images/logo.png" alt="Godot Wingman logo: a W with two wings" width="112">
+</p>
 
-**A local MCP server that lets any AI assistant use the Godot editor the way a person does.** It can see the editor, build scenes, change properties in the inspector, write and check scripts, run the game and play it with real input, then read the errors and fix them.
+<h1 align="center">Godot Wingman</h1>
 
+<p align="center">
+  <b>Let your AI app use the Godot editor.</b><br>
+  It builds scenes, writes scripts, plays the game with real input, reads the errors and fixes them.
+</p>
+
+<p align="center">
+  <a href="https://github.com/Godot-wingman/godot-wingman/releases"><img alt="Latest release" src="https://img.shields.io/github/v/release/Godot-wingman/godot-wingman?style=flat-square&color=478cbf"></a>
+  <a href="LICENSE"><img alt="License: AGPL-3.0" src="https://img.shields.io/badge/license-AGPL--3.0-478cbf?style=flat-square"></a>
+  <img alt="Godot 4.5 or newer" src="https://img.shields.io/badge/Godot-4.5%2B-478cbf?style=flat-square&logo=godotengine&logoColor=white">
+  <img alt="No telemetry" src="https://img.shields.io/badge/telemetry-none-2ea043?style=flat-square">
+  <a href="https://github.com/Godot-wingman/godot-wingman/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/Godot-wingman/godot-wingman/actions/workflows/ci.yml/badge.svg"></a>
+</p>
+
+<p align="center">
+  <a href="https://godot-wingman.pages.dev"><b>Website</b></a> ·
+  <a href="#quick-start"><b>Quick start</b></a> ·
+  <a href="docs/INSTALL.md"><b>Installation guide</b></a> ·
+  <a href="CHANGELOG.md"><b>Changelog</b></a>
+</p>
+
+<p align="center">
+  <img src="docs/images/editor.png" alt="The Godot editor with the Godot Wingman panel listing the AI's script edits" width="880">
+</p>
+
+<p align="center"><sub>
+  <a href="README.tr.md">Türkçe</a> · <a href="README.es.md">Español</a> · <a href="README.pt-BR.md">Português (Brasil)</a> · <a href="README.de.md">Deutsch</a> · <a href="README.fr.md">Français</a> · <a href="README.ru.md">Русский</a> · <a href="README.zh-CN.md">简体中文</a> · <a href="README.ja.md">日本語</a> · <a href="README.ko.md">한국어</a>
+</sub></p>
+
+**Godot Wingman is a local MCP server that lets any AI assistant use the Godot editor the way a person does.** It works with Claude Code, Claude Desktop, Codex, Cursor, Gemini CLI, Windsurf, GitHub Copilot in VS Code and other MCP clients.
+
+> [!NOTE]
 > **Unofficial project.** Godot Wingman is a community project. It is not made by, affiliated with or endorsed by the Godot Foundation or the Godot Engine project. "Godot" is a trademark of the Godot Foundation.
 
-> **Status: early development (0.x).** Things change quickly and may break. Version 1.0 will only come once the project is stable and well tested by real users.
+> [!WARNING]
+> **Early development (0.x).** Things change quickly and may break. Version 1.0 will only come once the project is stable and well tested by real users.
 
-**Other languages:** [Türkçe](README.tr.md) · [Español](README.es.md) · [Português (Brasil)](README.pt-BR.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md) · [日本語](README.ja.md) · [한국어](README.ko.md)
+## See it work
+
+A real session: three requests, and screenshots taken through Godot Wingman along the way.
+
+| 1. *"Build a level with the Kenney tiles in art/."* | 2. *"Add a player that runs and jumps, coins and a score. Then play it."* | 3. *"Let the player jump twice in the air."* |
+|---|---|---|
+| <img src="docs/images/level.png" alt="A tile level built in the 2D editor"> | <img src="docs/images/game-coins.png" alt="The running game: the player jumps to coins, the score reads 3 of 9"> | <img src="docs/images/game-double-jump.png" alt="The running game: the player in a double jump"> |
+
+<sub>Game art: [Pixel Platformer](https://kenney.nl/assets/pixel-platformer) by Kenney (CC0).</sub>
 
 ## What it does
 
@@ -102,7 +144,8 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
 
 **Games you make with Godot Wingman are not affected.** The addon is an editor tool and is not included in exported games, so your game can use any license and be sold freely.
 
-### License questions
+<details>
+<summary><b>License questions</b></summary>
 
 - **Can I sell a game I made with Godot Wingman?** Yes. Exported games do not contain the addon (a test checks this on every change), and your game's code and assets are yours.
 - **Is the code the AI writes for me under the AGPL?** No. The AGPL covers Godot Wingman's own files: the server and the `addons/godot_wingman` folder. What you and the AI create in your project is yours.
@@ -111,3 +154,5 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
 - **When do I have to share source code?** Only when you give Godot Wingman itself to others, changed or not, or let others use a changed version over a network. Then you share that version's source under the AGPL-3.0.
 
 This is a summary, not legal advice; the [license text](LICENSE) is what counts.
+
+</details>
