@@ -4,6 +4,13 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Added
+
+- `create_project`: the AI creates a new, empty Godot project (name, renderer) and opens it.
+- One-line installers for Windows (`install/install.ps1`) and macOS/Linux (`install/install.sh`): download the newest release, check its checksum, install it and run setup. Files downloaded this way get no "unknown app" warning.
+- `godot-pilot setup` adds Godot Pilot to Codex, Claude Desktop, Claude Code, Cursor, Gemini CLI and Windsurf, keeping a copy of each changed settings file. Codex gets a longer tool timeout.
+- README in Spanish, Portuguese (Brazil), German, French, Russian, Simplified Chinese, Japanese and Korean.
+
 ## [0.2.0] - 2026-11-26
 
 ### Added

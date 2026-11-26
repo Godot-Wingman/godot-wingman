@@ -20,7 +20,7 @@ Godot Pilot works inside the open Godot editor, through an addon:
 - **You stay in control.** The Godot Pilot panel at the bottom of the editor lists every change the AI made and can put scripts, scenes, resources and settings back to how they were before any of them.
 - **You and the AI stay in step.** When you press Ctrl+Z, change something by hand or go back in the panel, the AI is told with its next step, so it does not keep working on a state that is gone.
 - **Several AIs, one editor.** AIs working in the same editor (for example Claude Code and Cursor) can tell each other what they are about to change, and you can write to all of them from the panel.
-- **Small context.** 120 tools in 20 toolsets: scene, inspector, script, project settings, signals, resources, file system, viewport, playing the game, input, live game inspection, debugging, animation, tile maps, UI, 3D, shaders, audio and export. The AI turns on only the groups it needs. See the [changelog](CHANGELOG.md).
+- **Small context.** 121 tools in 20 toolsets: scene, inspector, script, project settings, signals, resources, file system, viewport, playing the game, input, live game inspection, debugging, animation, tile maps, UI, 3D, shaders, audio and export. The AI turns on only the groups it needs. See the [changelog](CHANGELOG.md).
 
 ## Permission modes
 
@@ -50,15 +50,18 @@ Your AI client is a different matter: what the AI reads through Godot Pilot (cod
 
 ## Quick start
 
-1. Download the executable for your system from [Releases](https://github.com/Albis0/godot-pilot/releases).
-2. Add it to your AI client. For Claude Code:
+1. Install it with one command. Windows (PowerShell):
+   ```powershell
+   irm https://raw.githubusercontent.com/Albis0/godot-pilot/main/install/install.ps1 | iex
    ```
-   claude mcp add godot-pilot -- /path/to/godot-pilot
+   macOS and Linux:
+   ```sh
+   curl -fsSL https://raw.githubusercontent.com/Albis0/godot-pilot/main/install/install.sh | sh
    ```
-   Every other client (Claude Desktop, Cursor, VS Code, Codex, Gemini CLI, Windsurf...) is covered in the **[installation guide](docs/INSTALL.md)**.
-3. Ask your AI: *"Open my Godot project at C:/games/my-game and show me the main scene."*
+   It downloads the newest release, checks it, and adds it to the AI apps it finds (Codex, Claude Desktop, Claude Code, Cursor, Gemini CLI, Windsurf). Installing by hand and other clients: **[installation guide](docs/INSTALL.md)**.
+2. Restart your AI app and ask: *"Create a new Godot game in C:/games/my-game"*, or *"Open my Godot project at C:/games/my-game and show me the main scene."*
 
-The AI installs the addon into the project, opens the editor and connects. Requires **Godot 4.5 or newer**. Every change is tested with Godot 4.5.2, 4.6.3 and 4.7.2.
+The AI creates or opens the project, installs the addon, opens the editor and connects. Requires **Godot 4.5 or newer**. Every change is tested with Godot 4.5.2, 4.6.3 and 4.7.2.
 
 **Updating:** when a new version is out, the AI tells you and installs it if you agree. You can also run `godot-pilot update`.
 

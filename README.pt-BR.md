@@ -17,7 +17,7 @@ Para mais detalhes, veja o [README em inglês](README.md) e o [guia de instalaç
 - O painel do Godot Pilot, embaixo do editor, lista cada mudança feita pela IA e pode devolver scripts, cenas, recursos e configurações ao estado que tinham antes do passo que você escolher.
 - Quando você aperta Ctrl+Z, mexe em algo manualmente ou volta pelo painel, a IA fica sabendo no próximo passo; assim ela não continua trabalhando sobre um estado que não existe mais.
 - Várias IAs no mesmo editor (por exemplo, Claude Code e Cursor) podem avisar umas às outras o que vão mudar, e você pode escrever para todas pelo painel.
-- As ferramentas são organizadas em grupos (120 ferramentas em 20 grupos: cena, inspetor, script, animação, tilemap, interface, 3D, shader, áudio, exportação, jogar o jogo...). A IA ativa só os grupos de que precisa.
+- As ferramentas são organizadas em grupos (121 ferramentas em 20 grupos: cena, inspetor, script, animação, tilemap, interface, 3D, shader, áudio, exportação, jogar o jogo...). A IA ativa só os grupos de que precisa.
 
 ## Modos de permissão
 

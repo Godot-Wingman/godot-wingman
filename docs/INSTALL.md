@@ -2,7 +2,29 @@
 
 Godot Pilot is one executable file. Your AI client starts it in the background and talks to it; you never run it by hand.
 
-## 1. Download
+## Install with one command (recommended)
+
+**Windows** (PowerShell):
+
+```powershell
+irm https://raw.githubusercontent.com/Albis0/godot-pilot/main/install/install.ps1 | iex
+```
+
+**macOS and Linux** (Terminal):
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/Albis0/godot-pilot/main/install/install.sh | sh
+```
+
+The script downloads the newest release, checks its SHA-256 checksum, installs it (Windows: `%LOCALAPPDATA%\Programs\godot-pilot`, added to your PATH; macOS and Linux: `~/.local/bin`) and runs `godot-pilot setup`. That adds Godot Pilot to the AI apps it finds: Codex, Claude Desktop, Claude Code, Cursor, Gemini CLI and Windsurf. A copy of every settings file it changes is kept next to it (`.before-godot-pilot`). Restart those apps afterwards.
+
+Files downloaded by these scripts are not marked as coming from the internet, so Windows SmartScreen and macOS Gatekeeper do not warn about them. Read the scripts first if you like: [install.ps1](../install/install.ps1), [install.sh](../install/install.sh).
+
+Then ask your AI: *"Create a new Godot game in C:/games/my-game"* or *"Open my Godot project in D:/games/platformer"*.
+
+## Install by hand
+
+### 1. Download
 
 Get the file for your system from [Releases](https://github.com/Albis0/godot-pilot/releases):
 
@@ -15,16 +37,19 @@ Get the file for your system from [Releases](https://github.com/Albis0/godot-pil
 
 Put it somewhere permanent, for example `C:\Tools\godot-pilot.exe` or `~/bin/godot-pilot`.
 
+- **Windows:** the file is not signed yet, so Windows may say it is an unknown app. Run `Unblock-File C:\Tools\godot-pilot.exe` once in PowerShell, or choose More info → Run anyway.
 - **macOS:** the file is not signed yet. Allow it once with `xattr -d com.apple.quarantine ~/bin/godot-pilot` and `chmod +x ~/bin/godot-pilot`.
 - **Linux:** make it executable with `chmod +x ~/bin/godot-pilot`.
 
 Check it works: `godot-pilot doctor` lists the Godot versions it found.
 
-## 2. Add it to your AI client
+### 2. Add it to your AI client
+
+`godot-pilot setup` does this for every AI app it finds. To do it by hand:
 
 In the examples, replace `/path/to/godot-pilot` with the real path. On Windows, write paths in JSON with double backslashes (`C:\\Tools\\godot-pilot.exe`) or forward slashes (`C:/Tools/godot-pilot.exe`).
 
-### Claude Code
+#### Claude Code
 
 ```
 claude mcp add godot-pilot -- /path/to/godot-pilot
@@ -32,7 +57,7 @@ claude mcp add godot-pilot -- /path/to/godot-pilot
 
 Add `--scope user` to use it in every project.
 
-### Claude Desktop
+#### Claude Desktop
 
 Settings → Developer → Edit Config, then add to `claude_desktop_config.json`:
 
@@ -46,7 +71,7 @@ Settings → Developer → Edit Config, then add to `claude_desktop_config.json`
 
 Restart Claude Desktop.
 
-### Cursor
+#### Cursor
 
 `.cursor/mcp.json` in your project (or `~/.cursor/mcp.json` for all projects):
 
@@ -58,7 +83,7 @@ Restart Claude Desktop.
 }
 ```
 
-### VS Code (GitHub Copilot)
+#### VS Code (GitHub Copilot)
 
 `.vscode/mcp.json` in your project:
 
@@ -70,16 +95,18 @@ Restart Claude Desktop.
 }
 ```
 
-### OpenAI Codex CLI
+#### OpenAI Codex CLI
 
 `~/.codex/config.toml`:
 
 ```toml
 [mcp_servers.godot-pilot]
 command = "/path/to/godot-pilot"
+# Opening a project can take longer than Codex's default of 60 seconds per tool call.
+tool_timeout_sec = 300
 ```
 
-### Gemini CLI
+#### Gemini CLI
 
 `~/.gemini/settings.json`:
 
@@ -91,7 +118,7 @@ command = "/path/to/godot-pilot"
 }
 ```
 
-### Windsurf
+#### Windsurf
 
 `~/.codeium/windsurf/mcp_config.json`:
 
@@ -103,13 +130,13 @@ command = "/path/to/godot-pilot"
 }
 ```
 
-### Any other MCP client
+#### Any other MCP client
 
 Godot Pilot is a standard MCP server over stdio. Configure the command `/path/to/godot-pilot` with no arguments.
 
-## 3. Use it
+## Use it
 
-Ask your AI something like: *"Open my Godot project in D:/games/platformer and tell me what is in the main scene."*
+Ask your AI something like: *"Open my Godot project in D:/games/platformer and tell me what is in the main scene."* For a new game: *"Create a new 2D Godot game in C:/games/space-shooter."* (the AI calls `create_project`).
 
 The AI calls `launch_editor`, which installs the addon into `res://addons/godot_pilot`, enables it and opens the editor. You can also install the addon yourself: `godot-pilot install /path/to/project`.
 

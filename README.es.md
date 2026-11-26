@@ -17,7 +17,7 @@ Más detalles en el [README en inglés](README.md) y en la [guía de instalació
 - El panel de Godot Pilot, debajo del editor, muestra cada cambio que hizo la IA y puede devolver scripts, escenas, recursos y ajustes al estado que tenían antes del paso que elijas.
 - Cuando presionas Ctrl+Z, cambias algo a mano o vuelves atrás desde el panel, la IA se entera en su siguiente paso; así no sigue trabajando sobre un estado que ya no existe.
 - Varias IA que trabajan en el mismo editor (por ejemplo, Claude Code y Cursor) pueden avisarse entre sí qué van a cambiar, y tú puedes escribir a todas desde el panel.
-- Las herramientas están en grupos (120 herramientas en 20 grupos: escena, inspector, script, animación, tilemap, interfaz, 3D, shader, audio, exportación, jugar el juego...). La IA activa solo los grupos que necesita.
+- Las herramientas están en grupos (121 herramientas en 20 grupos: escena, inspector, script, animación, tilemap, interfaz, 3D, shader, audio, exportación, jugar el juego...). La IA activa solo los grupos que necesita.
 
 ## Modos de permiso
 

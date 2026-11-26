@@ -17,7 +17,7 @@ Details stehen im [englischen README](README.md) und im [Installationsleitfaden]
 - Das Godot-Pilot-Panel unten im Editor listet jede Änderung der KI auf. Es kann Skripte, Szenen, Ressourcen und Einstellungen auf den Stand vor einem beliebigen Schritt zurücksetzen.
 - Wenn du Strg+Z drückst, selbst etwas änderst oder im Panel zurückgehst, erfährt die KI das mit ihrem nächsten Schritt. Sie arbeitet dann nicht weiter an einem Zustand, den es nicht mehr gibt.
 - KIs, die im selben Editor arbeiten (zum Beispiel Claude Code und Cursor), können einander sagen, was sie ändern wollen. Du kannst aus dem Panel an alle schreiben.
-- Die Werkzeuge sind in Gruppen geordnet: 120 Werkzeuge in 20 Gruppen (Szene, Inspector, Skript, Animation, Tilemap, Oberfläche, 3D, Shader, Audio, Export, Spiel spielen ...). Die KI schaltet nur die Gruppen ein, die sie braucht.
+- Die Werkzeuge sind in Gruppen geordnet: 121 Werkzeuge in 20 Gruppen (Szene, Inspector, Skript, Animation, Tilemap, Oberfläche, 3D, Shader, Audio, Export, Spiel spielen ...). Die KI schaltet nur die Gruppen ein, die sie braucht.
 
 ## Berechtigungsmodi
 

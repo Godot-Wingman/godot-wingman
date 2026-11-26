@@ -17,7 +17,7 @@ Ayrıntılar için [İngilizce README](README.md) ve [kurulum rehberi](docs/INST
 - Editörün altındaki Godot Pilot paneli AI'ın yaptığı her değişikliği listeler; script, sahne, kaynak ve ayarları istediğin adımdan önceki haline döndürebilir.
 - Sen Ctrl+Z'ye bastığında, elle bir şey değiştirdiğinde ya da panelden geri döndüğünde AI bunu bir sonraki adımında öğrenir; artık var olmayan bir hal üzerinde çalışmaya devam etmez.
 - Aynı editörde çalışan AI'lar (örneğin Claude Code ve Cursor) ne değiştireceklerini birbirlerine söyleyebilir; sen de panelden hepsine yazabilirsin.
-- Araçlar gruplar halindedir (20 grupta 120 araç: sahne, inspector, script, animasyon, tilemap, arayüz, 3D, shader, ses, export, oyunu oynama...). AI sadece ihtiyacı olan grupları açar.
+- Araçlar gruplar halindedir (20 grupta 121 araç: sahne, inspector, script, animasyon, tilemap, arayüz, 3D, shader, ses, export, oyunu oynama...). AI sadece ihtiyacı olan grupları açar.
 
 ## İzin modları
 
