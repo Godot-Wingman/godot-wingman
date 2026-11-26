@@ -12,7 +12,7 @@ import { existsSync } from "node:fs";
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
-import type { ServerLaunchCommand } from "../installation.ts";
+import { BUNDLE_ASSET_NAME, type ServerLaunchCommand } from "../installation.ts";
 import { getOperatingSystemDataDirectory } from "../paths.ts";
 import { PRODUCT_NAME } from "../product.ts";
 
@@ -101,6 +101,26 @@ function describeLaunch(launch: ServerLaunchCommand): LaunchEntry {
   return launch.args.length > 0 ? { command, args: launch.args.map(toForwardSlashes) } : { command };
 }
 
+/**
+ * The server options (like "--mode", "confirm") of an existing entry, without the path
+ * of a bundle, so switching between the bundle and the executable keeps them.
+ */
+function findServerOptions(existingArguments: unknown): string[] {
+  if (!Array.isArray(existingArguments)) {
+    return [];
+  }
+  return existingArguments.filter(
+    (argument): argument is string => typeof argument === "string" && !argument.endsWith(BUNDLE_ASSET_NAME),
+  );
+}
+
+function withServerOptions(launchEntry: LaunchEntry, serverOptions: string[]): LaunchEntry {
+  const allArguments = [...(launchEntry.args ?? []), ...serverOptions];
+  return allArguments.length > 0
+    ? { command: launchEntry.command, args: allArguments }
+    : { command: launchEntry.command };
+}
+
 async function setUpJsonClient(client: JsonClient, launchEntry: LaunchEntry): Promise<SetupStep> {
   if (!existsSync(client.folder)) {
     return { client: client.name, outcome: "skipped", detail: "not installed" };
@@ -120,16 +140,17 @@ async function setUpJsonClient(client: JsonClient, launchEntry: LaunchEntry): Pr
   }
   const servers = (configuration[client.serversKey] ?? {}) as Record<string, unknown>;
   const existingEntry = servers[PRODUCT_NAME] as Record<string, unknown> | undefined;
+  const wantedEntry = withServerOptions(launchEntry, findServerOptions(existingEntry?.args));
   if (
     existingEntry !== undefined &&
-    existingEntry.command === launchEntry.command &&
-    JSON.stringify(existingEntry.args ?? []) === JSON.stringify(launchEntry.args ?? [])
+    existingEntry.command === wantedEntry.command &&
+    JSON.stringify(existingEntry.args ?? []) === JSON.stringify(wantedEntry.args ?? [])
   ) {
     return { client: client.name, outcome: "already set up", detail: client.configFile };
   }
   // Other keys of an existing entry (env, timeout...) are kept.
   const { args: _previousArguments, ...keptKeys } = existingEntry ?? {};
-  servers[PRODUCT_NAME] = { ...keptKeys, ...launchEntry };
+  servers[PRODUCT_NAME] = { ...keptKeys, ...wantedEntry };
   configuration[client.serversKey] = servers;
   await saveWithBackup(client.configFile, `${JSON.stringify(configuration, null, 2)}\n`);
   return {
@@ -145,10 +166,13 @@ async function setUpCodex(codexFolder: string, launchEntry: LaunchEntry): Promis
   }
   const configFile = join(codexFolder, "config.toml");
   const text = existsSync(configFile) ? await readFile(configFile, "utf8") : "";
-  const launchLines = [`command = "${launchEntry.command}"`];
-  if (launchEntry.args) {
-    launchLines.push(`args = [${launchEntry.args.map((argument) => `"${argument}"`).join(", ")}]`);
-  }
+  const describeInToml = (entry: LaunchEntry) => {
+    const lines = [`command = "${entry.command}"`];
+    if (entry.args) {
+      lines.push(`args = [${entry.args.map((argument) => `"${argument}"`).join(", ")}]`);
+    }
+    return lines;
+  };
 
   const header = new RegExp(`^\\[mcp_servers\\.["']?${PRODUCT_NAME}["']?\\][^\\n]*\\n?`, "m").exec(text);
   if (header) {
@@ -159,6 +183,10 @@ async function setUpCodex(codexFolder: string, launchEntry: LaunchEntry): Promis
     const bodyLines = text.slice(bodyStart, bodyEnd).split("\n");
     const isLaunchLine = (line: string) => /^(command|args)\s*=/.test(line.trim());
     const currentLaunchLines = bodyLines.filter(isLaunchLine).map((line) => line.trim());
+    const currentArguments = [
+      ...(currentLaunchLines.find((line) => line.startsWith("args"))?.matchAll(/"((?:[^"\\]|\\.)*)"/g) ?? []),
+    ].map((match) => match[1] ?? "");
+    const launchLines = describeInToml(withServerOptions(launchEntry, findServerOptions(currentArguments)));
     if (currentLaunchLines.join("\n") === launchLines.join("\n")) {
       return { client: "Codex", outcome: "already set up", detail: configFile };
     }
@@ -169,7 +197,12 @@ async function setUpCodex(codexFolder: string, launchEntry: LaunchEntry): Promis
 
   // Opening the editor and importing a project can take longer than Codex's default
   // 60 seconds per tool call.
-  const section = [`[mcp_servers.${PRODUCT_NAME}]`, ...launchLines, "tool_timeout_sec = 300", ""].join("\n");
+  const section = [
+    `[mcp_servers.${PRODUCT_NAME}]`,
+    ...describeInToml(launchEntry),
+    "tool_timeout_sec = 300",
+    "",
+  ].join("\n");
   const separator = text === "" || text.endsWith("\n\n") ? "" : text.endsWith("\n") ? "\n" : "\n\n";
   await saveWithBackup(configFile, `${text}${separator}${section}`);
   return { client: "Codex", outcome: "added", detail: configFile };

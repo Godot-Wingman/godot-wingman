@@ -138,3 +138,25 @@ test("Claude Code gets the bundle command with its argument", async () => {
   expect(commands[0]).toEqual(["mcp", "remove", "--scope", "user", "godot-wingman"]);
   expect(commands[1]).toEqual(["mcp", "add", "--scope", "user", "godot-wingman", "--", BUN, BUNDLE]);
 });
+
+test("server options like --mode are kept when switching to the bundle", async () => {
+  await mkdir(join(home, ".codex"));
+  await mkdir(join(home, ".cursor"));
+  await writeFile(
+    join(home, ".codex", "config.toml"),
+    '[mcp_servers.godot-wingman]\ncommand = "C:/Tools/godot-wingman.exe"\nargs = ["--mode", "confirm"]\n',
+  );
+  await writeFile(
+    join(home, ".cursor", "mcp.json"),
+    JSON.stringify({
+      mcpServers: { "godot-wingman": { command: "C:/Tools/godot-wingman.exe", args: ["--mode", "confirm"] } },
+    }),
+  );
+  await runSetup(null, BUNDLE_LAUNCH);
+  const bundle = "C:/Users/me/AppData/Local/Programs/godot-wingman/godot-wingman.js";
+  expect(await readFile(join(home, ".codex", "config.toml"), "utf8")).toContain(
+    `args = ["${bundle}", "--mode", "confirm"]`,
+  );
+  const cursorConfig = JSON.parse(await readFile(join(home, ".cursor", "mcp.json"), "utf8"));
+  expect(cursorConfig.mcpServers["godot-wingman"].args).toEqual([bundle, "--mode", "confirm"]);
+});
