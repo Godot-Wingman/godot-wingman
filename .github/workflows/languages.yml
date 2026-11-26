@@ -1,0 +1,64 @@
+# End-to-end tests with a C# project and a Rust GDExtension.
+# They take longer (they install .NET and Rust and build code), so they run apart from
+# the main CI: every night, before every release tag, and when started by hand
+# (Actions > Languages > Run workflow).
+name: Languages
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  csharp:
+    name: C# project (Godot .NET 4.7.2)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - run: bun install --frozen-lockfile
+      - name: Download Godot .NET 4.7.2
+        run: |
+          folder_name="Godot_v4.7.2-stable_mono_linux_x86_64"
+          curl --fail --location --silent --show-error \
+            "https://github.com/godotengine/godot/releases/download/4.7.2-stable/${folder_name}.zip" \
+            --output godot.zip
+          unzip -q godot.zip -d "$RUNNER_TEMP/godot"
+          executable="$RUNNER_TEMP/godot/${folder_name}/Godot_v4.7.2-stable_mono_linux.x86_64"
+          chmod +x "$executable"
+          echo "GODOT_PATH=$executable" >> "$GITHUB_ENV"
+      - run: bun test tests/languages/csharp.test.ts
+        env:
+          GODOT_PILOT_CSHARP: "1"
+
+  gdextension:
+    name: Rust GDExtension (Godot 4.7.2)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: tests/languages/rust-extension
+      - run: bun install --frozen-lockfile
+      - name: Download Godot 4.7.2
+        run: |
+          file_name="Godot_v4.7.2-stable_linux.x86_64"
+          curl --fail --location --silent --show-error \
+            "https://github.com/godotengine/godot/releases/download/4.7.2-stable/${file_name}.zip" \
+            --output godot.zip
+          unzip -q godot.zip -d "$RUNNER_TEMP/godot"
+          chmod +x "$RUNNER_TEMP/godot/${file_name}"
+          echo "GODOT_PATH=$RUNNER_TEMP/godot/${file_name}" >> "$GITHUB_ENV"
+      - run: bun test tests/languages/gdextension.test.ts
+        env:
+          GODOT_PILOT_GDEXTENSION: "1"
