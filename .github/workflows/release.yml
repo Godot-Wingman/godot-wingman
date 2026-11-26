@@ -49,14 +49,4 @@ jobs:
           prerelease_flag=""
           # Versions below 1.0 are pre-releases.
           if [[ "${GITHUB_REF_NAME}" == v0.* ]]; then prerelease_flag="--prerelease"; fi
-          # docs/release-notes/<tag>.md gives the title (its first line) and the top of the
-          # text; get-it.md and GitHub's commit list follow it.
-          notes_source="docs/release-notes/${GITHUB_REF_NAME}.md"
-          if [[ -f "${notes_source}" ]]; then
-            release_title="${GITHUB_REF_NAME} · $(head -n 1 "${notes_source}" | sed 's/^# //')"
-            notes_file="${RUNNER_TEMP}/release-notes.md"
-            { tail -n +2 "${notes_source}"; echo; cat docs/release-notes/get-it.md; } > "${notes_file}"
-            gh release create "${GITHUB_REF_NAME}" dist/* --title "${release_title}" --notes-file "${notes_file}" --generate-notes ${prerelease_flag}
-          else
-            gh release create "${GITHUB_REF_NAME}" dist/* --generate-notes ${prerelease_flag}
-          fi
+          gh release create "${GITHUB_REF_NAME}" dist/* --generate-notes ${prerelease_flag}
