@@ -10,7 +10,7 @@ import { mkdir, readdir, rm, stat } from "node:fs/promises";
 import { dirname, join, relative } from "node:path";
 import { ADDON_FOLDER_NAME, ADDON_PLUGIN_CONFIG_RESOURCE_PATH } from "../product.ts";
 import { bundledAddonFiles } from "./addon-files.generated.ts";
-import { addEnabledEditorPlugin } from "./project-file.ts";
+import { addEnabledEditorPlugin, removeEnabledEditorPlugin } from "./project-file.ts";
 
 export interface AddonInstallResult {
   addonDirectory: string;
@@ -72,7 +72,10 @@ export async function installAddon(projectPath: string): Promise<AddonInstallRes
 
   const filesRemoved = await removeFilesFromOlderVersions(addonDirectory);
 
-  const projectFileText = await Bun.file(projectFilePath).text();
+  const projectFileText = await removeAddonFromBeforeTheRename(
+    projectPath,
+    await Bun.file(projectFilePath).text(),
+  );
   const { text: updatedProjectFileText, changed } = addEnabledEditorPlugin(
     projectFileText,
     ADDON_PLUGIN_CONFIG_RESOURCE_PATH,
@@ -89,6 +92,24 @@ export async function installAddon(projectPath: string): Promise<AddonInstallRes
     filesRemoved,
     pluginWasAlreadyEnabled: !changed,
   };
+}
+
+/** Folder name of the addon in versions 0.1 to 0.3, before the project was renamed. */
+const ADDON_FOLDER_NAME_BEFORE_THE_RENAME = "godot_pilot";
+
+/**
+ * Deletes the addon of versions 0.1 to 0.3 (addons/godot_pilot), so a project never runs
+ * both. Returns the project file text without that plugin turned on.
+ */
+async function removeAddonFromBeforeTheRename(projectPath: string, projectFileText: string): Promise<string> {
+  await rm(join(projectPath, "addons", ADDON_FOLDER_NAME_BEFORE_THE_RENAME), {
+    recursive: true,
+    force: true,
+  });
+  return removeEnabledEditorPlugin(
+    projectFileText,
+    `res://addons/${ADDON_FOLDER_NAME_BEFORE_THE_RENAME}/plugin.cfg`,
+  ).text;
 }
 
 /**

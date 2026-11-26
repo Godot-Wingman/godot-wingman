@@ -60,6 +60,34 @@ export function addEnabledEditorPlugin(
   return { text: lines.join(lineBreak), changed: true };
 }
 
+/** Removes `pluginConfigPath` from the list of enabled editor plugins, if it is there. */
+export function removeEnabledEditorPlugin(
+  projectFileText: string,
+  pluginConfigPath: string,
+): { text: string; changed: boolean } {
+  const lineBreak = projectFileText.includes("\r\n") ? "\r\n" : "\n";
+  const lines = projectFileText.split(/\r?\n/);
+  const sectionLineIndex = lines.findIndex((line) => line.trim() === EDITOR_PLUGINS_SECTION);
+  if (sectionLineIndex === -1) {
+    return { text: projectFileText, changed: false };
+  }
+  const sectionEndIndex = findSectionEnd(lines, sectionLineIndex);
+  for (let lineIndex = sectionLineIndex + 1; lineIndex < sectionEndIndex; lineIndex++) {
+    const line = lines[lineIndex] ?? "";
+    if (!line.startsWith(ENABLED_PLUGINS_KEY)) {
+      continue;
+    }
+    const enabledPlugins = parsePackedStringArray(line.slice(ENABLED_PLUGINS_KEY.length));
+    if (!enabledPlugins.includes(pluginConfigPath)) {
+      return { text: projectFileText, changed: false };
+    }
+    const remainingPlugins = enabledPlugins.filter((plugin) => plugin !== pluginConfigPath);
+    lines[lineIndex] = `${ENABLED_PLUGINS_KEY}${formatPackedStringArray(remainingPlugins)}`;
+    return { text: lines.join(lineBreak), changed: true };
+  }
+  return { text: projectFileText, changed: false };
+}
+
 export function isEditorPluginEnabled(projectFileText: string, pluginConfigPath: string): boolean {
   return addEnabledEditorPlugin(projectFileText, pluginConfigPath).changed === false;
 }

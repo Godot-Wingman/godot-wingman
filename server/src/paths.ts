@@ -1,8 +1,8 @@
 /**
- * Where Godot Pilot keeps its files on this computer.
+ * Where Godot Wingman keeps its files on this computer.
  *
  * The folder must be the same one the Godot addon uses, which is
- * `OS.get_data_dir()/godot-pilot` in GDScript. Godot's data folder is:
+ * `OS.get_data_dir()/godot-wingman` in GDScript. Godot's data folder is:
  *   Windows: %APPDATA%                         (C:\Users\<name>\AppData\Roaming)
  *   macOS:   ~/Library/Application Support
  *   Linux:   $XDG_DATA_HOME or ~/.local/share

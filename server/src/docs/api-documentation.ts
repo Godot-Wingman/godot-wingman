@@ -415,7 +415,7 @@ async function ensureApiDumpFile(godotExecutable: string, godotVersion: string):
 
   await mkdir(cacheDirectory, { recursive: true });
   // Godot writes extension_api.json into its working folder, so give it an empty one.
-  const workingDirectory = await mkdtemp(join(tmpdir(), "godot-pilot-api-"));
+  const workingDirectory = await mkdtemp(join(tmpdir(), "godot-wingman-api-"));
   try {
     const dumpProcess = Bun.spawn([godotExecutable, "--headless", "--dump-extension-api-with-docs"], {
       cwd: workingDirectory,
