@@ -8,8 +8,8 @@ extends Node
 ## is not started from the editor (exported or run by hand) there is no debugger, and
 ## this node removes itself immediately.
 
-const CAPTURE_NAME := "godot_pilot"
-const PilotError := preload("../utils/pilot_error.gd")
+const CAPTURE_NAME := "godot_wingman"
+const WingmanError := preload("../utils/wingman_error.gd")
 const NodeSearch := preload("../utils/node_search.gd")
 const ValueCodec := preload("../utils/value_codec.gd")
 const ImageEncoding := preload("../utils/image_encoding.gd")
@@ -51,7 +51,7 @@ func _exit_tree() -> void:
 func _start_log_capture() -> void:
 	if not ClassDB.class_exists("Logger") or not OS.has_method("add_logger"):
 		return
-	# This script lives in addons/godot_pilot/runtime; the logger is in addons/godot_pilot/logging.
+	# This script lives in addons/godot_wingman/runtime; the logger is in addons/godot_wingman/logging.
 	var addon_directory: String = get_script().resource_path.get_base_dir().get_base_dir()
 	_log_capture = load(addon_directory.path_join("logging/log_capture.gd")).new()
 	OS.call("add_logger", _log_capture)
@@ -80,7 +80,7 @@ func _register_handlers() -> void:
 	}
 
 
-## Called by Godot for every debugger message starting with "godot_pilot:".
+## Called by Godot for every debugger message starting with "godot_wingman:".
 func _on_debugger_message(message: String, data: Array) -> bool:
 	if message != "request" or data.size() < 3:
 		return false
@@ -93,8 +93,8 @@ func _run_request(request_id: int, method_name: String, params: Dictionary) -> v
 	if _handlers_by_method.has(method_name):
 		result = await _handlers_by_method[method_name].call(params)
 	else:
-		result = PilotError.new("UNKNOWN_METHOD", "The game bridge does not know '%s'." % method_name)
-	if result is PilotError:
+		result = WingmanError.new("UNKNOWN_METHOD", "The game bridge does not know '%s'." % method_name)
+	if result is WingmanError:
 		EngineDebugger.send_message("%s:response" % CAPTURE_NAME, [request_id, false, result.to_dictionary()])
 	else:
 		EngineDebugger.send_message("%s:response" % CAPTURE_NAME, [request_id, true, result])
@@ -119,7 +119,7 @@ func _find_node(node_path: String) -> Variant:
 			similar_paths = NodeSearch.find_similar_node_paths(current_scene, node_path)
 		if not similar_paths.is_empty():
 			hint = "Did you mean: %s? " % ", ".join(similar_paths) + hint
-		return PilotError.new("NODE_NOT_FOUND", "No node at '%s' in the running game." % node_path, hint)
+		return WingmanError.new("NODE_NOT_FOUND", "No node at '%s' in the running game." % node_path, hint)
 	return found_node
 
 
@@ -150,7 +150,7 @@ func _get_state(_params: Dictionary) -> Dictionary:
 
 func _get_game_tree(params: Dictionary) -> Variant:
 	var start_node: Variant = _find_node(String(params.get("node_path", ".")))
-	if start_node is PilotError:
+	if start_node is WingmanError:
 		return start_node
 	var tree_lines: Array[String] = []
 	_append_tree_lines(start_node, 0, int(params.get("max_depth", DEFAULT_TREE_DEPTH)), tree_lines)
@@ -180,7 +180,7 @@ func _append_tree_lines(node: Node, depth: int, max_depth: int, tree_lines: Arra
 
 func _get_properties(params: Dictionary) -> Variant:
 	var node: Variant = _find_node(String(params.get("node_path", ".")))
-	if node is PilotError:
+	if node is WingmanError:
 		return node
 	var requested_names: Array = params.get("names", []) if params.get("names") is Array else []
 	var name_filter := String(params.get("filter", "")).to_lower()
@@ -202,7 +202,7 @@ func _get_properties(params: Dictionary) -> Variant:
 
 func _screenshot(params: Dictionary) -> Variant:
 	if DisplayServer.get_name() == "headless":
-		return PilotError.new("NO_DISPLAY", "The game runs headless, so there is no picture.", "Run the game with a window.")
+		return WingmanError.new("NO_DISPLAY", "The game runs headless, so there is no picture.", "Run the game with a window.")
 	await RenderingServer.frame_post_draw
 	var encoded := ImageEncoding.encode_bytes(get_viewport().get_texture().get_image(), params)
 	encoded["viewport_size"] = var_to_str(get_viewport().get_visible_rect().size)
@@ -212,7 +212,7 @@ func _screenshot(params: Dictionary) -> Variant:
 ## Several screenshots over time, to see movement and animation.
 func _capture_frames(params: Dictionary) -> Variant:
 	if DisplayServer.get_name() == "headless":
-		return PilotError.new("NO_DISPLAY", "The game runs headless, so there is no picture.")
+		return WingmanError.new("NO_DISPLAY", "The game runs headless, so there is no picture.")
 	var frame_count := clampi(int(params.get("count", 4)), 2, MAX_CAPTURED_FRAMES)
 	var interval_seconds := maxf(float(params.get("interval_seconds", 0.25)), 0.0)
 	var frames: Array = []
@@ -251,7 +251,7 @@ func _list_ui_elements(params: Dictionary) -> Dictionary:
 
 func _set_properties(params: Dictionary) -> Variant:
 	var node: Variant = _find_node(String(params.get("node_path", ".")))
-	if node is PilotError:
+	if node is WingmanError:
 		return node
 	var changed := {}
 	var new_values: Dictionary = params.get("properties", {}) if params.get("properties") is Dictionary else {}
@@ -260,7 +260,7 @@ func _set_properties(params: Dictionary) -> Variant:
 		var value_class: String = current_value.get_class() if current_value is Object else ""
 		var conversion := ValueCodec.from_json_value(new_values[property_path], typeof(current_value), value_class, get_tree().current_scene)
 		if not conversion["ok"]:
-			return PilotError.new("INVALID_VALUE", "%s: %s" % [property_path, conversion["error"]])
+			return WingmanError.new("INVALID_VALUE", "%s: %s" % [property_path, conversion["error"]])
 		node.set_indexed(NodePath(String(property_path)), conversion["value"])
 		changed[property_path] = ValueCodec.to_json_value(node.get_indexed(NodePath(String(property_path))))
 	return {"node": _describe_path(node), "changed": changed}
@@ -268,11 +268,11 @@ func _set_properties(params: Dictionary) -> Variant:
 
 func _call_method(params: Dictionary) -> Variant:
 	var node: Variant = _find_node(String(params.get("node_path", ".")))
-	if node is PilotError:
+	if node is WingmanError:
 		return node
 	var method_name := String(params.get("method", ""))
 	if not node.has_method(method_name):
-		return PilotError.new("METHOD_NOT_FOUND", "%s has no method '%s'." % [node.name, method_name])
+		return WingmanError.new("METHOD_NOT_FOUND", "%s has no method '%s'." % [node.name, method_name])
 	var arguments: Array = []
 	for argument in params.get("arguments", []):
 		arguments.append(ValueCodec.from_json_value(argument, TYPE_NIL)["value"])
@@ -290,7 +290,7 @@ func _execute_script(params: Dictionary) -> Variant:
 	script.source_code = prepared_source["source"]
 	var compile_result := script.reload()
 	if compile_result != OK:
-		return PilotError.new(
+		return WingmanError.new(
 			"SCRIPT_COMPILE_ERROR",
 			"The code did not compile (%s)." % error_string(compile_result),
 			"Line numbers refer to your code. Use tabs for indentation.",
@@ -322,7 +322,7 @@ func _execute_script(params: Dictionary) -> Variant:
 func _play_input(params: Dictionary) -> Variant:
 	var outcome: Dictionary = await _input_player.play(params.get("steps", []))
 	if outcome.has("error"):
-		return PilotError.new("INVALID_INPUT_STEP", String(outcome["error"]), "", outcome.get("performed"))
+		return WingmanError.new("INVALID_INPUT_STEP", String(outcome["error"]), "", outcome.get("performed"))
 	return outcome
 
 
@@ -330,7 +330,7 @@ func _click_ui_element(params: Dictionary) -> Variant:
 	var target: Control = null
 	if params.has("node_path"):
 		var found: Variant = _find_node(String(params["node_path"]))
-		if found is PilotError:
+		if found is WingmanError:
 			return found
 		target = found as Control
 	elif params.has("text"):
@@ -340,7 +340,7 @@ func _click_ui_element(params: Dictionary) -> Variant:
 				target = control
 				break
 	if target == null:
-		return PilotError.new("UI_ELEMENT_NOT_FOUND", "No visible control matches.", "Use list_ui_elements to see the controls and their text.")
+		return WingmanError.new("UI_ELEMENT_NOT_FOUND", "No visible control matches.", "Use list_ui_elements to see the controls and their text.")
 	var center := target.get_global_rect().get_center()
 	return await _input_player.play([{"mouse_click": [center.x, center.y]}])
 
@@ -351,14 +351,14 @@ func _wait_until(params: Dictionary) -> Variant:
 	var condition := String(params.get("condition", ""))
 	var expression := Expression.new()
 	if expression.parse(condition, ["scene", "tree"]) != OK:
-		return PilotError.new("INVALID_EXPRESSION", "Could not parse '%s': %s" % [condition, expression.get_error_text()])
+		return WingmanError.new("INVALID_EXPRESSION", "Could not parse '%s': %s" % [condition, expression.get_error_text()])
 	var timeout_seconds := float(params.get("timeout_seconds", 10.0))
 	var start_milliseconds := Time.get_ticks_msec()
 	var last_value: Variant = null
 	while (Time.get_ticks_msec() - start_milliseconds) / 1000.0 < timeout_seconds:
 		last_value = expression.execute([get_tree().current_scene, get_tree()], self, false)
 		if expression.has_execute_failed():
-			return PilotError.new("EXPRESSION_FAILED", "'%s' failed: %s" % [condition, expression.get_error_text()])
+			return WingmanError.new("EXPRESSION_FAILED", "'%s' failed: %s" % [condition, expression.get_error_text()])
 		if last_value:
 			return {"met": true, "after_seconds": snappedf((Time.get_ticks_msec() - start_milliseconds) / 1000.0, 0.01)}
 		await get_tree().process_frame

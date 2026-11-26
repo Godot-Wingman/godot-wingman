@@ -57,7 +57,7 @@ var _next_connection_id := 1
 
 
 func _init(dispatcher: RefCounted, token: String, editor_information: Dictionary) -> void:
-	name = "GodotPilotBridgeServer"
+	name = "GodotWingmanBridgeServer"
 	_dispatcher = dispatcher
 	_token = token
 	_editor_information = editor_information

@@ -4,14 +4,14 @@ extends EditorDebuggerPlugin
 ##
 ## When a game is started from the editor, Godot connects it to the editor's debugger.
 ## The game bridge (runtime/game_bridge.gd) uses that connection to receive requests
-## and send answers, with messages named "godot_pilot:...". This class sends the
+## and send answers, with messages named "godot_wingman:...". This class sends the
 ## requests and waits for the matching answers.
 
 signal game_stopped
 ## The game bridge inside the game answered: the game is running and reachable.
 signal game_ready
 
-const CAPTURE_NAME := "godot_pilot"
+const CAPTURE_NAME := "godot_wingman"
 
 var _scene_tree: SceneTree
 var _active_session_id := -1

@@ -7,9 +7,9 @@ extends RefCounted
 ## The file is deleted when the editor closes. Files left behind by a crashed editor
 ## are cleaned up by the MCP server, which checks whether the process still exists.
 
-const PRODUCT_FOLDER_NAME := "godot-pilot"
+const PRODUCT_FOLDER_NAME := "godot-wingman"
 ## Lets tests and advanced users move the folder somewhere else.
-const HOME_OVERRIDE_ENVIRONMENT_VARIABLE := "GODOT_PILOT_HOME"
+const HOME_OVERRIDE_ENVIRONMENT_VARIABLE := "GODOT_WINGMAN_HOME"
 
 var _registry_file_path: String = ""
 

@@ -3,9 +3,9 @@ extends RefCounted
 ## Routes each incoming request to the handler function registered for its method name.
 ##
 ## Handlers are plain functions that receive the request parameters as a Dictionary
-## and return either a JSON-friendly value or a PilotError. Handlers may use `await`.
+## and return either a JSON-friendly value or a WingmanError. Handlers may use `await`.
 
-const PilotError := preload("../utils/pilot_error.gd")
+const WingmanError := preload("../utils/wingman_error.gd")
 
 ## Method name -> Callable that handles it.
 var _handlers_by_method: Dictionary = {}
@@ -25,7 +25,7 @@ func get_method_names() -> PackedStringArray:
 ## {"ok": true, "result": ...} or {"ok": false, "error": {...}}.
 func dispatch(method_name: String, params: Variant) -> Dictionary:
 	if not _handlers_by_method.has(method_name):
-		var unknown_method_error := PilotError.new(
+		var unknown_method_error := WingmanError.new(
 			"UNKNOWN_METHOD",
 			"The Godot addon does not know the method '%s'." % method_name,
 			"The MCP server and the addon may be different versions. Reinstall the addon with the install_addon tool."
@@ -36,6 +36,6 @@ func dispatch(method_name: String, params: Variant) -> Dictionary:
 	var handler: Callable = _handlers_by_method[method_name]
 	var result: Variant = await handler.call(request_params)
 
-	if result is PilotError:
+	if result is WingmanError:
 		return {"ok": false, "error": result.to_dictionary()}
 	return {"ok": true, "result": result}

@@ -17,7 +17,7 @@ func _init(addon_directory: String) -> void:
 
 
 func _get_name() -> String:
-	return "GodotPilotExportFilter"
+	return "GodotWingmanExportFilter"
 
 
 func _export_file(path: String, _type: String, _features: PackedStringArray) -> void:
