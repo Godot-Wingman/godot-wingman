@@ -3,8 +3,10 @@
  * `bun build --compile`. The executables contain Bun itself, the addon and the guides,
  * so people need nothing else installed.
  *
- * Usage: bun run build            (all platforms)
- *        bun run build -- current  (only this computer's platform, faster)
+ * Usage: bun run build                    (all platforms)
+ *        bun run build -- current          (only this computer's platform, faster)
+ *        bun run build -- windows          (only Windows; the release builds it on Windows)
+ *        bun run build -- without-windows  (every platform except Windows)
  */
 import { join } from "node:path";
 import packageJson from "../package.json" with { type: "json" };
@@ -46,6 +48,11 @@ function windowsDetails(target: BuildTarget): string[] {
   if (!target.bunTarget.startsWith("bun-windows")) {
     return [];
   }
+  if (process.platform !== "win32") {
+    // Bun can only write these details when it runs on Windows.
+    console.warn("Building the Windows executable without file details (only possible on Windows).");
+    return [];
+  }
   const numericVersion = `${packageJson.version.replace(/[^0-9.].*$/, "")}.0`;
   return [
     "--windows-title=Godot Wingman",
@@ -56,8 +63,20 @@ function windowsDetails(target: BuildTarget): string[] {
   ];
 }
 
-const onlyCurrentPlatform = process.argv.includes("current");
-const targets = onlyCurrentPlatform ? [currentPlatformTarget()] : ALL_TARGETS;
+function selectTargets(): BuildTarget[] {
+  if (process.argv.includes("current")) {
+    return [currentPlatformTarget()];
+  }
+  if (process.argv.includes("windows")) {
+    return ALL_TARGETS.filter((target) => target.bunTarget.startsWith("bun-windows"));
+  }
+  if (process.argv.includes("without-windows")) {
+    return ALL_TARGETS.filter((target) => !target.bunTarget.startsWith("bun-windows"));
+  }
+  return ALL_TARGETS;
+}
+
+const targets = selectTargets();
 
 for (const target of targets) {
   const outputPath = join(outputDirectory, target.outputName);
