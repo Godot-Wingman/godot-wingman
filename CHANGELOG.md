@@ -7,6 +7,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 ### Fixed
 
 - `step_frames` ran one physics frame less than asked, and none for `count: 1`, because the game was paused again before the last frame was processed. An input sent while paused now reaches the game on the next stepped frame.
+- `execute_game_script` with code that does not compile no longer freezes the game: Godot stopped the game in its debugger, so the tool waited until its timeout and later calls hung. The editor now compiles the code first and returns the errors right away.
 
 ## [0.4.2] - 2026-11-27
 

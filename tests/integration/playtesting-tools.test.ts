@@ -162,6 +162,21 @@ describe("playing the game", () => {
     expect(result.printed).toContain("from the game");
   });
 
+  test("execute_game_script reports a parse error without freezing the game, and can await", async () => {
+    if (!editor) return;
+    const broken = await editor.callTool("execute_game_script", { code: "var a := 1\nvar a := 2\nreturn a" });
+    expect(broken.isError).toBe(true);
+    expect(broken.text).toContain("SCRIPT_COMPILE_ERROR");
+    // The game is still running normally: frames go on and a later script can wait for one.
+    const awaited = parseJson<{ result: number }>(
+      await editor.callTool("execute_game_script", {
+        code: "await tree.physics_frame\nawait tree.physics_frame\nreturn 7",
+        timeout_seconds: 10,
+      }),
+    );
+    expect(awaited.result).toBe(7);
+  });
+
   test("get_game_logs and get_performance read diagnostics", async () => {
     if (!editor) return;
     const logs = parseJson<{ captured: boolean; entries: { message: string }[] }>(

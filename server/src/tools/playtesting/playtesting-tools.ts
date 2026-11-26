@@ -437,15 +437,20 @@ export const callGameMethodTool = defineGameTool({
   gameMethod: "call_method",
 });
 
-export const executeGameScriptTool = defineGameTool({
+export const executeGameScriptTool = defineTool({
   name: "execute_game_script",
   title: "Run GDScript in the game",
   description:
-    'Runs GDScript inside the running game; the code becomes the body of `func run():`. Helpers: tree, root, scene (current scene), node("Path") ("/root/Name" for autoloads), output(value). return a value to get it back; print() output and errors come back too.',
+    'Runs GDScript inside the running game; the code becomes the body of `func run():`. Helpers: tree, root, scene (current scene), node("Path") ("/root/Name" for autoloads), output(value). return a value to get it back; print() output and errors come back too. await works (for example await tree.physics_frame).',
   inputShape: { code: z.string(), timeout_seconds: z.number().min(1).max(300).optional() },
   access: "write",
-  gameMethod: "execute_script",
-  timeoutSeconds: (input) => input.timeout_seconds ?? 30,
+  async run(input, context) {
+    // A parse error inside the game would stop it in Godot's debugger (frozen until someone
+    // presses Continue), so the editor compiles the code first and reports the errors.
+    await context.editors.request("check_game_script", { code: input.code });
+    const timeoutSeconds = input.timeout_seconds ?? 30;
+    return jsonResult(await requestFromGame(context, "execute_script", input, timeoutSeconds));
+  },
 });
 
 export const listUiElementsTool = defineGameTool({

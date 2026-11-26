@@ -25,6 +25,7 @@ func register_methods(dispatcher: RefCounted) -> void:
 	dispatcher.register_method("ping", _ping)
 	dispatcher.register_method("get_editor_state", _get_editor_state)
 	dispatcher.register_method("execute_script", _execute_script)
+	dispatcher.register_method("check_game_script", _check_game_script)
 	dispatcher.register_method("get_logs", _get_logs)
 	dispatcher.register_method("take_screenshot", _take_screenshot)
 	dispatcher.register_method("confirm_action", _confirm_action)
@@ -62,6 +63,30 @@ func _get_editor_state(_params: Dictionary) -> Dictionary:
 
 
 #region execute_script
+
+## Compiles code meant for the running game (execute_game_script) without running it.
+## In a game started from the editor, a parse error stops the whole game in Godot's
+## debugger until someone presses Continue, so the code is checked here first.
+func _check_game_script(params: Dictionary) -> Variant:
+	var code := String(params.get("code", ""))
+	if code.strip_edges() == "":
+		return WingmanError.new("EMPTY_CODE", "The code is empty.")
+
+	var prepared_source := ScriptSource.prepare(code, _context.addon_directory.path_join("runtime/game_script_context.gd"), false)
+	var first_log_id: int = _context.get_next_log_id()
+	var script := GDScript.new()
+	script.source_code = prepared_source["source"]
+	var compile_result := script.reload()
+	if compile_result == OK:
+		return {"compiles": true}
+	var compile_errors := ScriptSource.clean_log_entries(_context.get_logs_since(first_log_id, ["error", "script_error", "warning"]), prepared_source["line_offset"])
+	return WingmanError.new(
+		"SCRIPT_COMPILE_ERROR",
+		"The code did not compile (%s), so it was not sent to the game." % error_string(compile_result),
+		"Line numbers refer to your code. The code is the body of `func run():` unless you write `func run():` yourself. Use tabs for indentation inside blocks.",
+		compile_errors
+	)
+
 
 func _execute_script(params: Dictionary) -> Variant:
 	var code := String(params.get("code", ""))
