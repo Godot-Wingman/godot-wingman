@@ -189,7 +189,11 @@ function estimateSequenceSeconds(steps: Record<string, unknown>[]): number {
   let totalSeconds = 0;
   for (const step of steps) {
     totalSeconds +=
-      Number(step.seconds ?? 0) + Number(step.wait_seconds ?? 0) + Number(step.wait_frames ?? 0) / 30 + 0.1;
+      Number(step.seconds ?? 0) +
+      Number(step.wait_seconds ?? 0) +
+      Number(step.wait_frames ?? 0) / 30 +
+      (step.wait_until === undefined ? 0 : Number(step.timeout_seconds ?? 10)) +
+      0.1;
     if (typeof step.type_text === "string") {
       totalSeconds += step.type_text.length / 30;
     }
@@ -224,8 +228,10 @@ export const inputSequenceTool = defineTool({
     "Plays several inputs in order with exact timing inside the game, for combos and movement patterns. One key per step:",
     '{"press": "action:move_right"}, {"release": "action:move_right"}, {"tap": "action:jump"}, {"hold": "key:Right", "seconds": 1.5},',
     '{"wait_seconds": 0.5}, {"wait_frames": 10}, {"mouse_move": [x, y]}, {"mouse_click": [x, y], "button": "left", "double": false},',
-    '{"mouse_drag": {"from": [x, y], "to": [x, y], "seconds": 0.3}}, {"type_text": "hello"}.',
-    'Example (run right and jump): [{"press": "action:move_right"}, {"wait_seconds": 0.4}, {"tap": "action:jump"}, {"wait_seconds": 0.6}, {"release": "action:move_right"}]',
+    '{"mouse_drag": {"from": [x, y], "to": [x, y], "seconds": 0.3}}, {"type_text": "hello"},',
+    '{"wait_until": "<GDScript expression>", "timeout_seconds": 5} (checked every physics frame; can use node("path"), scene, tree).',
+    "Prefer wait_until over guessed times: physics timing varies, positions do not. If a step fails, held inputs are released.",
+    'Example (run to the edge, then jump onto a platform): [{"press": "action:move_right"}, {"wait_until": "node("Player").position.x > 170"}, {"tap": "action:jump"}, {"wait_until": "node("Player").is_on_floor()"}, {"release": "action:move_right"}]',
   ].join("\n"),
   inputShape: { steps: z.array(z.record(z.string(), z.unknown())).min(1) },
   access: "write",
