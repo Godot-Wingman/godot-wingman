@@ -12,9 +12,16 @@ extends Node
 ##   client -> editor: {"type": "hello", "token": "...", "client": {...}}
 ##   editor -> client: {"type": "hello_ok", "editor": {...}}
 ##   client -> editor: {"type": "request", "id": 7, "method": "ping", "params": {}}
-##   editor -> client: {"type": "response", "id": 7, "ok": true, "result": ...}
+##   editor -> client: {"type": "response", "id": 7, "ok": true, "result": ...,
+##                      "notices": [{"time", "kind", "text"}]}
+##
+## "notices" is news for that AI (session/notice_board.gd), left out when there is none.
+## Every request's params get "_caller": {"connection_id", "ai_client"}, so handlers
+## know which AI is asking.
 
 signal client_count_changed(authenticated_client_count: int)
+signal client_connected(connection_id: int, ai_client: String)
+signal client_disconnected(connection_id: int)
 
 const FIRST_PORT := 6550
 const LAST_PORT := 6599
@@ -28,6 +35,8 @@ const UNAUTHORIZED_CLOSE_CODE := 4001
 ## One connected MCP server.
 class ClientConnection:
 	var socket := WebSocketPeer.new()
+	## Counts from 1; 0 stands for the person at the editor in notices.
+	var connection_id := 0
 	var is_authenticated := false
 	var connected_at_milliseconds := 0
 	var client_name := "unknown"
@@ -36,12 +45,15 @@ class ClientConnection:
 
 
 var port: int = 0
+## Gives the news waiting for a connection: Callable(connection_id) -> Array. Optional.
+var take_notices: Callable
 
 var _tcp_server := TCPServer.new()
 var _clients: Array[ClientConnection] = []
 var _dispatcher: RefCounted
 var _token: String
 var _editor_information: Dictionary
+var _next_connection_id := 1
 
 
 func _init(dispatcher: RefCounted, token: String, editor_information: Dictionary) -> void:
@@ -95,6 +107,8 @@ func _accept_new_clients() -> void:
 		client.socket.max_queued_packets = MAX_QUEUED_PACKETS
 		client.socket.accept_stream(_tcp_server.take_connection())
 		client.connected_at_milliseconds = Time.get_ticks_msec()
+		client.connection_id = _next_connection_id
+		_next_connection_id += 1
 		_clients.append(client)
 
 
@@ -106,6 +120,7 @@ func _poll_client(client: ClientConnection) -> void:
 		var was_authenticated := client.is_authenticated
 		_clients.erase(client)
 		if was_authenticated:
+			client_disconnected.emit(client.connection_id)
 			client_count_changed.emit(get_authenticated_client_count())
 		return
 
@@ -152,6 +167,7 @@ func _handle_hello(client: ClientConnection, message: Dictionary) -> void:
 			"permission_mode": String(client_information.get("permission_mode", "")),
 		}
 	_send(client, {"type": "hello_ok", "editor": _editor_information})
+	client_connected.emit(client.connection_id, String(client.description.get("ai_client", client.client_name)))
 	client_count_changed.emit(get_authenticated_client_count())
 
 
@@ -160,11 +176,19 @@ func _handle_hello(client: ClientConnection, message: Dictionary) -> void:
 func _run_request(client: ClientConnection, message: Dictionary) -> void:
 	var request_id: Variant = message.get("id")
 	var method_name := String(message.get("method", ""))
-	var response: Dictionary = await _dispatcher.dispatch(method_name, message.get("params", {}))
+	var params: Variant = message.get("params", {})
+	if params is Dictionary:
+		params["_caller"] = {"connection_id": client.connection_id, "ai_client": String(client.description.get("ai_client", client.client_name))}
+	var response: Dictionary = await _dispatcher.dispatch(method_name, params)
 	response["type"] = "response"
 	response["id"] = request_id
-	if client.socket.get_ready_state() == WebSocketPeer.STATE_OPEN:
-		_send(client, response)
+	if client.socket.get_ready_state() != WebSocketPeer.STATE_OPEN:
+		return
+	if take_notices.is_valid():
+		var notices: Array = take_notices.call(client.connection_id)
+		if not notices.is_empty():
+			response["notices"] = notices
+	_send(client, response)
 
 
 func _send(client: ClientConnection, payload: Dictionary) -> void:
