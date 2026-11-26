@@ -49,12 +49,16 @@ describe("create_project", () => {
 
   test("refuses a folder that already has a project or other files", async () => {
     const projectPath = join(temporaryRoot, "space-shooter");
-    await expect(createProject({ projectPath, godotVersion: "4.7" })).rejects.toBeInstanceOf(CreateProjectError);
+    await expect(createProject({ projectPath, godotVersion: "4.7" })).rejects.toBeInstanceOf(
+      CreateProjectError,
+    );
 
     const busyFolder = join(temporaryRoot, "busy");
     await mkdir(busyFolder, { recursive: true });
     await writeFile(join(busyFolder, "notes.txt"), "mine");
-    await expect(createProject({ projectPath: busyFolder, godotVersion: "4.7" })).rejects.toThrow("is not empty");
+    await expect(createProject({ projectPath: busyFolder, godotVersion: "4.7" })).rejects.toThrow(
+      "is not empty",
+    );
     const allowed = await createProject({
       projectPath: busyFolder,
       godotVersion: "4.7",
