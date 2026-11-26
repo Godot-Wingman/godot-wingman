@@ -51,7 +51,7 @@ Server options:
   --project <path>                     Editor to use when several are running
   --no-update-check                    Do not look for new versions on GitHub
 
-Docs: https://github.com/Godot-wingman/godot-wingman#readme`;
+Docs: https://github.com/Godot-Wingman/godot-wingman#readme`;
 
 async function main(): Promise<void> {
   const { values: options, positionals } = parseArgs({
