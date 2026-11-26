@@ -5,6 +5,8 @@
  * 1. We send {"type": "hello", "token": ...}; the editor answers "hello_ok" or closes.
  * 2. We send {"type": "request", "id", "method", "params"}; the editor answers with
  *    {"type": "response", "id", "ok": true, "result"} or {"ok": false, "error"}.
+ *    A response may carry "notices": news for the AI (the person pressed Ctrl+Z, another
+ *    AI sent a message...). They are handed to onNotices.
  * Several requests can be in flight at the same time; the id matches answers to them.
  */
 import { PRODUCT_NAME, PRODUCT_VERSION } from "../product.ts";
@@ -34,6 +36,14 @@ export interface ClientDescription {
   permissionMode: string;
 }
 
+/** News from the editor for the AI (addon/godot_pilot/session/notice_board.gd). */
+export interface EditorNotice {
+  /** Clock time in the editor, for example "14:02:11". */
+  time: string;
+  kind: string;
+  text: string;
+}
+
 interface PendingRequest {
   method: string;
   resolve: (result: unknown) => void;
@@ -47,6 +57,7 @@ interface ResponseMessage {
   ok: boolean;
   result?: unknown;
   error?: { code?: string; message?: string; hint?: string; details?: unknown };
+  notices?: EditorNotice[];
 }
 
 export class EditorConnection {
@@ -61,6 +72,7 @@ export class EditorConnection {
       aiClient: "unknown",
       permissionMode: "full",
     }),
+    private readonly onNotices: (notices: EditorNotice[]) => void = () => {},
   ) {}
 
   get isOpen(): boolean {
@@ -195,6 +207,9 @@ export class EditorConnection {
   }
 
   private handleResponse(response: ResponseMessage): void {
+    if (Array.isArray(response.notices) && response.notices.length > 0) {
+      this.onNotices(response.notices);
+    }
     const pendingRequest = this.pendingRequests.get(response.id);
     if (!pendingRequest) {
       return;

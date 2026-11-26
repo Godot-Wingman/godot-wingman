@@ -5,12 +5,14 @@
  * - Several editors running: the one chosen with select_editor (or launch_editor) is
  *   used; without a choice the tool fails and lists the editors to choose from.
  * - A broken connection is reopened on the next request.
+ * - News from the editors (notices) is collected until the next tool result takes it.
  */
 import { normalizePathForComparison } from "../paths.ts";
 import {
   type ClientDescription,
   DEFAULT_REQUEST_TIMEOUT_MILLISECONDS,
   EditorConnection,
+  type EditorNotice,
   EditorRequestError,
 } from "./editor-connection.ts";
 import {
@@ -23,6 +25,7 @@ export class EditorManager {
   /** Open connections, keyed by the editor's process id. */
   private readonly connectionsByProcessId = new Map<number, EditorConnection>();
   private selectedProjectPath: string | null = null;
+  private pendingNotices: EditorNotice[] = [];
 
   constructor(private readonly describeClient?: () => ClientDescription) {}
 
@@ -47,7 +50,9 @@ export class EditorManager {
     }
 
     existingConnection?.close();
-    const connection = new EditorConnection(registration, this.describeClient);
+    const connection = new EditorConnection(registration, this.describeClient, (notices) => {
+      this.pendingNotices.push(...notices);
+    });
     await connection.open();
     this.connectionsByProcessId.set(registration.processId, connection);
     return connection;
@@ -60,6 +65,13 @@ export class EditorManager {
   ): Promise<Result> {
     const connection = await this.getConnection();
     return connection.request<Result>(method, params, timeoutMilliseconds);
+  }
+
+  /** The news received since the last call, oldest first. Empties the list. */
+  takeNotices(): EditorNotice[] {
+    const notices = this.pendingNotices;
+    this.pendingNotices = [];
+    return notices;
   }
 
   /** The registry entry of the editor the tools use (project folder, Godot executable...). */
