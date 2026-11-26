@@ -17,6 +17,7 @@ import {
   getEditorStateTool,
   getLogsTool,
   takeEditorScreenshotTool,
+  tellOtherAisTool,
 } from "./core/editor-tools.ts";
 import { getClassDocsTool, getGuideTool, searchDocsTool } from "./core/knowledge-tools.ts";
 import {
@@ -51,6 +52,7 @@ export const ALL_TOOLSETS: Toolset[] = [
       executeEditorScriptTool,
       getLogsTool,
       takeEditorScreenshotTool,
+      tellOtherAisTool,
       getClassDocsTool,
       searchDocsTool,
       getGuideTool,

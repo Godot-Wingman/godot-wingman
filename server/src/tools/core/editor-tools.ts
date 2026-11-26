@@ -1,9 +1,9 @@
 /**
  * Core tools that work inside the running editor: its state, running GDScript,
- * reading the Output panel and taking screenshots.
+ * reading the Output panel, taking screenshots, and messages to other AIs.
  */
 import { z } from "zod";
-import { defineTool, forwardToEditor, imageResult } from "../../mcp/tool-definition.ts";
+import { defineTool, forwardToEditor, imageResult, textResult } from "../../mcp/tool-definition.ts";
 
 const LOG_LEVELS = ["info", "warning", "error", "script_error", "shader_error"] as const;
 
@@ -94,6 +94,36 @@ export const takeEditorScreenshotTool = defineTool({
       screenshot.data_base64,
       screenshot.mime_type,
       `${input.view ?? "editor"} view, ${screenshot.width}x${screenshot.height}`,
+    );
+  },
+});
+
+export const tellOtherAisTool = defineTool({
+  name: "tell_other_ais",
+  title: "Tell the other AIs",
+  description: [
+    "Sends a short message to the other AIs connected to this Godot editor (for example Claude Code and Cursor working on the same game), so you do not change the same things at the same time or undo each other's work.",
+    "They get it at the end of their next tool result. An AI that connects later gets the recent messages too. The person sees the messages in the Godot Pilot panel.",
+    "Use it before larger changes when other AIs are connected (you are told when they are), and when you finish: what you change, which files or nodes, and what the others should leave alone.",
+    'Example: "I am rewriting res://player/player.gd and the Player scene. Please do not edit them until I say I am done."',
+  ].join("\n"),
+  inputShape: {
+    message: z
+      .string()
+      .min(1)
+      .max(1000)
+      .describe("What you are about to change or have changed, in one or two sentences."),
+  },
+  access: "read",
+  run: async (input, context) => {
+    const answer = await context.editors.request<{ delivered_to: string[] }>("post_message_to_other_ais", {
+      message: input.message,
+    });
+    const receivers = answer.delivered_to;
+    return textResult(
+      receivers.length > 0
+        ? `Sent to ${receivers.join(", ")}. They read it with their next tool result.`
+        : "No other AI is connected right now. The message is kept, and an AI that connects in the next 30 minutes gets it.",
     );
   },
 });
