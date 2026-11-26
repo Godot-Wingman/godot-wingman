@@ -66,6 +66,10 @@ func _enter_tree() -> void:
 	_remove_game_bridge_autoload()
 
 	_game_debugger_bridge = GameDebuggerBridge.new(get_tree())
+	# The game reads its autoloads only when it starts, so the bridge entry can leave
+	# project.godot as soon as the game is up. Otherwise an export made while the game
+	# runs would list an autoload whose file the export filter leaves out.
+	_game_debugger_bridge.game_ready.connect(_remove_game_bridge_autoload)
 	_game_debugger_bridge.game_stopped.connect(_remove_game_bridge_autoload)
 	add_debugger_plugin(_game_debugger_bridge)
 	_export_filter = ExportFilter.new(addon_directory)
@@ -112,7 +116,8 @@ func _enter_tree() -> void:
 
 
 ## Godot calls this right before the game starts (Play button or run_game). The game
-## bridge is added as an autoload only for this run; it is removed when the game stops.
+## bridge is added as an autoload only for this start; it is removed again as soon as
+## the game is running (or stops).
 func _build() -> bool:
 	if not ProjectSettings.has_setting("autoload/" + GAME_BRIDGE_AUTOLOAD_NAME):
 		add_autoload_singleton(GAME_BRIDGE_AUTOLOAD_NAME, _addon_directory.path_join("runtime/game_bridge.gd"))
