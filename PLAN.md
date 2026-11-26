@@ -163,7 +163,7 @@ _Sonuç:_ AI editörü görür ve script ile her şeyi yapabilir.
 **Faz 4 — Özel editörler ve yayın** ✅ (26 Kasım 2026)
 
 - Gruplar: `animation`, `tilemap`, `ui`, `3d`, `shader`, `audio`, `export`.
-- 20 araç grubunda 118 araç; 66 test, çoğu gerçek Godot editörüyle uçtan uca (Godot 4.5, 4.6, 4.7).
+- 20 araç grubunda 118 araç; 68 test, çoğu gerçek Godot editörüyle uçtan uca (Godot 4.5, 4.6, 4.7).
 - Token optimizasyonu ve testler.
 - README (EN/TR).
 - GitHub Releases'ta her işletim sistemi için tek dosya.
