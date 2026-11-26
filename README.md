@@ -6,7 +6,7 @@
 
 > **Status: early development (0.x).** Things change quickly and may break. Version 1.0 will only come once the project is stable and well tested by real users.
 
-[Türkçe README](README.tr.md)
+**Other languages:** [Türkçe](README.tr.md) · [Español](README.es.md) · [Português (Brasil)](README.pt-BR.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md) · [日本語](README.ja.md) · [한국어](README.ko.md)
 
 ## What it does
 
