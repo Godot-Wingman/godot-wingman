@@ -29,12 +29,15 @@ export interface TestEditor {
   projectPath: string;
   callTool(name: string, toolArguments?: Record<string, unknown>): Promise<ToolCallOutcome>;
   listToolNames(): Promise<string[]>;
+  /** Sends a request straight to the addon, bypassing the tools (for checking editor state). */
+  requestEditor<Result = unknown>(method: string, params?: object): Promise<Result>;
   stop(): Promise<void>;
 }
 
 export interface StartTestEditorOptions {
   permissionMode?: PermissionMode;
   initialToolsets?: string[];
+  confirmationTimeoutSeconds?: number;
 }
 
 export async function startTestEditor(options: StartTestEditorOptions = {}): Promise<TestEditor | null> {
@@ -75,6 +78,7 @@ run/main_run_args="--headless"
   const { server, editors } = createMcpServer({
     permissionMode: options.permissionMode ?? "full",
     initialToolsets: options.initialToolsets ?? ["core", "scene", "inspector", "script", "project"],
+    confirmationTimeoutSeconds: options.confirmationTimeoutSeconds,
   });
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   await server.connect(serverTransport);
@@ -107,6 +111,9 @@ run/main_run_args="--headless"
         isError: result.isError === true,
         imageCount: content.filter((item) => item.type === "image").length,
       };
+    },
+    requestEditor(method, params = {}) {
+      return editors.request(method, params);
     },
     async listToolNames() {
       const { tools } = await client.listTools();
