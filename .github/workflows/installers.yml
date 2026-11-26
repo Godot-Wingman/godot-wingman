@@ -1,5 +1,6 @@
 # Checks that the one-line installers (install/) download, verify and run the newest
-# release on Windows, macOS and Linux. Runs when they change, and by hand.
+# release on Windows, macOS and Linux, both ways: the small bundle run by Bun (Bun is
+# installed when missing) and the single-file program. Runs when they change, and by hand.
 name: Installers
 
 on:
@@ -13,12 +14,13 @@ permissions:
 
 jobs:
   unix:
-    name: install.sh (${{ matrix.os }})
+    name: install.sh (${{ matrix.os }}, ${{ matrix.kind }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
+        kind: [bundle, executable]
     steps:
       - uses: actions/checkout@v7
       - name: Install into a temporary folder
@@ -27,11 +29,24 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           GODOT_WINGMAN_INSTALL_DIR: ${{ runner.temp }}/godot-wingman
           GODOT_WINGMAN_NO_SETUP: "1"
-      - run: '"$RUNNER_TEMP/godot-wingman/godot-wingman" --version'
+          GODOT_WINGMAN_USE_EXECUTABLE: ${{ matrix.kind == 'executable' && '1' || '' }}
+      - name: The installed command runs
+        run: '"$RUNNER_TEMP/godot-wingman/godot-wingman" --version'
+      - name: The bundle is installed only when Bun runs it
+        run: |
+          if [ "${{ matrix.kind }}" = "bundle" ]; then
+            test -f "$RUNNER_TEMP/godot-wingman/godot-wingman.js"
+          else
+            test ! -e "$RUNNER_TEMP/godot-wingman/godot-wingman.js"
+          fi
 
   windows:
-    name: install.ps1 (windows-latest)
+    name: install.ps1 (windows-latest, ${{ matrix.kind }})
     runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        kind: [bundle, executable]
     steps:
       - uses: actions/checkout@v7
       - name: Install into a temporary folder (Windows PowerShell 5.1)
@@ -41,5 +56,12 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           GODOT_WINGMAN_INSTALL_DIR: ${{ runner.temp }}\godot-wingman
           GODOT_WINGMAN_NO_SETUP: "1"
-      - shell: powershell
-        run: '& "$env:RUNNER_TEMP\godot-wingman\godot-wingman.exe" --version'
+          GODOT_WINGMAN_USE_EXECUTABLE: ${{ matrix.kind == 'executable' && '1' || '' }}
+      - name: The installed command runs
+        shell: cmd
+        run: '"%RUNNER_TEMP%\godot-wingman\godot-wingman" --version'
+      - name: The bundle is installed only when Bun runs it
+        shell: powershell
+        run: |
+          $BundleExists = Test-Path "$env:RUNNER_TEMP\godot-wingman\godot-wingman.js"
+          if (("${{ matrix.kind }}" -eq "bundle") -ne $BundleExists) { throw "Wrong kind of install." }
