@@ -120,7 +120,7 @@ Add options as arguments (`"args": [...]` in JSON configs, after `--` for Claude
 | Option | Meaning |
 |---|---|
 | `--mode full` | Default. The AI may use every enabled tool. Editor changes can be undone with Ctrl+Z. |
-| `--mode confirm` | Before every change, Godot shows an Allow / Deny dialog. |
+| `--mode confirm` | Before every change, Godot shows a dialog with everything the AI wants to do (GDScript code in full). Choose Allow, Allow this tool for the session, or Deny. |
 | `--mode read-only` | Tools that change anything are hidden. The AI can only look. |
 | `--toolsets edit` | Toolsets enabled at start: a profile (`minimal`, `default`, `edit`, `2d`, `3d`, `play`, `all`) or names like `core,scene,animation`. The AI can still switch toolsets later. |
 | `--project /path` | Which editor to use when several projects are open. |
@@ -136,6 +136,8 @@ Example for Claude Desktop with confirmation and the playtesting tools:
 ```
 
 The same options can be set with the environment variables `GODOT_PILOT_MODE`, `GODOT_PILOT_TOOLSETS` and `GODOT_PILOT_PROJECT`.
+
+The permission mode can also be chosen in Godot: open the **Godot Pilot** panel at the bottom of the editor. That choice is saved for the project on your computer. If it differs from `--mode`, the stricter of the two applies.
 
 ## Godot not found?
 

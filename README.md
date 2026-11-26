@@ -8,27 +8,41 @@
 
 [Türkçe README](README.tr.md)
 
-## Why another Godot MCP?
+## What it does
 
-Most Godot MCP servers edit scene files in the background and can take a screenshot. That is not how a person works. Godot Pilot works **inside the running editor**:
+Godot Pilot works inside the open Godot editor, through an addon:
 
-| | Typical MCP servers | Godot Pilot |
-|---|---|---|
-| Changes | Edits files with a separate headless Godot; the open editor does not see them; no undo | Changes happen live in the editor and can be undone with Ctrl+Z |
-| Seeing | Game screenshot | Editor window, 2D/3D viewport, game, with camera control |
-| Playing | A single key press | Real input events: hold, timing, sequences; frame stepping; "wait until" |
-| Godot knowledge | None: the AI guesses APIs | Class reference of **your installed Godot version** |
-| Missing tool | Stuck | Runs any GDScript inside the editor as a fallback |
-| Context use | All tools always loaded | Tools grouped in toolsets that the AI turns on and off |
+- **Live changes with undo.** Scene and inspector changes happen in the open editor and go through Godot's undo history, so you can press Ctrl+Z.
+- **Seeing.** Screenshots of the editor window, the 2D/3D viewport and the running game, with camera control.
+- **Playing.** Real input events: holding keys, timing, sequences, frame stepping and "wait until a condition is true".
+- **Godot knowledge.** The class reference of the Godot version you have installed, plus the classes of your GDExtensions and scripts.
+- **Fallback.** When no tool fits, the AI can run GDScript inside the editor.
+- **You stay in control.** The Godot Pilot panel at the bottom of the editor lists every change the AI made and can put scripts, scenes, resources and settings back to how they were before any of them.
+- **Small context.** 118 tools in 20 toolsets: scene, inspector, script, project settings, signals, resources, file system, viewport, playing the game, input, live game inspection, debugging, animation, tile maps, UI, 3D, shaders, audio and export. The AI turns on only the groups it needs. See the [changelog](CHANGELOG.md).
 
-## Features
+## Permission modes
 
-- **Core** (always on): status, opening projects, editor state, running GDScript in the editor, Output panel and errors with stack traces, editor screenshots, version-matched Godot documentation and search, usage guides for the AI.
-- **Toolsets** switched on when needed: scene, inspector, script, project settings, signals, resources, file system, viewport, playing the game, input, live game inspection, debugging, animation, tile maps, UI, 3D, shaders, audio and export. 118 tools in 20 toolsets; see the [changelog](CHANGELOG.md).
-- **Permission modes**: `full`, `confirm` (an Allow / Deny dialog in Godot before each change) and `read-only`.
-- **Any language**: GDScript, C# and GDExtension (Rust, C++) projects.
-- **Private by design**: everything runs on your computer. No accounts, no cloud, **no telemetry**.
-- **Nothing to install** besides one executable: the Godot addon is built in and installed into your project automatically.
+| Mode | What the AI may do |
+|---|---|
+| `full` (default) | Use every enabled tool. |
+| `confirm` | Look freely. Before every change, Godot shows what the AI wants to do (for GDScript, the whole code) and you click Allow or Deny. |
+| `read-only` | Only look. Tools that change files, run GDScript, start the game or send input are hidden. |
+
+Set the mode when you add Godot Pilot to your AI client (`--mode`, see the [installation guide](docs/INSTALL.md)), or in Godot in the Godot Pilot panel. If the two differ, the stricter one applies. In the dialog you can also allow one tool for the rest of the session, so a long series of similar changes does not ask every time.
+
+## Languages
+
+- **GDScript**: fully supported.
+- **C#**: the AI can write and edit C# scripts when the project is opened with the .NET build of Godot.
+- **GDExtension (Rust, C++)**: the AI sees the classes your extensions add, with their properties, methods and signals.
+
+The end-to-end tests currently use a GDScript project.
+
+## Privacy
+
+Godot Pilot runs on your computer and sends nothing anywhere: no accounts, no cloud, **no telemetry**.
+
+Your AI client is a different matter: what the AI reads through Godot Pilot (code, scenes, screenshots, errors) goes to the AI model you use, under that provider's rules. Only a model running on your own computer keeps everything local.
 
 ## Quick start
 
@@ -40,7 +54,7 @@ Most Godot MCP servers edit scene files in the background and can take a screens
    Every other client (Claude Desktop, Cursor, VS Code, Codex, Gemini CLI, Windsurf...) is covered in the **[installation guide](docs/INSTALL.md)**.
 3. Ask your AI: *"Open my Godot project at C:/games/my-game and show me the main scene."*
 
-The AI installs the addon into the project, opens the editor and connects. Requires **Godot 4.5 or newer**; tested with 4.5, 4.6 and 4.7. Older 4.x versions may work without log capture, but are not tested.
+The AI installs the addon into the project, opens the editor and connects. Requires **Godot 4.5 or newer**. Every change is tested with Godot 4.5.2, 4.6.3 and 4.7.2.
 
 ## How it works
 
@@ -62,7 +76,8 @@ Requires [Bun](https://bun.sh) and Godot.
 
 ```
 bun install
-bun test              # unit tests + end-to-end tests against a real headless Godot
+bun run test          # unit tests + end-to-end tests against a real headless Godot
+bun run test:unit     # only the unit tests, no Godot needed
 bun run lint          # Biome
 bun run typecheck
 bun run build         # standalone executables for every platform in dist/

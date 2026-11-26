@@ -37,7 +37,12 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
   - `export`: export presets, export template check, building the game in a separate Godot process.
 - An export plugin keeps the addon out of exported games.
 - `launch_editor` keeps Godot's console output in a log and shows its end when startup fails.
-- `input_sequence` steps can wait for game conditions (`wait_until`), and a failed sequence releases the keys it still holds.
+- `input_sequence` steps can wait for game conditions (`wait_until`), and inputs still held when a sequence ends or fails are released.
+- Godot Pilot panel in the editor: connected AIs, permission mode for the project (the stricter of the panel and `--mode` applies), and a list of every change the AI made with its result, also written to `.godot/godot_pilot/activity.log`.
+- Going back: before every change, the project's text files (scripts, scenes, resources, settings, import options) are remembered, and the panel can put them back to how they were before any step.
+- The approval dialog of `confirm` mode shows the AI, the tool and every argument in full (code in a scrollable box), and can allow one tool for the rest of the session.
+- A wrong node path suggests nodes with a similar name.
+- Clear errors when the editor closes or crashes during a request.
 
 ### Fixed
 

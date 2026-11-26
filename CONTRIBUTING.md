@@ -14,10 +14,13 @@ You need [Bun](https://bun.sh) and Godot 4.5 or newer.
 
 ```
 bun install
-bun run test
+bun run test         # every test: unit tests and end-to-end tests with a real headless Godot
+bun run test:unit    # only the unit tests; fast, no Godot needed
+bun run lint
+bun run typecheck
 ```
 
-`bun run test` bundles the addon and also starts a real headless Godot editor. If Godot is not found automatically, set `GODOT_PATH` to the Godot executable.
+Every test run first packs the current addon code into the server (see `bunfig.toml`), so `bun test` and `bun run test` do the same. If Godot is not found automatically, set `GODOT_PATH` to the Godot executable.
 
 ## Project layout
 
@@ -45,10 +48,14 @@ test-project/          small Godot project used by the tests
 
 To add a tool:
 
-1. Define it with `defineTool` in the right toolset folder. Write the description for the AI: when to use it, what it returns, an example.
+1. Define it in the right toolset folder. Write the description for the AI: when to use it, what it returns, an example.
+   - `defineEditorTool` when the tool only passes its input to one addon method (most tools). Example: `getSceneTreeTool` in `server/src/tools/editing/scene-tools.ts`.
+   - `defineTool` with your own `run` function when the tool does more: several requests, work outside the editor, or an image result. Example: `exportProjectTool` in `server/src/tools/building/shader-audio-export-tools.ts`.
+   - Set `access`: `"read"` if it only looks, `"write"` if it changes anything (hidden in `read-only` mode, needs approval in `confirm` mode).
 2. Add it to the toolset in `server/src/tools/toolsets.ts`.
 3. If it needs the editor, add a handler method in the addon and register it in `register_methods`. New handler files go into `HANDLER_GROUP_SCRIPTS` in `plugin.gd`.
 4. Add an end-to-end test in `tests/integration`.
+5. Update the tool count in `README.md` and `README.tr.md` and add a line to `CHANGELOG.md`.
 
 ## Code style
 
@@ -72,7 +79,7 @@ These rules are for AI agents (Claude Code, Codex, Cursor and others) that write
 - **Check the Godot API before using it.** Look the class up in the installed Godot version (`ClassDB` or the class reference). Do not guess method names, and do not use Godot 3 APIs.
 - **Follow the existing patterns.** New tools use `defineEditorTool` or `defineTool` and go into `server/src/tools/toolsets.ts`; new handler files go into `HANDLER_GROUP_SCRIPTS` in `plugin.gd`. Do not add dependencies, and never Python or npm packages.
 - **Keep the change focused.** Do not reformat, rename or rewrite code that the task does not need.
-- **Prove it works.** Run `bun run lint`, `bun run typecheck` and `bun run test` (not plain `bun test`, which skips rebuilding the bundled addon) before saying the work is done. Report failures as they are; do not hide or skip them.
+- **Prove it works.** Run `bun run lint`, `bun run typecheck` and `bun run test` before saying the work is done. Report failures as they are; do not hide or skip them.
 
 ## Commits and pull requests
 
