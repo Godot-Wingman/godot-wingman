@@ -1,0 +1,7 @@
+// Cloudflare deployment of the landing page: a Worker that only serves the static
+// files in public/. Deploy with: bunx wrangler deploy (from this folder).
+{
+  "name": "godot-pilot",
+  "compatibility_date": "2026-11-01",
+  "assets": { "directory": "./public" }
+}
