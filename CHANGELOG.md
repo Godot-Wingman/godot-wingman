@@ -4,6 +4,12 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-11-27
+
+### Fixed
+
+- `godot-wingman setup` no longer reports Gemini CLI, Windsurf or Cursor as set up when only a folder of theirs is left: such folders stay after an app is removed, and other apps create them too (Antigravity creates `~/.gemini` and `~/.codeium/windsurf`). An app now counts as installed when its command is on the PATH, its program folder exists, or it has written its own settings file.
+
 ## [0.4.1] - 2026-11-26
 
 ### Changed
