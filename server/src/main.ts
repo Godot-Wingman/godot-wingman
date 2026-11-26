@@ -6,6 +6,7 @@
  *   godot-pilot install <project>   Install or update the addon in a Godot project.
  *   godot-pilot doctor              Check the setup: Godot executables, running editors.
  *   godot-pilot update              Install the newest release from GitHub.
+ *   godot-pilot setup               Add Godot Pilot to the AI apps on this computer.
  *   godot-pilot --version | help
  *
  * Server options (also readable from environment variables):
@@ -27,9 +28,15 @@ import { createMcpServer } from "./mcp/create-mcp-server.ts";
 import { PERMISSION_MODES, parsePermissionMode } from "./mcp/permission-mode.ts";
 import { getProductHomeDirectory } from "./paths.ts";
 import { PRODUCT_DISPLAY_NAME, PRODUCT_NAME, PRODUCT_VERSION } from "./product.ts";
+import { setUpAiClients } from "./setup/client-setup.ts";
 import { DEFAULT_TOOLSET_NAMES, TOOLSET_PROFILES } from "./tools/toolset-profiles.ts";
 import { ALL_TOOLSETS } from "./tools/toolsets.ts";
-import { installNewestRelease, isUpdateCheckDisabled, removePreviousExecutable } from "./updates/updates.ts";
+import {
+  installNewestRelease,
+  isRunningAsExecutable,
+  isUpdateCheckDisabled,
+  removePreviousExecutable,
+} from "./updates/updates.ts";
 
 const HELP_TEXT = `${PRODUCT_DISPLAY_NAME} ${PRODUCT_VERSION} - lets AI assistants use the Godot editor.
 
@@ -38,6 +45,7 @@ Usage:
   ${PRODUCT_NAME} install <project>    Install or update the Godot addon in a project
   ${PRODUCT_NAME} doctor               Check Godot executables and running editors
   ${PRODUCT_NAME} update               Install the newest release from GitHub
+  ${PRODUCT_NAME} setup                Add Godot Pilot to the AI apps on this computer
   ${PRODUCT_NAME} --version
 
 Server options:
@@ -78,6 +86,10 @@ async function main(): Promise<void> {
   }
   if (command === "doctor") {
     await runDoctorCommand();
+    return;
+  }
+  if (command === "setup") {
+    await runSetupCommand();
     return;
   }
   if (command === "update") {
@@ -157,6 +169,23 @@ async function runInstallCommand(projectPath: string | undefined): Promise<void>
     result.pluginWasAlreadyEnabled
       ? "The plugin was already enabled."
       : "Enabled the plugin in project.godot.",
+  );
+}
+
+async function runSetupCommand(): Promise<void> {
+  if (!isRunningAsExecutable()) {
+    console.error(
+      "setup adds the downloaded executable to your AI apps. When running from source, follow docs/INSTALL.md.",
+    );
+    process.exit(1);
+  }
+  console.log(`Adding ${PRODUCT_DISPLAY_NAME} (${process.execPath}) to your AI apps:\n`);
+  const steps = await setUpAiClients({ executablePath: process.execPath });
+  for (const step of steps) {
+    console.log(`  ${step.client.padEnd(18)} ${step.outcome.padEnd(15)} ${step.detail}`);
+  }
+  console.log(
+    '\nRestart the AI apps that were changed. Then ask the AI: "Create a new Godot game in C:/games/my-game".',
   );
 }
 
