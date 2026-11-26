@@ -1,0 +1,53 @@
+# Refreshes the live README badges (release, downloads, tests, stars, last commit).
+# GitHub's image proxy often times out on shields.io and then shows a broken image, so this
+# workflow downloads the badges itself and keeps them as SVG files on the "badges" branch,
+# which holds only that one commit. The READMEs load them from raw.githubusercontent.com.
+name: Badges
+
+on:
+  schedule:
+    - cron: "41 */6 * * *"
+  push:
+    branches: [main]
+  release:
+    types: [published]
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: badges
+  cancel-in-progress: true
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download the badges
+        run: |
+          repository="${GITHUB_REPOSITORY}"
+          style="style=for-the-badge&logoColor=white"
+          mkdir badges
+          download_badge() {
+            curl --fail --silent --show-error --retry 5 --retry-delay 5 --max-time 60 \
+              --output "badges/$1.svg" "$2"
+          }
+          download_badge release "https://img.shields.io/github/v/release/${repository}?include_prereleases&${style}&logo=github&color=8b5cf6&labelColor=2a1f3d&label=release"
+          download_badge downloads "https://img.shields.io/github/downloads/${repository}/total?${style}&logo=github&color=22c55e&labelColor=14301f"
+          download_badge tests "https://img.shields.io/github/actions/workflow/status/${repository}/ci.yml?branch=main&${style}&logo=githubactions&labelColor=1b2a40&label=tests"
+          download_badge stars "https://img.shields.io/github/stars/${repository}?${style}&logo=github&color=f0b400&labelColor=3a2f0a"
+          download_badge last-commit "https://img.shields.io/github/last-commit/${repository}?${style}&logo=git&color=e5534b&labelColor=3a1d1d"
+      - name: Replace the badges branch with the new files
+        run: |
+          cd badges
+          git init --quiet --initial-branch=badges
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit --quiet --message "Refresh the README badges"
+          git push --force --quiet "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" badges
