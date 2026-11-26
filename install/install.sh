@@ -1,26 +1,26 @@
 #!/bin/sh
-# Installs Godot Pilot on macOS or Linux and adds it to the AI apps on this computer.
+# Installs Godot Wingman on macOS or Linux and adds it to the AI apps on this computer.
 #
-#   curl -fsSL https://raw.githubusercontent.com/Albis0/godot-pilot/main/install/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/Albis0/godot-wingman/main/install/install.sh | sh
 #
 # What it does:
 # 1. Downloads the executable for this computer from the newest GitHub release.
 # 2. Checks it against the release's SHA256SUMS file.
-# 3. Puts it in ~/.local/bin/godot-pilot.
-# 4. Runs "godot-pilot setup", which adds Godot Pilot to Codex, Claude, Cursor... (a copy
+# 3. Puts it in ~/.local/bin/godot-wingman.
+# 4. Runs "godot-wingman setup", which adds Godot Wingman to Codex, Claude, Cursor... (a copy
 #    of every changed settings file is kept next to it).
 #
 # A file downloaded with curl is not quarantined, so macOS does not block it.
 #
 # Options (environment variables):
-#   GODOT_PILOT_INSTALL_DIR   install somewhere else
-#   GODOT_PILOT_NO_SETUP=1    only download; do not change AI app settings
+#   GODOT_WINGMAN_INSTALL_DIR   install somewhere else
+#   GODOT_WINGMAN_NO_SETUP=1    only download; do not change AI app settings
 #   GITHUB_TOKEN              GitHub token, needed only while the repository is private
 set -eu
 
-repository="Albis0/godot-pilot"
-install_folder="${GODOT_PILOT_INSTALL_DIR:-$HOME/.local/bin}"
-executable_path="$install_folder/godot-pilot"
+repository="Albis0/godot-wingman"
+install_folder="${GODOT_WINGMAN_INSTALL_DIR:-$HOME/.local/bin}"
+executable_path="$install_folder/godot-wingman"
 
 case "$(uname -s)" in
   Darwin) platform_name="macos" ;;
@@ -32,13 +32,13 @@ case "$(uname -m)" in
   x86_64 | amd64) architecture_name="x64" ;;
   *) echo "Unsupported processor: $(uname -m)" >&2; exit 1 ;;
 esac
-asset_name="godot-pilot-$platform_name-$architecture_name"
+asset_name="godot-wingman-$platform_name-$architecture_name"
 
 github() {
   if [ -n "${GITHUB_TOKEN:-}" ]; then
-    curl -fsSL -H "User-Agent: godot-pilot-installer" -H "Authorization: Bearer $GITHUB_TOKEN" "$@"
+    curl -fsSL -H "User-Agent: godot-wingman-installer" -H "Authorization: Bearer $GITHUB_TOKEN" "$@"
   else
-    curl -fsSL -H "User-Agent: godot-pilot-installer" "$@"
+    curl -fsSL -H "User-Agent: godot-wingman-installer" "$@"
   fi
 }
 
@@ -55,7 +55,7 @@ find_asset_url() {
     '
 }
 
-echo "Looking for the newest Godot Pilot release..."
+echo "Looking for the newest Godot Wingman release..."
 executable_url="$(find_asset_url "$asset_name")"
 checksums_url="$(find_asset_url "SHA256SUMS")"
 if [ -z "$executable_url" ] || [ -z "$checksums_url" ]; then
@@ -85,10 +85,10 @@ echo "Installed $executable_path"
 
 case ":$PATH:" in
   *":$install_folder:"*) ;;
-  *) echo "Note: $install_folder is not in your PATH. Add it to run godot-pilot from a terminal." ;;
+  *) echo "Note: $install_folder is not in your PATH. Add it to run godot-wingman from a terminal." ;;
 esac
 
-if [ "${GODOT_PILOT_NO_SETUP:-}" = "1" ]; then
+if [ "${GODOT_WINGMAN_NO_SETUP:-}" = "1" ]; then
   exit 0
 fi
 "$executable_path" setup
