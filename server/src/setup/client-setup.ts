@@ -1,10 +1,10 @@
 /**
- * `godot-pilot setup`: adds Godot Pilot to the AI apps installed on this computer, so
+ * `godot-wingman setup`: adds Godot Wingman to the AI apps installed on this computer, so
  * the person does not have to edit configuration files by hand.
  *
- * For each app whose configuration folder exists, the godot-pilot entry is added when
+ * For each app whose configuration folder exists, the godot-wingman entry is added when
  * it is missing (an existing entry is left alone). A copy of the file is saved next to
- * it first (".before-godot-pilot"). Claude Code is set up with its own `claude mcp add`
+ * it first (".before-godot-wingman"). Claude Code is set up with its own `claude mcp add`
  * command. VS Code is set up per project, so it is only explained.
  */
 import { existsSync } from "node:fs";
@@ -168,7 +168,7 @@ async function runClaudeCli(commandArguments: string[]): Promise<number | null> 
 
 async function saveWithBackup(filePath: string, content: string): Promise<void> {
   if (existsSync(filePath)) {
-    await copyFile(filePath, `${filePath}.before-godot-pilot`);
+    await copyFile(filePath, `${filePath}.before-godot-wingman`);
   }
   await mkdir(dirname(filePath), { recursive: true });
   await writeFile(filePath, content);

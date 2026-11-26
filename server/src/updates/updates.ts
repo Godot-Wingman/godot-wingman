@@ -1,12 +1,12 @@
 /**
- * Finding and installing new versions of Godot Pilot.
+ * Finding and installing new versions of Godot Wingman.
  *
  * - Checking: at most once a day, the server asks GitHub for the list of releases of
  *   this project (a plain download, like opening the releases page; nothing about the
  *   person or their project is sent). When a newer version exists, the AI is told
  *   with its next tool result and can offer the update. Turn it off with
- *   --no-update-check or GODOT_PILOT_NO_UPDATE_CHECK=1.
- * - Installing (the update_godot_pilot tool, or `godot-pilot update`): downloads the
+ *   --no-update-check or GODOT_WINGMAN_NO_UPDATE_CHECK=1.
+ * - Installing (the update_godot_wingman tool, or `godot-wingman update`): downloads the
  *   executable for this computer from the newest release, checks it against the
  *   release's SHA256SUMS file, and swaps it in. A running program cannot be
  *   overwritten on Windows, but it can be renamed, so the old file is moved aside and
@@ -18,7 +18,7 @@ import { basename, dirname, join } from "node:path";
 import { getProductHomeDirectory } from "../paths.ts";
 import { PRODUCT_NAME, PRODUCT_REPOSITORY, PRODUCT_VERSION } from "../product.ts";
 
-export const NO_UPDATE_CHECK_ENVIRONMENT_VARIABLE = "GODOT_PILOT_NO_UPDATE_CHECK";
+export const NO_UPDATE_CHECK_ENVIRONMENT_VARIABLE = "GODOT_WINGMAN_NO_UPDATE_CHECK";
 const RELEASES_URL = `https://api.github.com/repos/${PRODUCT_REPOSITORY}/releases?per_page=20`;
 const CHECK_INTERVAL_MILLISECONDS = 24 * 60 * 60 * 1000;
 /** The AI mentions an available version again after this long, if it was not installed. */
@@ -37,7 +37,7 @@ export interface Release {
   assets: ReleaseAsset[];
 }
 
-/** Remembered in <data>/godot-pilot/update-check.json between runs. */
+/** Remembered in <data>/godot-wingman/update-check.json between runs. */
 interface UpdateCheckRecord {
   checkedAtMilliseconds: number;
   newestRelease: Release | null;
@@ -187,7 +187,7 @@ export async function findUpdateToAnnounce(options: UpdateOptions = {}): Promise
 }
 
 export function describeAvailableUpdate(release: Release, currentVersion: string = PRODUCT_VERSION): string {
-  return `Godot Pilot ${release.version} is available (this is ${currentVersion}). Tell the person once and ask whether to install it; if they agree, call update_godot_pilot. What changed: ${release.pageUrl}`;
+  return `Godot Wingman ${release.version} is available (this is ${currentVersion}). Tell the person once and ask whether to install it; if they agree, call update_godot_wingman. What changed: ${release.pageUrl}`;
 }
 
 export interface UpdateOutcome {
@@ -203,13 +203,13 @@ export async function installNewestRelease(
   const fetcher = options.fetcher ?? fetch;
   const release = await fetchNewestRelease(fetcher);
   if (release === null || compareVersions(release.version, currentVersion) <= 0) {
-    return { updated: false, message: `Godot Pilot ${currentVersion} is the newest version.` };
+    return { updated: false, message: `Godot Wingman ${currentVersion} is the newest version.` };
   }
   const executablePath = options.executablePath ?? process.execPath;
   if (options.executablePath === undefined && !isRunningAsExecutable()) {
     return {
       updated: false,
-      message: `Godot Pilot ${release.version} is available, but this copy runs from source code with Bun. Update it with "git pull" and "bun install" in its folder. Release: ${release.pageUrl}`,
+      message: `Godot Wingman ${release.version} is available, but this copy runs from source code with Bun. Update it with "git pull" and "bun install" in its folder. Release: ${release.pageUrl}`,
     };
   }
 
@@ -258,8 +258,8 @@ export async function installNewestRelease(
   return {
     updated: true,
     message: [
-      `Installed Godot Pilot ${release.version} (was ${currentVersion}).`,
-      "It runs from the next start: the person should restart the AI app, or reconnect the godot-pilot MCP server.",
+      `Installed Godot Wingman ${release.version} (was ${currentVersion}).`,
+      "It runs from the next start: the person should restart the AI app, or reconnect the godot-wingman MCP server.",
       "After that, launch_editor updates the addon in the project; restart the Godot editor if it is open.",
       `What changed: ${release.pageUrl}`,
     ].join(" "),
