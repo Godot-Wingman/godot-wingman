@@ -26,6 +26,8 @@ export interface CreateServerOptions {
   preselectedProjectPath?: string;
   /** Replaces the built-in toolsets; used by tests. */
   toolsets?: Toolset[];
+  /** How long the approval dialog waits in "confirm" mode; tests make it short. */
+  confirmationTimeoutSeconds?: number;
 }
 
 export interface CreatedServer {
@@ -43,7 +45,12 @@ export function createMcpServer(options: CreateServerOptions): CreatedServer {
     },
   );
 
-  const editors = new EditorManager();
+  // The AI application introduces itself when it connects (MCP "initialize").
+  const getAiClientName = () => server.server.getClientVersion()?.name ?? "AI";
+  const editors = new EditorManager(() => ({
+    aiClient: getAiClientName(),
+    permissionMode: options.permissionMode,
+  }));
   if (options.preselectedProjectPath) {
     editors.selectProject(options.preselectedProjectPath);
   }
@@ -60,6 +67,7 @@ export function createMcpServer(options: CreateServerOptions): CreatedServer {
       toolContext ??= { editors, docs, toolsets, permissionMode: options.permissionMode };
       return toolContext;
     },
+    { confirmationTimeoutSeconds: options.confirmationTimeoutSeconds, getAiClientName },
   );
   toolsets.registerAll(options.initialToolsets);
 

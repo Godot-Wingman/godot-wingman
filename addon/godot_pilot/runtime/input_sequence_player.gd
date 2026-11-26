@@ -54,10 +54,15 @@ func play(steps: Array) -> Dictionary:
 		elif step.has("release"):
 			held_inputs.erase(String(step["release"]))
 		performed_steps.append(outcome)
+	# A press without a matching release would keep the player running after the sequence.
+	var released_at_end := await _release_all(held_inputs)
+	if released_at_end != "":
+		performed_steps.append("end of sequence" + released_at_end)
 	return {"performed": performed_steps}
 
 
-## Lets go of inputs a failed sequence still holds, so the game does not keep running.
+## Lets go of inputs that are still held when a sequence ends or fails, so the game
+## does not keep running.
 func _release_all(held_inputs: Array[String]) -> String:
 	if held_inputs.is_empty():
 		return ""

@@ -230,7 +230,7 @@ export const inputSequenceTool = defineTool({
     '{"wait_seconds": 0.5}, {"wait_frames": 10}, {"mouse_move": [x, y]}, {"mouse_click": [x, y], "button": "left", "double": false},',
     '{"mouse_drag": {"from": [x, y], "to": [x, y], "seconds": 0.3}}, {"type_text": "hello"},',
     '{"wait_until": "<GDScript expression>", "timeout_seconds": 5} (checked every physics frame; can use node("path"), scene, tree).',
-    "Prefer wait_until over guessed times: physics timing varies, positions do not. If a step fails, held inputs are released.",
+    "Prefer wait_until over guessed times: physics timing varies, positions do not. Inputs still held when the sequence ends or a step fails are released.",
     'Example (run to the edge, then jump onto a platform): [{"press": "action:move_right"}, {"wait_until": "node("Player").position.x > 170"}, {"tap": "action:jump"}, {"wait_until": "node("Player").is_on_floor()"}, {"release": "action:move_right"}]',
   ].join("\n"),
   inputShape: { steps: z.array(z.record(z.string(), z.unknown())).min(1) },

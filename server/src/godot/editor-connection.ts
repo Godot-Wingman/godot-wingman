@@ -8,7 +8,7 @@
  * Several requests can be in flight at the same time; the id matches answers to them.
  */
 import { PRODUCT_NAME, PRODUCT_VERSION } from "../product.ts";
-import type { EditorRegistration } from "./editor-registry.ts";
+import { type EditorRegistration, isProcessAlive } from "./editor-registry.ts";
 
 const HANDSHAKE_TIMEOUT_MILLISECONDS = 10_000;
 export const DEFAULT_REQUEST_TIMEOUT_MILLISECONDS = 60_000;
@@ -24,6 +24,13 @@ export class EditorRequestError extends Error {
     super(message);
     this.name = "EditorRequestError";
   }
+}
+
+/** Who is connecting, shown in the Godot Pilot panel of the editor. */
+export interface ClientDescription {
+  /** Name of the AI application, for example "claude-code". */
+  aiClient: string;
+  permissionMode: string;
 }
 
 interface PendingRequest {
@@ -47,7 +54,13 @@ export class EditorConnection {
   private readonly pendingRequests = new Map<number, PendingRequest>();
   private isClosed = false;
 
-  constructor(readonly registration: EditorRegistration) {}
+  constructor(
+    readonly registration: EditorRegistration,
+    private readonly describeClient: () => ClientDescription = () => ({
+      aiClient: "unknown",
+      permissionMode: "full",
+    }),
+  ) {}
 
   get isOpen(): boolean {
     return !this.isClosed && this.socket?.readyState === WebSocket.OPEN;
@@ -66,11 +79,17 @@ export class EditorConnection {
       }, HANDSHAKE_TIMEOUT_MILLISECONDS);
 
       socket.addEventListener("open", () => {
+        const clientDescription = this.describeClient();
         socket.send(
           JSON.stringify({
             type: "hello",
             token: this.registration.token,
-            client: { name: PRODUCT_NAME, version: PRODUCT_VERSION },
+            client: {
+              name: PRODUCT_NAME,
+              version: PRODUCT_VERSION,
+              ai_client: clientDescription.aiClient,
+              permission_mode: clientDescription.permissionMode,
+            },
           }),
         );
       });
@@ -100,7 +119,7 @@ export class EditorConnection {
       socket.addEventListener("close", () => {
         clearTimeout(handshakeTimer);
         this.isClosed = true;
-        this.rejectAllPendingRequests("The connection to the Godot editor was closed.");
+        this.rejectAllPendingRequests(this.describeLostConnection());
         if (!isAuthenticated) {
           reject(new Error(`Could not connect to the Godot editor on port ${this.registration.port}.`));
         }
@@ -149,7 +168,28 @@ export class EditorConnection {
   close(): void {
     this.isClosed = true;
     this.socket?.close();
-    this.rejectAllPendingRequests("The connection was closed.");
+    this.rejectAllPendingRequests(
+      new EditorRequestError(
+        "CONNECTION_CLOSED",
+        "The connection to the Godot editor was closed by the MCP server.",
+      ),
+    );
+  }
+
+  /** Explains a connection that ended by itself, with what the AI should do next. */
+  private describeLostConnection(): EditorRequestError {
+    if (isProcessAlive(this.registration.processId)) {
+      return new EditorRequestError(
+        "EDITOR_DISCONNECTED",
+        "The connection to the Godot editor was lost, but the editor is still running.",
+        "The addon may have been turned off or reloaded. Try the call again; if it keeps failing, call get_status.",
+      );
+    }
+    return new EditorRequestError(
+      "EDITOR_CLOSED",
+      "The Godot editor closed or crashed while the request was running.",
+      "Tell the person, then call launch_editor to open the project again. Changes that were not saved before the crash are lost; check the result with get_editor_state.",
+    );
   }
 
   private handleResponse(response: ResponseMessage): void {
@@ -175,10 +215,10 @@ export class EditorConnection {
     );
   }
 
-  private rejectAllPendingRequests(reason: string): void {
+  private rejectAllPendingRequests(error: EditorRequestError): void {
     for (const pendingRequest of this.pendingRequests.values()) {
       clearTimeout(pendingRequest.timeoutTimer);
-      pendingRequest.reject(new Error(reason));
+      pendingRequest.reject(error);
     }
     this.pendingRequests.clear();
   }

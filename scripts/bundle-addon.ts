@@ -2,8 +2,8 @@
  * Packs the Godot addon (addon/godot_pilot) into a TypeScript file, so the compiled
  * server carries the addon inside itself and can install it into any project.
  *
- * Run automatically by `bun run build` and `bun test`. The output file is generated;
- * never edit it by hand.
+ * Run automatically by `bun run build` and before every test run (see bunfig.toml).
+ * The output file is generated; never edit it by hand.
  */
 import { join, relative } from "node:path";
 
@@ -36,5 +36,9 @@ const fileContent = [
   "",
 ].join("\n");
 
-await Bun.write(outputFilePath, fileContent);
-console.log(`Bundled ${sortedEntries.length} addon files into ${relative(repositoryRoot, outputFilePath)}`);
+// Rewriting an unchanged file would only wake up file watchers for nothing.
+const outputFile = Bun.file(outputFilePath);
+if (!(await outputFile.exists()) || (await outputFile.text()) !== fileContent) {
+  await Bun.write(outputFilePath, fileContent);
+  console.log(`Bundled ${sortedEntries.length} addon files into ${relative(repositoryRoot, outputFilePath)}`);
+}

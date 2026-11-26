@@ -1,0 +1,6 @@
+# Bun settings for this repository.
+
+[test]
+# Every test run first packs the addon into server/src/addon/addon-files.generated.ts,
+# so `bun test` and `bun run test` always test the current addon code.
+preload = ["./scripts/bundle-addon.ts"]

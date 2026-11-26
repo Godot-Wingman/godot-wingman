@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
-      - run: bun run lint && bun run typecheck && bun test tests/unit
+      - run: bun run lint && bun run typecheck && bun run test:unit
       - run: bun run build
       - name: Zip the addon for manual installation
         run: cd addon && zip -r ../dist/godot-pilot-addon.zip godot_pilot

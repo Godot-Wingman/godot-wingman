@@ -9,6 +9,7 @@
  */
 import type { McpServer, RegisteredTool } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import { EditorRequestError } from "../godot/editor-connection.ts";
 import type { PermissionMode } from "./permission-mode.ts";
 import { errorResult, errorToResult, type PilotTool, type ToolContext } from "./tool-definition.ts";
 
@@ -32,7 +33,30 @@ export interface ToolsetSummary {
   hiddenToolNames: string[];
 }
 
-const CONFIRMATION_TIMEOUT_SECONDS = 180;
+const DEFAULT_CONFIRMATION_TIMEOUT_SECONDS = 180;
+
+export interface ToolsetControllerOptions {
+  /** How long the approval dialog waits in "confirm" mode. */
+  confirmationTimeoutSeconds?: number;
+  /** Name of the AI application, shown in the editor next to each change. */
+  getAiClientName?: () => string;
+}
+
+/** The editor's answer to authorize_tool_call (addon/godot_pilot/session/pilot_session.gd). */
+interface EditorAuthorization {
+  allowed: boolean;
+  activity_id: number;
+  mode: string;
+  reason: string;
+}
+
+interface Authorization {
+  allowed: boolean;
+  reason: string;
+  hint?: string;
+  /** Id of the entry in the editor's activity list, when the editor recorded the call. */
+  activityId?: number;
+}
 
 export class ToolsetController {
   private readonly registeredToolsByName = new Map<string, RegisteredTool>();
@@ -43,6 +67,7 @@ export class ToolsetController {
     private readonly toolsets: Toolset[],
     private readonly permissionMode: PermissionMode,
     private readonly getContext: () => ToolContext,
+    private readonly options: ToolsetControllerOptions = {},
   ) {}
 
   /** Registers every tool with the MCP server, then enables the requested toolsets. */
@@ -155,43 +180,137 @@ export class ToolsetController {
     return !(this.permissionMode === "read-only" && tool.access === "write");
   }
 
+  /**
+   * Tools that only look run directly. Tools that change something first ask the
+   * editor: it applies the stricter of the two permission modes (this server's and the
+   * one chosen in the Godot Pilot panel), shows the approval dialog in "confirm" mode,
+   * takes a checkpoint and lists the change in its activity panel.
+   */
   private async runTool(tool: PilotTool, input: Record<string, unknown>): Promise<CallToolResult> {
     const context = this.getContext();
     try {
-      if (this.permissionMode === "confirm" && tool.access === "write") {
-        const approved = await this.askPersonForApproval(tool, input, context);
-        if (!approved) {
-          return errorResult(
-            "The person at the Godot editor denied this change (permission mode: confirm).",
-            "Explain what you want to do and why, or ask them what they would like instead.",
-          );
-        }
+      if (tool.access !== "write") {
+        return await tool.run(input, context);
       }
-      return await tool.run(input, context);
+      const authorization = await this.authorize(tool, input, context);
+      if (!authorization.allowed) {
+        return errorResult(authorization.reason, authorization.hint);
+      }
+      let result: CallToolResult;
+      try {
+        result = await tool.run(input, context);
+      } catch (error) {
+        result = errorToResult(error);
+      }
+      if (authorization.activityId !== undefined) {
+        this.reportFinished(authorization.activityId, result, context);
+      }
+      return result;
     } catch (error) {
       return errorToResult(error);
     }
   }
 
-  private async askPersonForApproval(
+  private async authorize(
+    tool: PilotTool,
+    input: Record<string, unknown>,
+    context: ToolContext,
+  ): Promise<Authorization> {
+    const timeoutSeconds = this.options.confirmationTimeoutSeconds ?? DEFAULT_CONFIRMATION_TIMEOUT_SECONDS;
+    try {
+      const answer = await context.editors.request<EditorAuthorization>(
+        "authorize_tool_call",
+        {
+          tool: tool.name,
+          title: tool.title,
+          input,
+          server_mode: this.permissionMode,
+          client: this.options.getAiClientName?.() ?? "AI",
+          timeout_seconds: timeoutSeconds,
+        },
+        (timeoutSeconds + 15) * 1000,
+      );
+      if (answer.allowed) {
+        return { allowed: true, reason: "", activityId: answer.activity_id };
+      }
+      return {
+        allowed: false,
+        reason: answer.reason,
+        hint:
+          answer.mode === "read-only"
+            ? "Only tools that look are allowed now. Tell the person what you would like to change."
+            : "Explain what you want to do and why, or ask the person what they would like instead.",
+      };
+    } catch (error) {
+      return this.authorizeWithoutEditor(tool, input, context, error);
+    }
+  }
+
+  /**
+   * The editor could not answer: it is not running, or its addon is older than this
+   * server. In "full" mode the tool runs anyway (and reports its own error if it needs
+   * the editor). In "confirm" mode nothing may run without the person's approval.
+   */
+  private async authorizeWithoutEditor(
+    tool: PilotTool,
+    input: Record<string, unknown>,
+    context: ToolContext,
+    error: unknown,
+  ): Promise<Authorization> {
+    if (this.permissionMode !== "confirm") {
+      return { allowed: true, reason: "" };
+    }
+    const isOlderAddon = error instanceof EditorRequestError && error.code === "UNKNOWN_METHOD";
+    if (isOlderAddon) {
+      const approved = await this.askWithOlderAddon(tool, input, context);
+      return approved
+        ? { allowed: true, reason: "" }
+        : {
+            allowed: false,
+            reason: "The person at the Godot editor denied this change (permission mode: confirm).",
+            hint: "Explain what you want to do and why, or ask them what they would like instead.",
+          };
+    }
+    const message = error instanceof Error ? error.message : String(error);
+    return {
+      allowed: false,
+      reason: `Permission mode "confirm" needs the Godot editor to ask the person, but the editor could not be reached: ${message}`,
+      hint: "Call get_status, or launch_editor to open the project.",
+    };
+  }
+
+  /** Older addons only know the plain confirm_action dialog. */
+  private async askWithOlderAddon(
     tool: PilotTool,
     input: Record<string, unknown>,
     context: ToolContext,
   ): Promise<boolean> {
-    const inputDescription = JSON.stringify(input, null, 2);
-    const shortenedInput =
-      inputDescription.length > 1500
-        ? `${inputDescription.slice(0, 1500)}\n... (shortened)`
-        : inputDescription;
+    const timeoutSeconds = this.options.confirmationTimeoutSeconds ?? DEFAULT_CONFIRMATION_TIMEOUT_SECONDS;
     const answer = await context.editors.request<{ allowed: boolean }>(
       "confirm_action",
       {
         title: tool.title,
-        description: `The AI wants to use "${tool.name}" with:\n\n${shortenedInput}`,
-        timeout_seconds: CONFIRMATION_TIMEOUT_SECONDS,
+        description: `The AI wants to use "${tool.name}" with:
+
+${JSON.stringify(input, null, 2)}`,
+        timeout_seconds: timeoutSeconds,
       },
-      (CONFIRMATION_TIMEOUT_SECONDS + 10) * 1000,
+      (timeoutSeconds + 10) * 1000,
     );
     return answer.allowed;
+  }
+
+  /** Tells the editor's activity panel how the call ended. Not awaited: it is only a record. */
+  private reportFinished(activityId: number, result: CallToolResult, context: ToolContext): void {
+    const firstText = result.content.find((item) => item.type === "text");
+    context.editors
+      .request("finish_tool_call", {
+        activity_id: activityId,
+        succeeded: result.isError !== true,
+        result: firstText && "text" in firstText ? firstText.text : "",
+      })
+      .catch(() => {
+        // The editor may have closed meanwhile; the tool result itself is what matters.
+      });
   }
 }

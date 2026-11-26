@@ -101,7 +101,7 @@ async function readRegistrationFile(filePath: string): Promise<EditorRegistratio
 }
 
 /** Sending signal 0 does nothing to the process but fails when it does not exist. */
-function isProcessAlive(processId: number): boolean {
+export function isProcessAlive(processId: number): boolean {
   try {
     process.kill(processId, 0);
     return true;

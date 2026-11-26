@@ -8,6 +8,7 @@
  */
 import { normalizePathForComparison } from "../paths.ts";
 import {
+  type ClientDescription,
   DEFAULT_REQUEST_TIMEOUT_MILLISECONDS,
   EditorConnection,
   EditorRequestError,
@@ -22,6 +23,8 @@ export class EditorManager {
   /** Open connections, keyed by the editor's process id. */
   private readonly connectionsByProcessId = new Map<number, EditorConnection>();
   private selectedProjectPath: string | null = null;
+
+  constructor(private readonly describeClient?: () => ClientDescription) {}
 
   listEditors(): Promise<EditorRegistration[]> {
     return readEditorRegistrations();
@@ -44,7 +47,7 @@ export class EditorManager {
     }
 
     existingConnection?.close();
-    const connection = new EditorConnection(registration);
+    const connection = new EditorConnection(registration, this.describeClient);
     await connection.open();
     this.connectionsByProcessId.set(registration.processId, connection);
     return connection;

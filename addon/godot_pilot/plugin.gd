@@ -5,7 +5,8 @@ extends EditorPlugin
 ## When the editor loads the plugin, it:
 ## 1. starts capturing the editor's output (Godot 4.5+),
 ## 2. starts a WebSocket server on 127.0.0.1 with a random secret token,
-## 3. writes a registry file so the MCP server can find this editor.
+## 3. writes a registry file so the MCP server can find this editor,
+## 4. adds the "Godot Pilot" panel (permission mode, activity list, going back).
 ## Everything is undone when the plugin is disabled or the editor closes.
 ##
 ## The addon only lives in the editor: nothing from it runs in exported games.
@@ -18,6 +19,7 @@ const EditorContext := preload("editor_context.gd")
 ## Every group of request handlers. A group is a script with `register_methods(dispatcher)`.
 const HANDLER_GROUP_SCRIPTS: Array[Script] = [
 	preload("handlers/core_handlers.gd"),
+	preload("handlers/session_handlers.gd"),
 	preload("handlers/scene_handlers.gd"),
 	preload("handlers/inspector_handlers.gd"),
 	preload("handlers/script_handlers.gd"),
@@ -38,6 +40,8 @@ const HANDLER_GROUP_SCRIPTS: Array[Script] = [
 
 const GameDebuggerBridge := preload("bridge/game_debugger_bridge.gd")
 const ExportFilter := preload("bridge/export_filter.gd")
+const PilotSession := preload("session/pilot_session.gd")
+const PilotDock := preload("ui/pilot_dock.gd")
 
 const TOKEN_BYTE_COUNT := 24
 ## Name of the temporary autoload that runs inside the game (runtime/game_bridge.gd).
@@ -50,6 +54,8 @@ var _bridge_server: BridgeServer
 var _registry_file: EditorRegistryFile
 var _game_debugger_bridge: GameDebuggerBridge
 var _export_filter: ExportFilter
+var _session: PilotSession
+var _dock: PilotDock
 
 
 func _enter_tree() -> void:
@@ -71,6 +77,8 @@ func _enter_tree() -> void:
 
 	var context := EditorContext.new(self, _log_capture, _read_addon_version(addon_directory), addon_directory)
 	context.game_bridge = _game_debugger_bridge
+	_session = PilotSession.new(get_tree(), addon_directory)
+	context.session = _session
 	var dispatcher := RequestDispatcher.new()
 	for handler_group_script in HANDLER_GROUP_SCRIPTS:
 		var handler_group: RefCounted = handler_group_script.new(context)
@@ -88,6 +96,9 @@ func _enter_tree() -> void:
 		return
 	add_child(_bridge_server)
 	_bridge_server.client_count_changed.connect(_on_client_count_changed)
+	if DisplayServer.get_name() != "headless":
+		_dock = PilotDock.new(_session, context.addon_version)
+		add_control_to_bottom_panel(_dock, "Godot Pilot")
 
 	var registry_information := editor_information.duplicate()
 	registry_information["port"] = _bridge_server.port
@@ -118,6 +129,11 @@ func _remove_game_bridge_autoload() -> void:
 
 func _exit_tree() -> void:
 	_remove_game_bridge_autoload()
+	if _dock != null:
+		remove_control_from_bottom_panel(_dock)
+		_dock.queue_free()
+		_dock = null
+	_session = null
 	if _game_debugger_bridge != null:
 		remove_debugger_plugin(_game_debugger_bridge)
 		_game_debugger_bridge = null
@@ -179,3 +195,5 @@ func _on_client_count_changed(authenticated_client_count: int) -> void:
 		print("Godot Pilot: %d AI connection(s) active." % authenticated_client_count)
 	else:
 		print("Godot Pilot: no AI connected.")
+	if _dock != null:
+		_dock.show_connected_clients(_bridge_server.get_client_descriptions())
