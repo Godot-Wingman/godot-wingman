@@ -47,6 +47,11 @@
 
 詳細は [英語版 README](README.md) と [インストールガイド](docs/INSTALL.md) を参照してください。
 
+
+<p align="center">
+  <img src="docs/images/gameplay.gif" alt="The finished demo game: the player runs, jumps, collects coins and double-jumps over a gap" width="640">
+</p>
+
 ## 要点
 
 - 変更は開いているエディタで行われ、Godot の元に戻す履歴に記録されるので、Ctrl+Z で元に戻せます。

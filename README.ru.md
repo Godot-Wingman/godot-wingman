@@ -47,6 +47,11 @@
 
 Подробнее см. [README на английском](README.md) и [руководство по установке](docs/INSTALL.md).
 
+
+<p align="center">
+  <img src="docs/images/gameplay.gif" alt="The finished demo game: the player runs, jumps, collects coins and double-jumps over a gap" width="640">
+</p>
+
 ## Коротко
 
 - Изменения вносятся в открытом редакторе и попадают в историю отмены Godot, поэтому их можно отменить через Ctrl+Z.

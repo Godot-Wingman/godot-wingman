@@ -47,6 +47,11 @@
 
 更多详情请参阅 [英文 README](README.md) 和 [安装指南](docs/INSTALL.md)。
 
+
+<p align="center">
+  <img src="docs/images/gameplay.gif" alt="The finished demo game: the player runs, jumps, collects coins and double-jumps over a gap" width="640">
+</p>
+
 ## 简要说明
 
 - 更改在打开的编辑器中进行，并记录在 Godot 的撤销历史中，可以用 Ctrl+Z 撤销。

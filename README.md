@@ -60,7 +60,11 @@ A real session: three requests, and screenshots taken through Godot Wingman alon
 |---|---|---|
 | <img src="docs/images/level.png" alt="A tile level built in the 2D editor"> | <img src="docs/images/game-coins.png" alt="The running game: the player jumps to coins, the score reads 3 of 9"> | <img src="docs/images/game-double-jump.png" alt="The running game: the player in a double jump"> |
 
-<sub>Game art: [Pixel Platformer](https://kenney.nl/assets/pixel-platformer) by Kenney (CC0).</sub>
+<p align="center">
+  <img src="docs/images/gameplay.gif" alt="The finished demo game: the player runs, jumps, collects coins and double-jumps over a gap" width="640">
+</p>
+
+<p align="center"><sub>The finished game, played through Godot Wingman frame by frame (step_frames, input events, take_game_screenshot).<br>Game art: <a href="https://kenney.nl/assets/pixel-platformer">Pixel Platformer</a> by Kenney (CC0).</sub></p>
 
 ## What it does
 

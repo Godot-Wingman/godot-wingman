@@ -47,6 +47,11 @@
 
 Pour plus de détails, voir le [README en anglais](README.md) et le [guide d'installation](docs/INSTALL.md).
 
+
+<p align="center">
+  <img src="docs/images/gameplay.gif" alt="The finished demo game: the player runs, jumps, collects coins and double-jumps over a gap" width="640">
+</p>
+
 ## En bref
 
 - Les changements se font dans l'éditeur ouvert et entrent dans l'historique d'annulation de Godot : on peut les annuler avec Ctrl+Z.

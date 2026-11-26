@@ -47,6 +47,11 @@
 
 Ayrıntılar için [İngilizce README](README.md) ve [kurulum rehberi](docs/INSTALL.md).
 
+
+<p align="center">
+  <img src="docs/images/gameplay.gif" alt="The finished demo game: the player runs, jumps, collects coins and double-jumps over a gap" width="640">
+</p>
+
 ## Kısaca
 
 - Değişiklikler açık editörde yapılır ve Godot'nun geri alma geçmişine girer, Ctrl+Z ile geri alınır.

@@ -47,6 +47,11 @@
 
 자세한 내용은 [영어 README](README.md)와 [설치 가이드](docs/INSTALL.md)를 참고하세요.
 
+
+<p align="center">
+  <img src="docs/images/gameplay.gif" alt="The finished demo game: the player runs, jumps, collects coins and double-jumps over a gap" width="640">
+</p>
+
 ## 요약
 
 - 변경은 열려 있는 편집기에서 이루어지고 Godot의 실행 취소 기록에 들어갑니다. 그래서 Ctrl+Z로 되돌릴 수 있습니다.

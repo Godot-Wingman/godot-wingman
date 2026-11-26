@@ -47,6 +47,11 @@
 
 Para mais detalhes, veja o [README em inglês](README.md) e o [guia de instalação](docs/INSTALL.md).
 
+
+<p align="center">
+  <img src="docs/images/gameplay.gif" alt="The finished demo game: the player runs, jumps, collects coins and double-jumps over a gap" width="640">
+</p>
+
 ## Em resumo
 
 - As mudanças são feitas no editor aberto e entram no histórico de desfazer do Godot, então dá para desfazer com Ctrl+Z.

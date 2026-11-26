@@ -47,6 +47,11 @@
 
 Más detalles en el [README en inglés](README.md) y en la [guía de instalación](docs/INSTALL.md).
 
+
+<p align="center">
+  <img src="docs/images/gameplay.gif" alt="The finished demo game: the player runs, jumps, collects coins and double-jumps over a gap" width="640">
+</p>
+
 ## En resumen
 
 - Los cambios se hacen en el editor abierto y entran en el historial de deshacer de Godot, así que se pueden revertir con Ctrl+Z.
