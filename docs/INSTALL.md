@@ -124,6 +124,7 @@ Add options as arguments (`"args": [...]` in JSON configs, after `--` for Claude
 | `--mode read-only` | Tools that change anything are hidden. The AI can only look. |
 | `--toolsets edit` | Toolsets enabled at start: a profile (`minimal`, `default`, `edit`, `2d`, `3d`, `play`, `all`) or names like `core,scene,animation`. The AI can still switch toolsets later. |
 | `--project /path` | Which editor to use when several projects are open. |
+| `--no-update-check` | Do not look for new versions on GitHub (see Updating). |
 
 Example for Claude Desktop with confirmation and the playtesting tools:
 
@@ -135,9 +136,25 @@ Example for Claude Desktop with confirmation and the playtesting tools:
 }
 ```
 
-The same options can be set with the environment variables `GODOT_PILOT_MODE`, `GODOT_PILOT_TOOLSETS` and `GODOT_PILOT_PROJECT`.
+The same options can be set with the environment variables `GODOT_PILOT_MODE`, `GODOT_PILOT_TOOLSETS`, `GODOT_PILOT_PROJECT` and `GODOT_PILOT_NO_UPDATE_CHECK=1`.
 
 The permission mode can also be chosen in Godot: open the **Godot Pilot** panel at the bottom of the editor. That choice is saved for the project on your computer. If it differs from `--mode`, the stricter of the two applies.
+
+## Updating
+
+At most once a day, Godot Pilot downloads the list of its releases from GitHub (nothing is sent with the request). When a newer version exists, the AI tells you and, if you agree, installs it with the `update_godot_pilot` tool. You can also update yourself:
+
+```
+godot-pilot update
+```
+
+The download is checked against the release's SHA-256 checksums before it replaces the old file. The new version runs after you restart your AI app; the next `launch_editor` then updates the addon in your project (restart Godot if it is open).
+
+## Several AIs in one editor
+
+More than one AI app can work in the same editor at once. The Godot Pilot panel shows which AI made each change. The AIs hear about each other when they connect and can tell each other what they are about to change (`tell_other_ais`). You can write to all of them from the message field at the bottom of the panel; they read it with their next step.
+
+When you press Ctrl+Z, change something by hand, or go back to an earlier step in the panel, every connected AI is told with its next tool result.
 
 ## Godot not found?
 

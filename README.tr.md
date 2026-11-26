@@ -15,6 +15,8 @@ Ayrıntılar için [İngilizce README](README.md) ve [kurulum rehberi](docs/INST
 - Oyunu gerçek input ile oynar: tuşu basılı tutma, zamanlama, kare kare ilerletme, "şu olana kadar bekle".
 - Kurulu Godot sürümünün kendi dokümantasyonunu ve GDExtension sınıflarını okur.
 - Editörün altındaki Godot Pilot paneli AI'ın yaptığı her değişikliği listeler; script, sahne, kaynak ve ayarları istediğin adımdan önceki haline döndürebilir.
+- Sen Ctrl+Z'ye bastığında, elle bir şey değiştirdiğinde ya da panelden geri döndüğünde AI bunu bir sonraki adımında öğrenir; artık var olmayan bir hal üzerinde çalışmaya devam etmez.
+- Aynı editörde çalışan AI'lar (örneğin Claude Code ve Cursor) ne değiştireceklerini birbirlerine söyleyebilir; sen de panelden hepsine yazabilirsin.
 - Araçlar gruplar halindedir (20 grupta 120 araç: sahne, inspector, script, animasyon, tilemap, arayüz, 3D, shader, ses, export, oyunu oynama...). AI sadece ihtiyacı olan grupları açar.
 
 ## İzin modları
@@ -33,11 +35,13 @@ Modu AI istemcisine eklerken (`--mode`) ya da Godot'da Godot Pilot panelinden se
 - **C#**: Proje Godot'nun .NET sürümüyle açıldığında AI C# script yazıp düzenleyebilir.
 - **GDExtension (Rust, C++)**: AI, eklentilerinin eklediği sınıfları, özellikleriyle, metotlarıyla ve sinyalleriyle görür.
 
-Uçtan uca testler şu an bir GDScript projesiyle yapılıyor.
+Ana uçtan uca testler bir GDScript projesiyle yapılıyor. Her gece ve her sürümden önce ayrıca bir C# projesi (Godot .NET 4.7.2: C# script yazılır, `dotnet build` ile derlenir, node'a eklenir, oyunda çalışır) ve godot-rust ile Rust'ta yazılmış bir GDExtension (sınıfı dokümante edilir, sahneye eklenir, düzenlenir, oyunda çağrılır) test edilir.
 
 ## Gizlilik
 
-Godot Pilot senin bilgisayarında çalışır ve hiçbir yere veri göndermez: hesap yok, bulut yok, **veri toplama yok**.
+Godot Pilot senin bilgisayarında çalışır ve senin ya da projen hakkında hiçbir yere veri göndermez: hesap yok, bulut yok, **veri toplama yok**.
+
+Yeni sürümleri haber vermek için günde en fazla bir kez GitHub'dan Godot Pilot sürüm listesini indirir; tarayıcıda sürümler sayfasını açmak gibidir, hiçbir şey gönderilmez. `--no-update-check` ile kapatılır. Yeni sürüm çıkınca AI sana söyler, istersen kurar; ya da `godot-pilot update` çalıştırırsın.
 
 AI istemcin ise ayrı bir konu: AI'ın Godot Pilot üzerinden okuduğu her şey (kod, sahneler, ekran görüntüleri, hatalar) kullandığın AI modeline, o sağlayıcının kurallarıyla gider. Her şeyin bilgisayarında kalması için modelin de kendi bilgisayarında çalışması gerekir.
 
@@ -48,3 +52,9 @@ Godot 4.5 veya üstü gerekir. Her değişiklik Godot 4.5.2, 4.6.3 ve 4.7.2 ile 
 [GNU AGPL-3.0](LICENSE). Kullanabilir, inceleyebilir, değiştirebilir, paylaşabilirsin. Değiştirilmiş bir sürümü dağıtır veya internet üzerinden sunarsan kaynak kodunu aynı lisansla paylaşmak zorundasın.
 
 **Godot Pilot ile yaptığın oyunlar bu lisanstan etkilenmez.** Addon sadece editörde çalışır, export edilen oyuna girmez; oyununu istediğin lisansla satabilirsin.
+
+- **AI'ın yazdığı kod AGPL mi olur?** Hayır. AGPL sadece Godot Pilot'un kendi dosyalarını (sunucu ve `addons/godot_pilot` klasörü) kapsar. Projende yaptıkların senindir.
+- **İşte, bir şirkette kullanabilir miyim?** Evet. Kullanmak seni hiçbir şeyi paylaşmaya zorlamaz.
+- **Ne zaman kaynak kodu paylaşmam gerekir?** Sadece Godot Pilot'un kendisini (değiştirilmiş ya da değil) başkalarına verirsen veya değiştirilmiş bir sürümü internet üzerinden kullandırırsan.
+
+Bu bir özettir, hukuki tavsiye değildir; geçerli olan [lisans metnidir](LICENSE).

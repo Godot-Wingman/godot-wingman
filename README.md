@@ -18,6 +18,8 @@ Godot Pilot works inside the open Godot editor, through an addon:
 - **Godot knowledge.** The class reference of the Godot version you have installed, plus the classes of your GDExtensions and scripts.
 - **Fallback.** When no tool fits, the AI can run GDScript inside the editor.
 - **You stay in control.** The Godot Pilot panel at the bottom of the editor lists every change the AI made and can put scripts, scenes, resources and settings back to how they were before any of them.
+- **You and the AI stay in step.** When you press Ctrl+Z, change something by hand or go back in the panel, the AI is told with its next step, so it does not keep working on a state that is gone.
+- **Several AIs, one editor.** AIs working in the same editor (for example Claude Code and Cursor) can tell each other what they are about to change, and you can write to all of them from the panel.
 - **Small context.** 120 tools in 20 toolsets: scene, inspector, script, project settings, signals, resources, file system, viewport, playing the game, input, live game inspection, debugging, animation, tile maps, UI, 3D, shaders, audio and export. The AI turns on only the groups it needs. See the [changelog](CHANGELOG.md).
 
 ## Permission modes
@@ -36,11 +38,13 @@ Set the mode when you add Godot Pilot to your AI client (`--mode`, see the [inst
 - **C#**: the AI can write and edit C# scripts when the project is opened with the .NET build of Godot.
 - **GDExtension (Rust, C++)**: the AI sees the classes your extensions add, with their properties, methods and signals.
 
-The end-to-end tests currently use a GDScript project.
+The main end-to-end tests use a GDScript project. Every night, and before each release, separate tests also check a C# project (Godot .NET 4.7.2: a C# script is written, built with `dotnet build`, attached and run in the game) and a GDExtension written in Rust with godot-rust (its class is documented, added to a scene, edited and called in the game).
 
 ## Privacy
 
-Godot Pilot runs on your computer and sends nothing anywhere: no accounts, no cloud, **no telemetry**.
+Godot Pilot runs on your computer and sends nothing about you or your project anywhere: no accounts, no cloud, **no telemetry**.
+
+To tell you about new versions, it downloads the list of Godot Pilot releases from GitHub at most once a day, like opening the releases page in a browser. Nothing is sent with it. Turn it off with `--no-update-check`.
 
 Your AI client is a different matter: what the AI reads through Godot Pilot (code, scenes, screenshots, errors) goes to the AI model you use, under that provider's rules. Only a model running on your own computer keeps everything local.
 
@@ -55,6 +59,8 @@ Your AI client is a different matter: what the AI reads through Godot Pilot (cod
 3. Ask your AI: *"Open my Godot project at C:/games/my-game and show me the main scene."*
 
 The AI installs the addon into the project, opens the editor and connects. Requires **Godot 4.5 or newer**. Every change is tested with Godot 4.5.2, 4.6.3 and 4.7.2.
+
+**Updating:** when a new version is out, the AI tells you and installs it if you agree. You can also run `godot-pilot update`.
 
 ## How it works
 
@@ -92,3 +98,13 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
 [GNU AGPL-3.0](LICENSE). You may use, study, change and share Godot Pilot. If you distribute a modified version, or offer it to others over a network, you must share its source under the same license.
 
 **Games you make with Godot Pilot are not affected.** The addon is an editor tool and is not included in exported games, so your game can use any license and be sold freely.
+
+### License questions
+
+- **Can I sell a game I made with Godot Pilot?** Yes. Exported games do not contain the addon (a test checks this on every change), and your game's code and assets are yours.
+- **Is the code the AI writes for me under the AGPL?** No. The AGPL covers Godot Pilot's own files: the server and the `addons/godot_pilot` folder. What you and the AI create in your project is yours.
+- **Can I use it at work, in a company?** Yes. Using Godot Pilot does not oblige you to share anything.
+- **May the `addons/godot_pilot` folder stay in my game's repository?** Yes. It keeps its own license; a copy of it is in that folder.
+- **When do I have to share source code?** Only when you give Godot Pilot itself to others, changed or not, or let others use a changed version over a network. Then you share that version's source under the AGPL-3.0.
+
+This is a summary, not legal advice; the [license text](LICENSE) is what counts.

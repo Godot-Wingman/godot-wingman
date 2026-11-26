@@ -6,6 +6,13 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Added
 
+- News for the AI at the end of its tool results: when the person undoes or redoes a change (saying whether it was that AI's change), changes things by hand, or goes back to an earlier step in the panel.
+- Several AIs in one editor: they are told when another AI connects or leaves, can message each other with the new `tell_other_ais` tool, and an AI that connects later gets the recent messages. The person can write to the AIs from the Godot Pilot panel.
+- Update check: at most once a day the server reads the list of releases from GitHub and tells the AI about a newer version. The new `update_godot_pilot` tool and the `godot-pilot update` command install it after checking its SHA-256 checksum. Off with `--no-update-check`.
+- Releases include a `SHA256SUMS` file.
+- End-to-end tests with a C# project and a Rust GDExtension, run every night and before releases.
+- The addon folder contains a copy of the license.
+
 - MCP server (Bun, TypeScript) shipped as a single executable per platform, with the Godot addon built in.
 - Godot editor addon with a localhost WebSocket bridge, secret token and an editor registry, so the server finds running editors by itself.
 - Toolsets that can be switched on and off while running, with profiles (`minimal`, `default`, `edit`, `2d`, `3d`, `play`, `all`).
