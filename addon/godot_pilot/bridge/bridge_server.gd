@@ -31,6 +31,8 @@ class ClientConnection:
 	var is_authenticated := false
 	var connected_at_milliseconds := 0
 	var client_name := "unknown"
+	## What the MCP server told us in its hello: AI client name, version, permission mode.
+	var description := {}
 
 
 var port: int = 0
@@ -56,6 +58,15 @@ func start_listening() -> Error:
 			port = candidate_port
 			return OK
 	return ERR_CANT_CREATE
+
+
+## One entry per connected MCP server: {ai_client, server_version, permission_mode}.
+func get_client_descriptions() -> Array:
+	var descriptions := []
+	for client in _clients:
+		if client.is_authenticated:
+			descriptions.append(client.description)
+	return descriptions
 
 
 func get_authenticated_client_count() -> int:
@@ -135,6 +146,11 @@ func _handle_hello(client: ClientConnection, message: Dictionary) -> void:
 	var client_information: Variant = message.get("client", {})
 	if client_information is Dictionary:
 		client.client_name = String(client_information.get("name", "unknown"))
+		client.description = {
+			"ai_client": String(client_information.get("ai_client", client.client_name)),
+			"server_version": String(client_information.get("version", "")),
+			"permission_mode": String(client_information.get("permission_mode", "")),
+		}
 	_send(client, {"type": "hello_ok", "editor": _editor_information})
 	client_count_changed.emit(get_authenticated_client_count())
 

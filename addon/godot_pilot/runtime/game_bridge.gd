@@ -10,6 +10,7 @@ extends Node
 
 const CAPTURE_NAME := "godot_pilot"
 const PilotError := preload("../utils/pilot_error.gd")
+const NodeSearch := preload("../utils/node_search.gd")
 const ValueCodec := preload("../utils/value_codec.gd")
 const ImageEncoding := preload("../utils/image_encoding.gd")
 const ScriptSource := preload("../utils/script_source.gd")
@@ -112,7 +113,13 @@ func _find_node(node_path: String) -> Variant:
 	elif current_scene != null:
 		found_node = current_scene.get_node_or_null(NodePath(node_path))
 	if found_node == null:
-		return PilotError.new("NODE_NOT_FOUND", "No node at '%s' in the running game." % node_path, "Use get_game_tree to see the live nodes. Paths are relative to the current scene; use /root/Name for autoloads.")
+		var hint := "Use get_game_tree to see the live nodes. Paths are relative to the current scene; use /root/Name for autoloads."
+		var similar_paths: Array[String] = []
+		if current_scene != null:
+			similar_paths = NodeSearch.find_similar_node_paths(current_scene, node_path)
+		if not similar_paths.is_empty():
+			hint = "Did you mean: %s? " % ", ".join(similar_paths) + hint
+		return PilotError.new("NODE_NOT_FOUND", "No node at '%s' in the running game." % node_path, hint)
 	return found_node
 
 
