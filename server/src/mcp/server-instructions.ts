@@ -8,7 +8,7 @@ import { PRODUCT_DISPLAY_NAME } from "../product.ts";
 
 export const SERVER_INSTRUCTIONS = `${PRODUCT_DISPLAY_NAME} lets you use the Godot game engine editor like a person: see it, build scenes, write scripts, run and play the game, and read errors.
 
-Start: call get_status. If no editor is running, call launch_editor with the folder that contains project.godot. If a tool cannot reach the editor, call get_status again.
+Start: call get_status. If no editor is running, call launch_editor with the folder that contains project.godot. For a new game without a project yet, call create_project. If a tool cannot reach the editor, call get_status again.
 
 How to work well:
 - Look before you change: get_editor_state, get_scene_tree, take_editor_screenshot.
