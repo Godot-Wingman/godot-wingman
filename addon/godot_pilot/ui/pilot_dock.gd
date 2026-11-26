@@ -4,7 +4,8 @@ extends VBoxContainer
 ##
 ## It shows which AIs are connected, lets the person choose the permission mode for
 ## this project, lists every change the AI made, and can put the project back to how
-## it was before any of those changes.
+## it was before any of those changes. The person can also write to the AIs: they get
+## the message with their next tool result.
 
 const ConfirmationPrompt := preload("confirmation_prompt.gd")
 const PilotSession := preload("../session/pilot_session.gd")
@@ -26,6 +27,7 @@ var _approvals_label: Label
 var _forget_approvals_button: Button
 var _activity_tree: Tree
 var _go_back_button: Button
+var _message_field: LineEdit
 
 
 func _init(session: RefCounted, addon_version: String) -> void:
@@ -129,9 +131,27 @@ func _build_footer() -> void:
 	clear_button.pressed.connect(func() -> void: _session.clear_activity())
 	footer.add_child(clear_button)
 	var hint := Label.new()
-	hint.text = "Ctrl+Z also undoes single changes in open scenes."
+	hint.text = "Ctrl+Z also undoes single changes; the AIs are told."
 	hint.modulate = Color(1, 1, 1, 0.6)
 	footer.add_child(hint)
+
+	_message_field = LineEdit.new()
+	_message_field.placeholder_text = "Tell the AIs something (they read it with their next step)"
+	_message_field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_message_field.text_submitted.connect(func(_text: String) -> void: _send_message())
+	footer.add_child(_message_field)
+	var send_button := Button.new()
+	send_button.text = "Send"
+	send_button.pressed.connect(_send_message)
+	footer.add_child(send_button)
+
+
+func _send_message() -> void:
+	var message := _message_field.text.strip_edges()
+	if message.is_empty():
+		return
+	_session.post_message(_session.notices.PERSON, "You", message)
+	_message_field.clear()
 
 
 func _refresh_settings() -> void:

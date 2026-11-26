@@ -11,6 +11,8 @@ extends RefCounted
 ## - Checkpoints: before each change the project's text files are remembered, so the
 ##   panel can put the project back to how it was before any step.
 ##
+## - News for the AIs (notice_board.gd): undo, changes by hand, going back, messages.
+##
 ## The MCP server calls authorize() before every tool that changes something, and
 ## finish() after it.
 
@@ -19,6 +21,8 @@ signal settings_changed
 
 const ConfirmationPrompt := preload("../ui/confirmation_prompt.gd")
 const CheckpointStore := preload("checkpoint_store.gd")
+const NoticeBoard := preload("notice_board.gd")
+const EditorChangeWatcher := preload("editor_change_watcher.gd")
 
 ## From the least to the most strict.
 const MODES: Array[String] = ["full", "confirm", "read-only"]
@@ -34,17 +38,26 @@ const STATUS_DONE := "done"
 const STATUS_FAILED := "failed"
 const STATUS_DENIED := "denied"
 const STATUS_BLOCKED := "blocked (read-only)"
+const STATUS_MESSAGE := "message"
+## A tool call still "running" after this long has lost its MCP server.
+const RUNNING_CALL_LIMIT_MILLISECONDS := 5 * 60 * 1000
 
 ## Mode chosen in the panel for this project.
 var editor_mode := "full"
 var checkpoints: CheckpointStore
-## Entries, oldest first: {id, time, client, tool, title, input, status, result, checkpoint_id}.
+var notices := NoticeBoard.new()
+## True while files are being put back, so the editor's reloads are not reported as
+## the person's changes.
+var is_going_back := false
+## Entries, oldest first: {id, time, client, connection_id, tool, title, input, status,
+## result, checkpoint_id, started_milliseconds}.
 var activity: Array[Dictionary] = []
 
 var _tools_allowed_for_session: Dictionary = {}
 var _next_activity_id := 1
 var _is_dialog_open := false
 var _tree: SceneTree
+var _change_watcher: EditorChangeWatcher
 
 
 func _init(tree: SceneTree, addon_directory: String) -> void:
@@ -55,6 +68,16 @@ func _init(tree: SceneTree, addon_directory: String) -> void:
 	if settings.load(SETTINGS_PATH) == OK:
 		var saved_mode := String(settings.get_value("permissions", "mode", "full"))
 		editor_mode = saved_mode if MODES.has(saved_mode) else "full"
+	_change_watcher = EditorChangeWatcher.new(self, notices)
+
+
+func shut_down() -> void:
+	_change_watcher.disconnect_from_editor()
+
+
+## The editor shows another scene: its undo history becomes the one to watch.
+func on_scene_changed() -> void:
+	_change_watcher.remember_current_state()
 
 
 static func stricter_mode(first_mode: String, second_mode: String) -> String:
@@ -91,6 +114,8 @@ func authorize(request: Dictionary) -> Dictionary:
 	var effective_mode := stricter_mode(server_mode if MODES.has(server_mode) else "full", editor_mode)
 	var tool_input: Dictionary = request.get("input", {}) if request.get("input") is Dictionary else {}
 	var entry := _add_entry(String(request.get("client", "AI")), tool_name, String(request.get("title", tool_name)), tool_input)
+	var caller: Dictionary = request.get("_caller", {}) if request.get("_caller") is Dictionary else {}
+	entry["connection_id"] = int(caller.get("connection_id", -1))
 
 	if effective_mode == "read-only":
 		_update_entry(entry, STATUS_BLOCKED, "")
@@ -108,6 +133,9 @@ func authorize(request: Dictionary) -> Dictionary:
 			return _refusal(entry, effective_mode, "Nobody answered the approval dialog in the Godot editor in time." if no_answer else "The person at the Godot editor denied this change.")
 
 	entry["checkpoint_id"] = checkpoints.take()
+	# Start from the current undo state, so this call's changes are known to be the AI's.
+	_change_watcher.remember_current_state()
+	entry["started_milliseconds"] = Time.get_ticks_msec()
 	_update_entry(entry, STATUS_RUNNING, "")
 	return {"allowed": true, "activity_id": entry["id"], "mode": effective_mode, "reason": ""}
 
@@ -122,6 +150,28 @@ func finish(activity_id: int, succeeded: bool, result_text: String) -> void:
 		shortened_result = shortened_result.left(MAXIMUM_RESULT_LENGTH) + "..."
 	_update_entry(entry, STATUS_DONE if succeeded else STATUS_FAILED, shortened_result)
 	_append_to_log_file(entry)
+
+
+## The newest AI tool call that is still running, or {} when none is.
+func get_running_ai_call() -> Dictionary:
+	for entry_index in range(activity.size() - 1, -1, -1):
+		var entry := activity[entry_index]
+		if entry["status"] != STATUS_RUNNING:
+			continue
+		if Time.get_ticks_msec() - int(entry.get("started_milliseconds", 0)) < RUNNING_CALL_LIMIT_MILLISECONDS:
+			return entry
+	return {}
+
+
+## A message for the other AIs, from an AI (connection id > 0) or from the person in
+## the panel (NoticeBoard.PERSON). Listed in the activity panel too. Returns the names
+## of the AIs that will get it.
+func post_message(from_connection_id: int, from_name: String, text: String) -> PackedStringArray:
+	var entry := _add_entry(from_name, "tell_other_ais", text, {})
+	entry["connection_id"] = from_connection_id
+	_update_entry(entry, STATUS_MESSAGE, "")
+	_append_to_log_file(entry)
+	return notices.post_message(from_connection_id, from_name, text)
 
 
 func find_entry(activity_id: int) -> Dictionary:
@@ -149,12 +199,16 @@ func go_back_to_before(activity_id: int) -> Dictionary:
 	var checkpoint_id := int(entry.get("checkpoint_id", -1))
 	if not checkpoints.has_checkpoint(checkpoint_id):
 		return {}
+	is_going_back = true
 	var project_file_before := FileAccess.get_file_as_string("res://project.godot")
 	var outcome := checkpoints.restore(checkpoint_id)
 	var changed_paths: Array = outcome["changed"]
 	if changed_paths.has("res://project.godot"):
 		_apply_restored_project_settings(project_file_before, FileAccess.get_file_as_string("res://project.godot"))
 	await _refresh_editor_after_restore(changed_paths)
+	_change_watcher.remember_current_state()
+	is_going_back = false
+	notices.report_went_back("step %d (\"%s\" by %s)" % [activity_id, entry["title"], entry["client"]], outcome)
 
 	var restore_entry := _add_entry("You", "go_back", "Went back to before step %d" % activity_id, {})
 	_update_entry(restore_entry, STATUS_DONE if Array(outcome["failed"]).is_empty() else STATUS_FAILED,
@@ -190,6 +244,7 @@ func _add_entry(client_name: String, tool_name: String, title: String, tool_inpu
 		"id": _next_activity_id,
 		"time": Time.get_datetime_string_from_system(false, true),
 		"client": client_name,
+		"connection_id": -1,
 		"tool": tool_name,
 		"title": title,
 		"input": JSON.stringify(tool_input),
@@ -225,6 +280,8 @@ func _append_to_log_file(entry: Dictionary) -> void:
 	log_file.seek_end()
 	var logged_entry := entry.duplicate()
 	logged_entry.erase("checkpoint_id")
+	logged_entry.erase("connection_id")
+	logged_entry.erase("started_milliseconds")
 	log_file.store_line(JSON.stringify(logged_entry))
 	log_file.close()
 
