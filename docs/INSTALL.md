@@ -1,6 +1,6 @@
 # Installing Godot Wingman
 
-Godot Wingman is one executable file. Your AI client starts it in the background and talks to it; you never run it by hand.
+Godot Wingman comes in two forms: a small file (`godot-wingman.js`, about 1-2 MB) that runs with [Bun](https://bun.sh), or a single executable file with Bun built in (about 100 MB). Your AI client starts it in the background and talks to it; you never run it by hand.
 
 ## Install with one command (recommended)
 
@@ -16,7 +16,7 @@ irm https://raw.githubusercontent.com/Albis0/godot-wingman/main/install/install.
 curl -fsSL https://raw.githubusercontent.com/Albis0/godot-wingman/main/install/install.sh | sh
 ```
 
-The script downloads the newest release, checks its SHA-256 checksum, installs it (Windows: `%LOCALAPPDATA%\Programs\godot-wingman`, added to your PATH; macOS and Linux: `~/.local/bin`) and runs `godot-wingman setup`. That adds Godot Wingman to the AI apps it finds: Codex, Claude Desktop, Claude Code, Cursor, Gemini CLI and Windsurf. A copy of every settings file it changes is kept next to it (`.before-godot-wingman`). Restart those apps afterwards.
+The script uses Bun when it is installed (version 1.3 or newer) and installs it with Bun's own installer when it is missing; then it downloads the small `godot-wingman.js`. If Bun cannot be used, it downloads the single executable instead. To always use the executable and never install Bun, set `GODOT_WINGMAN_USE_EXECUTABLE=1` first. It checks the download's SHA-256 checksum, installs it (Windows: `%LOCALAPPDATA%\Programs\godot-wingman`, added to your PATH; macOS and Linux: `~/.local/bin`) and runs `godot-wingman setup`. That adds Godot Wingman to the AI apps it finds: Codex, Claude Desktop, Claude Code, Cursor, Gemini CLI and Windsurf. A copy of every settings file it changes is kept next to it (`.before-godot-wingman`). Restart those apps afterwards.
 
 Files downloaded by these scripts are not marked as coming from the internet, so Windows SmartScreen and macOS Gatekeeper do not warn about them. Read the scripts first if you like: [install.ps1](../install/install.ps1), [install.sh](../install/install.sh).
 
@@ -34,6 +34,7 @@ Get the file for your system from [Releases](https://github.com/Albis0/godot-win
 | macOS (Apple Silicon) | `godot-wingman-macos-arm64` |
 | macOS (Intel) | `godot-wingman-macos-x64` |
 | Linux | `godot-wingman-linux-x64` or `godot-wingman-linux-arm64` |
+| Any system with Bun 1.3+ | `godot-wingman.js` (run it with `bun /path/to/godot-wingman.js`; in AI client settings use Bun as the command and the file as the first argument) |
 
 Put it somewhere permanent, for example `C:\Tools\godot-wingman.exe` or `~/bin/godot-wingman`.
 
