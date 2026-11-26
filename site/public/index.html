@@ -86,8 +86,8 @@
     font: 400 0.78rem/1.3 var(--font-body); color: var(--faint); overflow: hidden; white-space: nowrap;
   }
   .window-bar .scene-tab { color: var(--text); border-bottom: 2px solid var(--amber); padding-bottom: 4px; margin-bottom: -5px; }
-  .window-bar .mode { margin-left: auto; display: flex; gap: 14px; }
-  .window-bar .mode b { color: var(--text); font-weight: 500; }
+  .window-bar .main-screens { margin-left: auto; display: flex; gap: 14px; }
+  .window-bar .main-screens b { color: var(--text); font-weight: 500; }
 
   .viewport {
     position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.85fr);
@@ -253,7 +253,7 @@
   @media (max-width: 900px) {
     .viewport { grid-template-columns: minmax(0, 1fr); padding: 36px 22px 28px; }
     .scene { height: 200px; }
-    .window-bar .mode { display: none; }
+    .window-bar .main-screens { display: none; }
     .section-head, .install, .control-extra { grid-template-columns: minmax(0, 1fr); gap: 28px; }
     .abilities { grid-template-columns: minmax(0, 1fr); }
     .modes, .languages { grid-template-columns: minmax(0, 1fr); gap: 28px; }
@@ -289,7 +289,7 @@
       <div class="editor-window">
         <div class="window-bar" aria-hidden="true">
           <span class="scene-tab">main.tscn</span><span>player.gd</span>
-          <span class="mode"><span><b>2D</b></span><span>3D</span><span>Script</span><span>AssetLib</span></span>
+          <span class="main-screens"><span><b>2D</b></span><span>3D</span><span>Script</span><span>AssetLib</span></span>
         </div>
         <div class="viewport">
           <div class="hero-copy">
