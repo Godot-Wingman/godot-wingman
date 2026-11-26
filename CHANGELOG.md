@@ -4,6 +4,10 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Fixed
+
+- `step_frames` ran one physics frame less than asked, and none for `count: 1`, because the game was paused again before the last frame was processed. An input sent while paused now reaches the game on the next stepped frame.
+
 ## [0.4.2] - 2026-11-27
 
 ### Fixed

@@ -387,10 +387,12 @@ func _set_paused(params: Dictionary) -> Dictionary:
 
 
 ## Runs the paused game for exactly `count` physics frames, then pauses it again.
+## physics_frame is emitted just before the nodes' physics processing, so the game is paused
+## again at the start of the frame after the last one: that last frame is fully processed.
 func _step_frames(params: Dictionary) -> Dictionary:
 	var frame_count := maxi(int(params.get("count", 1)), 1)
 	get_tree().paused = false
-	for frame_index in frame_count:
+	for frame_index in frame_count + 1:
 		await get_tree().physics_frame
 	get_tree().paused = true
 	return {"stepped_frames": frame_count, "paused": true}

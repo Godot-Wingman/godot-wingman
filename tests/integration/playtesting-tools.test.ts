@@ -120,6 +120,30 @@ describe("playing the game", () => {
       await editor.callTool("step_frames", { count: 5 }),
     );
     expect(stepped).toEqual({ stepped_frames: 5, paused: true });
+
+    // The game really runs that many physics frames, also a single one.
+    await editor.callTool("execute_game_script", {
+      code: [
+        "var counter_script := GDScript.new()",
+        'counter_script.source_code = "extends Node\\nvar ticks := 0\\nfunc _physics_process(_delta: float) -> void:\\n\\tticks += 1\\n"',
+        "counter_script.reload()",
+        "var counter := Node.new()",
+        'counter.name = "PhysicsFrameCounter"',
+        "counter.set_script(counter_script)",
+        "scene.add_child(counter)",
+        "return true",
+      ].join("\n"),
+    });
+    const testEditor = editor;
+    const readTicks = async () =>
+      parseJson<{ result: number }>(
+        await testEditor.callTool("execute_game_script", { code: 'return node("PhysicsFrameCounter").ticks' }),
+      ).result;
+    const ticksBefore = await readTicks();
+    await editor.callTool("step_frames", { count: 5 });
+    expect(await readTicks()).toBe(ticksBefore + 5);
+    await editor.callTool("step_frames", { count: 1 });
+    expect(await readTicks()).toBe(ticksBefore + 6);
     await editor.callTool("pause_game", { paused: false });
   });
 
