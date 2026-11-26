@@ -67,6 +67,12 @@ export class EditorManager {
     return connection.request<Result>(method, params, timeoutMilliseconds);
   }
 
+  /** News from the server itself (for example a new version), shown like the editor's news. */
+  addNotice(kind: string, text: string): void {
+    const time = new Date().toTimeString().slice(0, 8);
+    this.pendingNotices.push({ time, kind, text });
+  }
+
   /** The news received since the last call, oldest first. Empties the list. */
   takeNotices(): EditorNotice[] {
     const notices = this.pendingNotices;
