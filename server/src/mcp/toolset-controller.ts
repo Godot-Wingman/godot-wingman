@@ -9,7 +9,7 @@
  */
 import type { McpServer, RegisteredTool } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import { EditorRequestError } from "../godot/editor-connection.ts";
+import { type EditorNotice, EditorRequestError } from "../godot/editor-connection.ts";
 import type { PermissionMode } from "./permission-mode.ts";
 import { errorResult, errorToResult, type PilotTool, type ToolContext } from "./tool-definition.ts";
 
@@ -189,6 +189,15 @@ export class ToolsetController {
    */
   private async runTool(tool: PilotTool, input: Record<string, unknown>): Promise<CallToolResult> {
     const context = this.getContext();
+    const result = await this.runToolWithPermission(tool, input, context);
+    return addNotices(result, context.editors.takeNotices());
+  }
+
+  private async runToolWithPermission(
+    tool: PilotTool,
+    input: Record<string, unknown>,
+    context: ToolContext,
+  ): Promise<CallToolResult> {
     try {
       if (tool.access !== "write") {
         return await tool.run(input, context);
@@ -326,4 +335,17 @@ ${JSON.stringify(input, null, 2)}`,
         // The editor may have closed meanwhile; the tool result itself is what matters.
       });
   }
+}
+
+/**
+ * Adds the editor's news (undo, changes by hand, going back, messages from other AIs)
+ * at the end of a tool result, which is the only place the AI is sure to read it.
+ */
+export function addNotices(result: CallToolResult, notices: EditorNotice[]): CallToolResult {
+  if (notices.length === 0) {
+    return result;
+  }
+  const lines = notices.map((notice) => `- ${notice.time} ${notice.text}`);
+  const text = ["News from the Godot editor since your last tool call:", ...lines].join("\n");
+  return { ...result, content: [...result.content, { type: "text", text }] };
 }
