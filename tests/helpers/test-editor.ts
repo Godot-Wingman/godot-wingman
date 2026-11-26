@@ -20,9 +20,18 @@ import { HOME_OVERRIDE_ENVIRONMENT_VARIABLE } from "../../server/src/product.ts"
 const repositoryRoot = join(import.meta.dir, "..", "..");
 
 export interface ToolCallOutcome {
+  /** All text parts joined, including news from the editor at the end. */
   text: string;
+  /** The text parts one by one: the tool's own answer first. */
+  texts: string[];
   isError: boolean;
   imageCount: number;
+}
+
+/** Another AI application connected to the same editor through its own MCP server. */
+export interface OtherAi {
+  callTool(name: string, toolArguments?: Record<string, unknown>): Promise<ToolCallOutcome>;
+  close(): Promise<void>;
 }
 
 export interface TestEditor {
@@ -31,6 +40,8 @@ export interface TestEditor {
   listToolNames(): Promise<string[]>;
   /** Sends a request straight to the addon, bypassing the tools (for checking editor state). */
   requestEditor<Result = unknown>(method: string, params?: object): Promise<Result>;
+  /** Connects a second AI client (its own MCP server) to the same editor. */
+  connectOtherAi(clientName: string): Promise<OtherAi>;
   stop(): Promise<void>;
 }
 
@@ -79,15 +90,13 @@ run/main_run_args="--headless"
     environment: { [HOME_OVERRIDE_ENVIRONMENT_VARIABLE]: homeDirectory },
   });
 
-  const { server, editors } = createMcpServer({
+  const serverOptions = {
     permissionMode: options.permissionMode ?? "full",
     initialToolsets: options.initialToolsets ?? ["core", "scene", "inspector", "script", "project"],
     confirmationTimeoutSeconds: options.confirmationTimeoutSeconds,
-  });
-  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
-  await server.connect(serverTransport);
-  const client = new Client({ name: "godot-pilot-tests", version: "0.0.0" });
-  await client.connect(clientTransport);
+  };
+  const { client, editors, callTool } = await connectAiClient("godot-pilot-tests", serverOptions);
+  const otherAis: OtherAi[] = [];
 
   // The editor reopens the main scene a moment after the addon is ready; wait for it so
   // the first test does not run against an empty editor.
@@ -102,28 +111,30 @@ run/main_run_args="--headless"
 
   return {
     projectPath,
-    async callTool(name, toolArguments = {}) {
-      const result = await client.callTool({ name, arguments: toolArguments }, undefined, {
-        timeout: 120_000,
-      });
-      const content = (result.content ?? []) as { type: string; text?: string }[];
-      return {
-        text: content
-          .filter((item) => item.type === "text")
-          .map((item) => item.text ?? "")
-          .join("\n"),
-        isError: result.isError === true,
-        imageCount: content.filter((item) => item.type === "image").length,
-      };
-    },
+    callTool,
     requestEditor(method, params = {}) {
       return editors.request(method, params);
+    },
+    async connectOtherAi(clientName) {
+      const otherClient = await connectAiClient(clientName, serverOptions);
+      const otherAi: OtherAi = {
+        callTool: otherClient.callTool,
+        async close() {
+          otherClient.editors.closeAll();
+          await otherClient.client.close();
+        },
+      };
+      otherAis.push(otherAi);
+      return otherAi;
     },
     async listToolNames() {
       const { tools } = await client.listTools();
       return tools.map((tool) => tool.name);
     },
     async stop() {
+      for (const otherAi of otherAis) {
+        await otherAi.close();
+      }
       editors.closeAll();
       await client.close();
       try {
@@ -140,7 +151,33 @@ run/main_run_args="--headless"
   };
 }
 
-/** Parses the JSON text of a tool result. */
+/** An MCP server of ours plus an MCP client talking to it, like one AI application. */
+async function connectAiClient(clientName: string, serverOptions: Parameters<typeof createMcpServer>[0]) {
+  const { server, editors } = createMcpServer(serverOptions);
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+  await server.connect(serverTransport);
+  const client = new Client({ name: clientName, version: "0.0.0" });
+  await client.connect(clientTransport);
+  async function callTool(
+    name: string,
+    toolArguments: Record<string, unknown> = {},
+  ): Promise<ToolCallOutcome> {
+    const result = await client.callTool({ name, arguments: toolArguments }, undefined, {
+      timeout: 120_000,
+    });
+    const content = (result.content ?? []) as { type: string; text?: string }[];
+    const texts = content.filter((item) => item.type === "text").map((item) => item.text ?? "");
+    return {
+      text: texts.join("\n"),
+      texts,
+      isError: result.isError === true,
+      imageCount: content.filter((item) => item.type === "image").length,
+    };
+  }
+  return { client, editors, callTool };
+}
+
+/** Parses the JSON answer of a tool (its first text part; news may follow it). */
 export function parseJson<Shape = Record<string, unknown>>(outcome: ToolCallOutcome): Shape {
-  return JSON.parse(outcome.text) as Shape;
+  return JSON.parse(outcome.texts[0] ?? outcome.text) as Shape;
 }
