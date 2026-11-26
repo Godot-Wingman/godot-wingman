@@ -1,6 +1,6 @@
 <!doctype html>
 <!--
-  Landing page of Godot Pilot, deployed to Cloudflare Pages from the site/ folder.
+  Landing page of Godot Wingman, deployed to Cloudflare Pages from the site/ folder.
   One static file: no build step, no frameworks, no tracking, no cookies.
   Every statement here must match the README (only verified facts).
 -->
@@ -8,7 +8,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Godot Pilot · let your AI use the Godot editor</title>
+  <title>Godot Wingman · let your AI use the Godot editor</title>
   <meta name="description" content="A free, open-source MCP server that lets AI assistants like Claude, Codex and Cursor use the Godot editor: build scenes, write scripts, play the game and fix the errors.">
   <!-- Not announced yet: keep search engines away until launch. -->
   <meta name="robots" content="noindex, nofollow">
@@ -157,14 +157,14 @@
     <div class="container">
       <a class="brand" href="#">
         <svg width="28" height="28" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#18223b"/><path d="M7 17 25 8l-6 17-4-6-8-2Z" fill="#60a5fa"/><path d="m15 19 10-11-6 17z" fill="#3b82f6"/></svg>
-        Godot Pilot
+        Godot Wingman
       </a>
       <nav>
         <a href="#features">Features</a>
         <a href="#install">Install</a>
         <a href="#control">Control</a>
         <a href="#faq">FAQ</a>
-        <a href="https://github.com/Albis0/godot-pilot">GitHub</a>
+        <a href="https://github.com/Albis0/godot-wingman">GitHub</a>
       </nav>
     </div>
   </header>
@@ -174,14 +174,14 @@
       <div>
         <span class="badge"><span class="dot"></span> Early development · 0.x · free and open source</span>
         <h1>Let your AI <span class="highlight">use the Godot editor</span> like a person.</h1>
-        <p class="lead">Godot Pilot is an MCP server that runs on your computer. Your AI assistant sees the editor, builds scenes, writes and checks scripts, runs the game, plays it with real input, then reads the errors and fixes them.</p>
+        <p class="lead">Godot Wingman is an MCP server that runs on your computer. Your AI assistant sees the editor, builds scenes, writes and checks scripts, runs the game, plays it with real input, then reads the errors and fixes them.</p>
         <div class="actions">
           <a class="button primary" href="#install">Install in one command</a>
-          <a class="button" href="https://github.com/Albis0/godot-pilot">View on GitHub</a>
+          <a class="button" href="https://github.com/Albis0/godot-wingman">View on GitHub</a>
         </div>
       </div>
 
-      <div class="transcript" role="img" aria-label="Example conversation with an AI using Godot Pilot">
+      <div class="transcript" role="img" aria-label="Example conversation with an AI using Godot Wingman">
         <div class="bar"><span></span><span></span><span></span><small>example</small></div>
         <div class="body">
           <div class="message person">Make a 2D game: a square that moves with the arrow keys and three coins to collect.</div>
@@ -239,28 +239,28 @@
     <section id="install">
       <div class="container">
         <h2>Install in one command</h2>
-        <p class="subtitle">The installer downloads the newest release, checks its SHA-256 checksum and adds Godot Pilot to the AI apps it finds.</p>
+        <p class="subtitle">The installer downloads the newest release, checks its SHA-256 checksum and adds Godot Wingman to the AI apps it finds.</p>
         <div class="install">
           <div class="card">
             <header>Windows <span style="color:var(--text-muted);font-weight:400;font-size:14px">PowerShell</span></header>
-            <div class="command" id="windows-command">irm https://raw.githubusercontent.com/Albis0/godot-pilot/main/install/install.ps1 | iex</div>
+            <div class="command" id="windows-command">irm https://raw.githubusercontent.com/Albis0/godot-wingman/main/install/install.ps1 | iex</div>
             <div style="padding:0 20px 16px"><button class="copy" data-target="windows-command">Copy</button></div>
           </div>
           <div class="card">
             <header>macOS and Linux <span style="color:var(--text-muted);font-weight:400;font-size:14px">Terminal</span></header>
-            <div class="command" id="unix-command">curl -fsSL https://raw.githubusercontent.com/Albis0/godot-pilot/main/install/install.sh | sh</div>
+            <div class="command" id="unix-command">curl -fsSL https://raw.githubusercontent.com/Albis0/godot-wingman/main/install/install.sh | sh</div>
             <div style="padding:0 20px 16px"><button class="copy" data-target="unix-command">Copy</button></div>
           </div>
         </div>
         <ol class="steps">
-          <li><span><strong>Run the command.</strong> Files downloaded this way get no "unknown app" warning. You can <a href="https://github.com/Albis0/godot-pilot/tree/main/install">read the scripts</a> first.</span></li>
+          <li><span><strong>Run the command.</strong> Files downloaded this way get no "unknown app" warning. You can <a href="https://github.com/Albis0/godot-wingman/tree/main/install">read the scripts</a> first.</span></li>
           <li><span><strong>Restart your AI app.</strong> A copy of every settings file the installer changed is kept next to it.</span></li>
           <li><span><strong>Ask:</strong> "Create a new Godot game in C:/games/my-game", or "Open my Godot project in D:/games/platformer".</span></li>
         </ol>
         <div class="clients">
           <span>Codex</span><span>Claude Desktop</span><span>Claude Code</span><span>Cursor</span><span>Gemini CLI</span><span>Windsurf</span><span>VS Code (by hand)</span><span>any MCP client</span>
         </div>
-        <p style="color:var(--text-muted);margin-top:22px">Requires Godot 4.5 or newer. Every change is tested with Godot 4.5.2, 4.6.3 and 4.7.2. <a href="https://github.com/Albis0/godot-pilot/blob/main/docs/INSTALL.md">Installation guide</a></p>
+        <p style="color:var(--text-muted);margin-top:22px">Requires Godot 4.5 or newer. Every change is tested with Godot 4.5.2, 4.6.3 and 4.7.2. <a href="https://github.com/Albis0/godot-wingman/blob/main/docs/INSTALL.md">Installation guide</a></p>
       </div>
     </section>
 
@@ -270,8 +270,8 @@
         <p class="subtitle">Everything runs on your computer. The connection to the editor only listens on 127.0.0.1 and needs a secret token.</p>
         <div class="flow">
           <div class="card"><strong>Your AI app</strong><small>Codex, Claude, Cursor…</small></div>
-          <div class="card"><strong>godot-pilot</strong><small>MCP server, one file</small></div>
-          <div class="card"><strong>Godot editor</strong><small>with the Godot Pilot addon</small></div>
+          <div class="card"><strong>godot-wingman</strong><small>MCP server, one file</small></div>
+          <div class="card"><strong>Godot editor</strong><small>with the Godot Wingman addon</small></div>
           <div class="card"><strong>Your game</strong><small>when started from the editor</small></div>
         </div>
       </div>
@@ -280,7 +280,7 @@
     <section id="control">
       <div class="container">
         <h2>You stay in control</h2>
-        <p class="subtitle">The Godot Pilot panel at the bottom of the editor lists every change the AI made and can put scripts, scenes, resources and settings back to how they were before any of them. When you press Ctrl+Z, change something by hand or go back, the AI is told with its next step.</p>
+        <p class="subtitle">The Godot Wingman panel at the bottom of the editor lists every change the AI made and can put scripts, scenes, resources and settings back to how they were before any of them. When you press Ctrl+Z, change something by hand or go back, the AI is told with its next step.</p>
         <table>
           <thead><tr><th>Permission mode</th><th>What the AI may do</th></tr></thead>
           <tbody>
@@ -308,7 +308,7 @@
       <div class="container">
         <h2>Questions</h2>
         <details>
-          <summary>Does Godot Pilot send my project anywhere?</summary>
+          <summary>Does Godot Wingman send my project anywhere?</summary>
           <p>No. It sends nothing about you or your project: no accounts, no cloud, no telemetry. To tell you about new versions it downloads the list of its releases from GitHub at most once a day (turn it off with <code>--no-update-check</code>). Your AI app is separate: what the AI reads goes to the AI model you use, under that provider's rules.</p>
         </details>
         <details>
@@ -317,11 +317,11 @@
         </details>
         <details>
           <summary>Is the code the AI writes for me under the AGPL?</summary>
-          <p>No. The AGPL-3.0 covers Godot Pilot's own files: the server and the <code>addons/godot_pilot</code> folder. You only have to share source code when you give Godot Pilot itself to others, or let others use a changed version over a network. This is a summary, not legal advice.</p>
+          <p>No. The AGPL-3.0 covers Godot Wingman's own files: the server and the <code>addons/godot_wingman</code> folder. You only have to share source code when you give Godot Wingman itself to others, or let others use a changed version over a network. This is a summary, not legal advice.</p>
         </details>
         <details>
           <summary>How does it get updated?</summary>
-          <p>When a new version is out, the AI tells you and installs it if you agree. The download is checked against the release's SHA-256 checksums. You can also run <code>godot-pilot update</code>.</p>
+          <p>When a new version is out, the AI tells you and installs it if you agree. The download is checked against the release's SHA-256 checksums. You can also run <code>godot-wingman update</code>.</p>
         </details>
         <details>
           <summary>Which Godot versions work?</summary>
@@ -332,15 +332,15 @@
 
     <section style="padding-top:0">
       <div class="container">
-        <div class="notice"><strong>Unofficial project.</strong> Godot Pilot is a community project. It is not made by, affiliated with or endorsed by the Godot Foundation or the Godot Engine project. "Godot" is a trademark of the Godot Foundation.</div>
+        <div class="notice"><strong>Unofficial project.</strong> Godot Wingman is a community project. It is not made by, affiliated with or endorsed by the Godot Foundation or the Godot Engine project. "Godot" is a trademark of the Godot Foundation.</div>
       </div>
     </section>
   </main>
 
   <footer>
     <div class="container">
-      <span>Godot Pilot · GNU AGPL-3.0 · no tracking on this page</span>
-      <span><a href="https://github.com/Albis0/godot-pilot">GitHub</a> · <a href="https://github.com/Albis0/godot-pilot/blob/main/docs/INSTALL.md">Installation guide</a> · <a href="https://github.com/Albis0/godot-pilot/blob/main/CHANGELOG.md">Changelog</a></span>
+      <span>Godot Wingman · GNU AGPL-3.0 · no tracking on this page</span>
+      <span><a href="https://github.com/Albis0/godot-wingman">GitHub</a> · <a href="https://github.com/Albis0/godot-wingman/blob/main/docs/INSTALL.md">Installation guide</a> · <a href="https://github.com/Albis0/godot-wingman/blob/main/CHANGELOG.md">Changelog</a></span>
     </div>
   </footer>
 
