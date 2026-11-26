@@ -3,6 +3,7 @@
  * tests play it with real input events and look inside it, like a person testing.
  */
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { join } from "node:path";
 import { parseJson, startTestEditor, type TestEditor } from "../helpers/test-editor.ts";
 
 let editor: TestEditor | null = null;
@@ -40,6 +41,13 @@ describe("playing the game", () => {
     expect(state.paused).toBe(false);
     const tree = parseJson<{ tree: string }>(await editor.callTool("get_game_tree"));
     expect(tree.tree).toContain("Player (CharacterBody2D) at Vector2(100, 200)");
+  });
+
+  test("the game bridge leaves project.godot as soon as the game runs", async () => {
+    if (!editor) return;
+    // An export made while the game runs must not list the bridge as an autoload.
+    const projectFile = await Bun.file(join(editor.projectPath, "project.godot")).text();
+    expect(projectFile).not.toContain("GodotPilotGameBridge");
   });
 
   test("holding the Right key moves the player like a real key press", async () => {

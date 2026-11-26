@@ -15,7 +15,11 @@ const outputFilePath = join(repositoryRoot, "server", "src", "addon", "addon-fil
 const IGNORED_FILE_PATTERN = /\.(uid|import)$/;
 
 const addonFiles: Record<string, string> = {};
-for (const absolutePath of new Bun.Glob("**/*").scanSync({ cwd: addonSourceDirectory, absolute: true })) {
+for (const absolutePath of new Bun.Glob("**/*").scanSync({
+  cwd: addonSourceDirectory,
+  absolute: true,
+  dot: true,
+})) {
   const relativePath = relative(addonSourceDirectory, absolutePath).replaceAll("\\", "/");
   if (IGNORED_FILE_PATTERN.test(relativePath)) {
     continue;

@@ -12,6 +12,7 @@ import { type EditorRegistration, isProcessAlive } from "./editor-registry.ts";
 
 const HANDSHAKE_TIMEOUT_MILLISECONDS = 10_000;
 export const DEFAULT_REQUEST_TIMEOUT_MILLISECONDS = 60_000;
+const NORMAL_CLOSE_CODE = 1000;
 
 /** An error reported by the Godot addon, with a hint for the AI on how to fix the call. */
 export class EditorRequestError extends Error {
@@ -74,7 +75,7 @@ export class EditorConnection {
       let isAuthenticated = false;
 
       const handshakeTimer = setTimeout(() => {
-        socket.close();
+        socket.close(NORMAL_CLOSE_CODE, "Handshake timed out");
         reject(new Error(`The Godot editor on port ${this.registration.port} did not answer in time.`));
       }, HANDSHAKE_TIMEOUT_MILLISECONDS);
 
@@ -167,7 +168,8 @@ export class EditorConnection {
 
   close(): void {
     this.isClosed = true;
-    this.socket?.close();
+    // With an explicit code and reason: Godot logs a Unicode error for an empty close frame.
+    this.socket?.close(NORMAL_CLOSE_CODE, "Closed by the MCP server");
     this.rejectAllPendingRequests(
       new EditorRequestError(
         "CONNECTION_CLOSED",

@@ -32,7 +32,7 @@ func _init(session: RefCounted, addon_version: String) -> void:
 	name = "GodotPilotDock"
 	_session = session
 	_addon_version = addon_version
-	custom_minimum_size = Vector2(0, 180 * EditorInterface.get_editor_scale())
+	custom_minimum_size = Vector2(0, 240 * EditorInterface.get_editor_scale())
 	_build_header()
 	_build_activity_tree()
 	_build_footer()
@@ -69,6 +69,14 @@ func _build_header() -> void:
 	_connection_label.clip_text = true
 	header.add_child(_connection_label)
 
+	_approvals_label = Label.new()
+	_approvals_label.clip_text = true
+	header.add_child(_approvals_label)
+	_forget_approvals_button = Button.new()
+	_forget_approvals_button.text = "Ask again for everything"
+	_forget_approvals_button.pressed.connect(func() -> void: _session.forget_session_approvals())
+	header.add_child(_forget_approvals_button)
+
 	var mode_label := Label.new()
 	mode_label.text = "Permission mode:"
 	header.add_child(mode_label)
@@ -84,17 +92,6 @@ func _build_header() -> void:
 	_version_warning_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(_version_warning_label)
 
-	var approvals_row := HBoxContainer.new()
-	add_child(approvals_row)
-	_approvals_label = Label.new()
-	_approvals_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_approvals_label.clip_text = true
-	approvals_row.add_child(_approvals_label)
-	_forget_approvals_button = Button.new()
-	_forget_approvals_button.text = "Ask again for everything"
-	_forget_approvals_button.pressed.connect(func() -> void: _session.forget_session_approvals())
-	approvals_row.add_child(_forget_approvals_button)
-
 
 func _build_activity_tree() -> void:
 	_activity_tree = Tree.new()
@@ -103,10 +100,17 @@ func _build_activity_tree() -> void:
 	_activity_tree.hide_root = true
 	_activity_tree.select_mode = Tree.SELECT_ROW
 	_activity_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var editor_scale := EditorInterface.get_editor_scale()
 	var column_titles := ["Time", "AI", "Change", "Status", "Result"]
+	# Fixed width for short columns; the change and its result share the rest.
+	var column_widths := [80, 120, 0, 150, 0]
 	for column_index in column_titles.size():
 		_activity_tree.set_column_title(column_index, column_titles[column_index])
-		_activity_tree.set_column_expand(column_index, column_index == COLUMN_CHANGE or column_index == COLUMN_RESULT)
+		var is_wide_column: bool = column_widths[column_index] == 0
+		_activity_tree.set_column_expand(column_index, is_wide_column)
+		_activity_tree.set_column_clip_content(column_index, true)
+		if not is_wide_column:
+			_activity_tree.set_column_custom_minimum_width(column_index, int(column_widths[column_index] * editor_scale))
 	_activity_tree.item_selected.connect(_update_go_back_button)
 	add_child(_activity_tree)
 
@@ -133,7 +137,7 @@ func _build_footer() -> void:
 func _refresh_settings() -> void:
 	_mode_button.select(PilotSession.MODES.find(_session.editor_mode))
 	var allowed_tools: PackedStringArray = _session.get_tools_allowed_for_session()
-	_approvals_label.text = "Allowed without asking for this session: %s" % ", ".join(allowed_tools) if not allowed_tools.is_empty() else ""
+	_approvals_label.text = "Allowed for this session: %s" % ", ".join(allowed_tools) if not allowed_tools.is_empty() else ""
 	_forget_approvals_button.visible = not allowed_tools.is_empty()
 
 

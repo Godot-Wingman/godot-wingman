@@ -32,9 +32,9 @@ static func ask_about_tool(
 	dialog.cancel_button_text = "Deny"
 	dialog.add_button("Allow \"%s\" for this session" % tool_name, false, ANSWER_ALLOW_FOR_SESSION)
 	var editor_scale := EditorInterface.get_editor_scale()
-	dialog.min_size = Vector2i(Vector2(720, 260) * editor_scale)
+	dialog.min_size = Vector2i(Vector2(560, 300) * editor_scale)
 	dialog.add_child(_build_content(client_name, tool_name, tool_title, tool_input, editor_scale))
-	return await _show_and_wait(dialog, timeout_seconds)
+	return await _show_and_wait(dialog, timeout_seconds, Vector2i(Vector2(900, 560) * editor_scale))
 
 
 ## The older, plain form: a title and a text. Returns true when allowed.
@@ -56,6 +56,9 @@ static func _build_content(client_name: String, tool_name: String, tool_title: S
 	var summary := Label.new()
 	summary.text = "%s wants to use \"%s\" (%s)." % [client_name, tool_name, tool_title]
 	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	# An autowrapped label without a width asks for one line per word, which makes the
+	# dialog as tall as the screen.
+	summary.custom_minimum_size = Vector2(520, 0) * editor_scale
 	content.add_child(summary)
 
 	var short_arguments := {}
@@ -86,17 +89,19 @@ static func _build_text_box(text: String, editor_scale: float, is_code: bool) ->
 	var text_box: TextEdit = CodeEdit.new() if is_code else TextEdit.new()
 	text_box.text = text
 	text_box.editable = false
-	text_box.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
+	# Code keeps its lines (scroll sideways); other text wraps.
+	text_box.wrap_mode = TextEdit.LINE_WRAPPING_NONE if is_code else TextEdit.LINE_WRAPPING_BOUNDARY
 	text_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var visible_lines := clampi(text.count("\n") + 1, 3, 18)
-	text_box.custom_minimum_size = Vector2(0, (visible_lines * 20 + 12) * editor_scale)
+	text_box.size_flags_stretch_ratio = 3.0 if is_code else 1.0
+	text_box.custom_minimum_size = Vector2(0, 70 * editor_scale)
 	text_box.add_theme_font_override("font", EditorInterface.get_base_control().get_theme_font("source", "EditorFonts"))
 	if text_box is CodeEdit:
 		(text_box as CodeEdit).gutters_draw_line_numbers = true
 	return text_box
 
 
-static func _show_and_wait(dialog: ConfirmationDialog, timeout_seconds: float) -> String:
+## `wanted_size` zero means: as small as the content allows.
+static func _show_and_wait(dialog: ConfirmationDialog, timeout_seconds: float, wanted_size: Vector2i = Vector2i.ZERO) -> String:
 	# The buttons and the timer report into this small state object, and we wait until
 	# one of them has written an answer.
 	var decision := {"answer": ""}
@@ -109,7 +114,11 @@ static func _show_and_wait(dialog: ConfirmationDialog, timeout_seconds: float) -
 
 	var base_control := EditorInterface.get_base_control()
 	base_control.add_child(dialog)
-	dialog.popup_centered()
+	if wanted_size == Vector2i.ZERO:
+		dialog.popup_centered()
+	else:
+		# Never larger than 85% of the screen, so the buttons stay visible.
+		dialog.popup_centered_clamped(wanted_size, 0.85)
 	if DisplayServer.has_method("window_request_attention"):
 		DisplayServer.window_request_attention()
 

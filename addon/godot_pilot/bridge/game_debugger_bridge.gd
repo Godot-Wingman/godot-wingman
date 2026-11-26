@@ -8,6 +8,8 @@ extends EditorDebuggerPlugin
 ## requests and waits for the matching answers.
 
 signal game_stopped
+## The game bridge inside the game answered: the game is running and reachable.
+signal game_ready
 
 const CAPTURE_NAME := "godot_pilot"
 
@@ -36,6 +38,7 @@ func _capture(message: String, data: Array, session_id: int) -> bool:
 		"%s:ready" % CAPTURE_NAME:
 			_active_session_id = session_id
 			_is_game_ready = true
+			game_ready.emit()
 			return true
 		"%s:response" % CAPTURE_NAME:
 			_answers_by_request_id[int(data[0])] = [bool(data[1]), data[2]]
