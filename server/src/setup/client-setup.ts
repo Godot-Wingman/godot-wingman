@@ -2,21 +2,23 @@
  * `godot-wingman setup`: adds Godot Wingman to the AI apps installed on this computer, so
  * the person does not have to edit configuration files by hand.
  *
- * For each app whose configuration folder exists, the godot-wingman entry is added when
- * it is missing (an existing entry is left alone). A copy of the file is saved next to
- * it first (".before-godot-wingman"). Claude Code is set up with its own `claude mcp add`
- * command. VS Code is set up per project, so it is only explained.
+ * For each app whose configuration folder exists, the godot-wingman entry is added, or
+ * changed when it starts Godot Wingman in another way (for example the old executable
+ * instead of the small bundle run by Bun). A copy of the file is saved next to it first
+ * (".before-godot-wingman"). Claude Code is set up with its own `claude mcp` commands.
+ * VS Code is set up per project, so it is only explained.
  */
 import { existsSync } from "node:fs";
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
+import type { ServerLaunchCommand } from "../installation.ts";
 import { getOperatingSystemDataDirectory } from "../paths.ts";
 import { PRODUCT_NAME } from "../product.ts";
 
 export interface SetupStep {
   client: string;
-  /** "added", "already set up", "skipped" or "failed". */
+  /** "added", "updated", "already set up", "skipped" or "failed". */
   outcome: string;
   detail: string;
 }
@@ -31,19 +33,27 @@ interface JsonClient {
 }
 
 export interface SetupOptions {
-  executablePath: string;
+  /** What the AI apps should run: the executable, or Bun with the bundle. */
+  launch: ServerLaunchCommand;
   homeDirectory?: string;
   applicationDataDirectory?: string;
-  /** Runs `claude mcp add ...`; returns the exit code. Replaced in tests. */
+  /** Runs `claude mcp ...`; returns the exit code, or null without Claude Code. Replaced in tests. */
   runClaudeCommand?: (commandArguments: string[]) => Promise<number | null>;
+}
+
+/** The "command" and "args" entries of a settings file; "args" only when there are any. */
+interface LaunchEntry {
+  command: string;
+  args?: string[];
 }
 
 export async function setUpAiClients(options: SetupOptions): Promise<SetupStep[]> {
   const home = options.homeDirectory ?? homedir();
   const applicationData = options.applicationDataDirectory ?? getOperatingSystemDataDirectory();
+  const launchEntry = describeLaunch(options.launch);
   const steps: SetupStep[] = [];
 
-  steps.push(await setUpCodex(join(home, ".codex"), options.executablePath));
+  steps.push(await setUpCodex(join(home, ".codex"), launchEntry));
   const claudeDesktopFolder =
     process.platform === "linux" ? join(home, ".config", "Claude") : join(applicationData, "Claude");
   const jsonClients: JsonClient[] = [
@@ -73,18 +83,25 @@ export async function setUpAiClients(options: SetupOptions): Promise<SetupStep[]
     },
   ];
   for (const client of jsonClients) {
-    steps.push(await setUpJsonClient(client, options.executablePath));
+    steps.push(await setUpJsonClient(client, launchEntry));
   }
   steps.push(await setUpClaudeCode(options));
   steps.push({
     client: "VS Code (Copilot)",
     outcome: "skipped",
-    detail: `VS Code is set up per project: add .vscode/mcp.json with {"servers": {"${PRODUCT_NAME}": {"type": "stdio", "command": "${toForwardSlashes(options.executablePath)}"}}}`,
+    detail: `VS Code is set up per project: add .vscode/mcp.json with ${JSON.stringify({
+      servers: { [PRODUCT_NAME]: { type: "stdio", ...launchEntry } },
+    })}`,
   });
   return steps;
 }
 
-async function setUpJsonClient(client: JsonClient, executablePath: string): Promise<SetupStep> {
+function describeLaunch(launch: ServerLaunchCommand): LaunchEntry {
+  const command = toForwardSlashes(launch.command);
+  return launch.args.length > 0 ? { command, args: launch.args.map(toForwardSlashes) } : { command };
+}
+
+async function setUpJsonClient(client: JsonClient, launchEntry: LaunchEntry): Promise<SetupStep> {
   if (!existsSync(client.folder)) {
     return { client: client.name, outcome: "skipped", detail: "not installed" };
   }
@@ -102,32 +119,57 @@ async function setUpJsonClient(client: JsonClient, executablePath: string): Prom
     }
   }
   const servers = (configuration[client.serversKey] ?? {}) as Record<string, unknown>;
-  if (servers[PRODUCT_NAME] !== undefined) {
+  const existingEntry = servers[PRODUCT_NAME] as Record<string, unknown> | undefined;
+  if (
+    existingEntry !== undefined &&
+    existingEntry.command === launchEntry.command &&
+    JSON.stringify(existingEntry.args ?? []) === JSON.stringify(launchEntry.args ?? [])
+  ) {
     return { client: client.name, outcome: "already set up", detail: client.configFile };
   }
-  servers[PRODUCT_NAME] = { command: toForwardSlashes(executablePath) };
+  // Other keys of an existing entry (env, timeout...) are kept.
+  const { args: _previousArguments, ...keptKeys } = existingEntry ?? {};
+  servers[PRODUCT_NAME] = { ...keptKeys, ...launchEntry };
   configuration[client.serversKey] = servers;
   await saveWithBackup(client.configFile, `${JSON.stringify(configuration, null, 2)}\n`);
-  return { client: client.name, outcome: "added", detail: client.configFile };
+  return {
+    client: client.name,
+    outcome: existingEntry === undefined ? "added" : "updated",
+    detail: client.configFile,
+  };
 }
 
-async function setUpCodex(codexFolder: string, executablePath: string): Promise<SetupStep> {
+async function setUpCodex(codexFolder: string, launchEntry: LaunchEntry): Promise<SetupStep> {
   if (!existsSync(codexFolder)) {
     return { client: "Codex", outcome: "skipped", detail: "not installed" };
   }
   const configFile = join(codexFolder, "config.toml");
   const text = existsSync(configFile) ? await readFile(configFile, "utf8") : "";
-  if (new RegExp(`^\\[mcp_servers\\.["']?${PRODUCT_NAME}["']?\\]`, "m").test(text)) {
-    return { client: "Codex", outcome: "already set up", detail: configFile };
+  const launchLines = [`command = "${launchEntry.command}"`];
+  if (launchEntry.args) {
+    launchLines.push(`args = [${launchEntry.args.map((argument) => `"${argument}"`).join(", ")}]`);
   }
+
+  const header = new RegExp(`^\\[mcp_servers\\.["']?${PRODUCT_NAME}["']?\\][^\\n]*\\n?`, "m").exec(text);
+  if (header) {
+    // Replace only the command and args lines of the existing section.
+    const bodyStart = header.index + header[0].length;
+    const nextSectionOffset = text.slice(bodyStart).search(/^\[/m);
+    const bodyEnd = nextSectionOffset === -1 ? text.length : bodyStart + nextSectionOffset;
+    const bodyLines = text.slice(bodyStart, bodyEnd).split("\n");
+    const isLaunchLine = (line: string) => /^(command|args)\s*=/.test(line.trim());
+    const currentLaunchLines = bodyLines.filter(isLaunchLine).map((line) => line.trim());
+    if (currentLaunchLines.join("\n") === launchLines.join("\n")) {
+      return { client: "Codex", outcome: "already set up", detail: configFile };
+    }
+    const newBody = [...launchLines, ...bodyLines.filter((line) => !isLaunchLine(line))].join("\n");
+    await saveWithBackup(configFile, text.slice(0, bodyStart) + newBody + text.slice(bodyEnd));
+    return { client: "Codex", outcome: "updated", detail: configFile };
+  }
+
   // Opening the editor and importing a project can take longer than Codex's default
   // 60 seconds per tool call.
-  const section = [
-    `[mcp_servers.${PRODUCT_NAME}]`,
-    `command = "${toForwardSlashes(executablePath)}"`,
-    "tool_timeout_sec = 300",
-    "",
-  ].join("\n");
+  const section = [`[mcp_servers.${PRODUCT_NAME}]`, ...launchLines, "tool_timeout_sec = 300", ""].join("\n");
   const separator = text === "" || text.endsWith("\n\n") ? "" : text.endsWith("\n") ? "\n" : "\n\n";
   await saveWithBackup(configFile, `${text}${separator}${section}`);
   return { client: "Codex", outcome: "added", detail: configFile };
@@ -135,6 +177,11 @@ async function setUpCodex(codexFolder: string, executablePath: string): Promise<
 
 async function setUpClaudeCode(options: SetupOptions): Promise<SetupStep> {
   const runClaudeCommand = options.runClaudeCommand ?? runClaudeCli;
+  // Removing first lets a new install replace an entry that starts it in another way.
+  const removeExitCode = await runClaudeCommand(["mcp", "remove", "--scope", "user", PRODUCT_NAME]);
+  if (removeExitCode === null) {
+    return { client: "Claude Code", outcome: "skipped", detail: "not installed (no claude command)" };
+  }
   const exitCode = await runClaudeCommand([
     "mcp",
     "add",
@@ -142,17 +189,19 @@ async function setUpClaudeCode(options: SetupOptions): Promise<SetupStep> {
     "user",
     PRODUCT_NAME,
     "--",
-    options.executablePath,
+    options.launch.command,
+    ...options.launch.args,
   ]);
-  if (exitCode === null) {
-    return { client: "Claude Code", outcome: "skipped", detail: "not installed (no claude command)" };
-  }
   return exitCode === 0
-    ? { client: "Claude Code", outcome: "added", detail: "claude mcp add --scope user" }
+    ? {
+        client: "Claude Code",
+        outcome: removeExitCode === 0 ? "updated" : "added",
+        detail: "claude mcp add --scope user",
+      }
     : {
         client: "Claude Code",
-        outcome: "already set up",
-        detail: "claude mcp add did not add it; it probably exists already (check with: claude mcp list)",
+        outcome: "failed",
+        detail: "claude mcp add did not work; check with: claude mcp list",
       };
 }
 

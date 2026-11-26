@@ -5,6 +5,7 @@ import { afterEach, beforeEach, expect, test } from "bun:test";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import type { ServerLaunchCommand } from "../../server/src/installation.ts";
 import { type SetupStep, setUpAiClients } from "../../server/src/setup/client-setup.ts";
 
 const EXECUTABLE = "C:\\Tools\\godot-wingman.exe";
@@ -20,9 +21,17 @@ afterEach(async () => {
   await rm(home, { recursive: true, force: true });
 });
 
-function runSetup(claudeExitCode: number | null = null): Promise<SetupStep[]> {
+const BUN = "C:\\Users\\me\\.bun\\bin\\bun.exe";
+const BUNDLE = "C:\\Users\\me\\AppData\\Local\\Programs\\godot-wingman\\godot-wingman.js";
+const EXECUTABLE_LAUNCH: ServerLaunchCommand = { command: EXECUTABLE, args: [] };
+const BUNDLE_LAUNCH: ServerLaunchCommand = { command: BUN, args: [BUNDLE] };
+
+function runSetup(
+  claudeExitCode: number | null = null,
+  launch: ServerLaunchCommand = EXECUTABLE_LAUNCH,
+): Promise<SetupStep[]> {
   return setUpAiClients({
-    executablePath: EXECUTABLE,
+    launch,
     homeDirectory: home,
     applicationDataDirectory: applicationData,
     runClaudeCommand: async () => claudeExitCode,
@@ -79,6 +88,53 @@ test("a config file with comments is not touched", async () => {
   expect(await readFile(join(home, ".gemini", "settings.json"), "utf8")).toBe(original);
 });
 
-test("Claude Code is set up with its own command", async () => {
-  expect(outcomeOf(await runSetup(0), "Claude Code")).toBe("added");
+test("Claude Code replaces an existing entry with its own commands", async () => {
+  expect(outcomeOf(await runSetup(0), "Claude Code")).toBe("updated");
+});
+
+test("switching to the bundle updates existing entries and keeps their other settings", async () => {
+  await mkdir(join(home, ".codex"));
+  await mkdir(join(home, ".cursor"));
+  await writeFile(
+    join(home, ".codex", "config.toml"),
+    '[mcp_servers.godot-wingman]\ncommand = "C:/Tools/godot-wingman.exe"\ntool_timeout_sec = 300\n\n[other]\nkey = 1\n',
+  );
+  await writeFile(
+    join(home, ".cursor", "mcp.json"),
+    JSON.stringify({
+      mcpServers: { "godot-wingman": { command: "C:/Tools/godot-wingman.exe", env: { A: "1" } } },
+    }),
+  );
+
+  const steps = await runSetup(null, BUNDLE_LAUNCH);
+  expect(outcomeOf(steps, "Codex")).toBe("updated");
+  expect(outcomeOf(steps, "Cursor")).toBe("updated");
+  expect(await readFile(join(home, ".codex", "config.toml"), "utf8")).toBe(
+    '[mcp_servers.godot-wingman]\ncommand = "C:/Users/me/.bun/bin/bun.exe"\nargs = ["C:/Users/me/AppData/Local/Programs/godot-wingman/godot-wingman.js"]\ntool_timeout_sec = 300\n\n[other]\nkey = 1\n',
+  );
+  const cursorConfig = JSON.parse(await readFile(join(home, ".cursor", "mcp.json"), "utf8"));
+  expect(cursorConfig.mcpServers["godot-wingman"]).toEqual({
+    command: "C:/Users/me/.bun/bin/bun.exe",
+    args: ["C:/Users/me/AppData/Local/Programs/godot-wingman/godot-wingman.js"],
+    env: { A: "1" },
+  });
+
+  const secondSteps = await runSetup(null, BUNDLE_LAUNCH);
+  expect(outcomeOf(secondSteps, "Codex")).toBe("already set up");
+  expect(outcomeOf(secondSteps, "Cursor")).toBe("already set up");
+});
+
+test("Claude Code gets the bundle command with its argument", async () => {
+  const commands: string[][] = [];
+  await setUpAiClients({
+    launch: BUNDLE_LAUNCH,
+    homeDirectory: home,
+    applicationDataDirectory: applicationData,
+    runClaudeCommand: async (commandArguments) => {
+      commands.push(commandArguments);
+      return commandArguments[1] === "remove" ? 1 : 0;
+    },
+  });
+  expect(commands[0]).toEqual(["mcp", "remove", "--scope", "user", "godot-wingman"]);
+  expect(commands[1]).toEqual(["mcp", "add", "--scope", "user", "godot-wingman", "--", BUN, BUNDLE]);
 });
