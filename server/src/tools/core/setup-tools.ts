@@ -1,6 +1,6 @@
 /**
  * Core tools for getting started: status, starting the editor, installing the addon,
- * choosing an editor, and switching toolsets on and off.
+ * choosing an editor, switching toolsets on and off, and updating Godot Pilot.
  */
 import { resolve } from "node:path";
 import { z } from "zod";
@@ -10,6 +10,7 @@ import { launchEditor } from "../../godot/launch-editor.ts";
 import { describePermissionMode } from "../../mcp/permission-mode.ts";
 import { defineTool, errorResult, jsonResult, textResult } from "../../mcp/tool-definition.ts";
 import { PRODUCT_DISPLAY_NAME, PRODUCT_VERSION } from "../../product.ts";
+import { installNewestRelease } from "../../updates/updates.ts";
 import { TOOLSET_PROFILES } from "../toolset-profiles.ts";
 
 export const getStatusTool = defineTool({
@@ -145,6 +146,19 @@ export const installAddonTool = defineTool({
           ? "Yes: this project is open in an editor. Restart it, or turn the plugin off and on in Project Settings > Plugins."
           : "No",
     });
+  },
+});
+
+export const updateGodotPilotTool = defineTool({
+  name: "update_godot_pilot",
+  title: "Update Godot Pilot",
+  description:
+    "Downloads the newest Godot Pilot release from GitHub, checks its SHA-256 checksum and installs it in place of this program. Only call it when the person agreed to update. The new version runs after the person restarts the AI app (or reconnects the MCP server); then launch_editor updates the addon in the project.",
+  inputShape: {},
+  access: "setup",
+  async run() {
+    const outcome = await installNewestRelease();
+    return textResult(outcome.message);
   },
 });
 

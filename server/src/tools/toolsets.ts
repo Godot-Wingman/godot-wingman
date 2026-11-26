@@ -27,6 +27,7 @@ import {
   listToolsetsTool,
   selectEditorTool,
   toggleToolsetsTool,
+  updateGodotPilotTool,
 } from "./core/setup-tools.ts";
 import { INSPECTOR_TOOLS, SCRIPT_TOOLS } from "./editing/inspector-and-script-tools.ts";
 import { PROJECT_TOOLS, SIGNAL_TOOLS } from "./editing/project-and-signal-tools.ts";
@@ -56,6 +57,7 @@ export const ALL_TOOLSETS: Toolset[] = [
       getClassDocsTool,
       searchDocsTool,
       getGuideTool,
+      updateGodotPilotTool,
     ],
   },
   {
