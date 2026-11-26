@@ -24,6 +24,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { getBundledAddonVersion, installAddon } from "./addon/addon-installer.ts";
 import { readEditorRegistrations } from "./godot/editor-registry.ts";
 import { describeExecutable, findGodotExecutables } from "./godot/find-godot-executable.ts";
+import { getInstallationKind, getServerLaunchCommand } from "./installation.ts";
 import { createMcpServer } from "./mcp/create-mcp-server.ts";
 import { PERMISSION_MODES, parsePermissionMode } from "./mcp/permission-mode.ts";
 import { getProductHomeDirectory } from "./paths.ts";
@@ -31,12 +32,7 @@ import { PRODUCT_DISPLAY_NAME, PRODUCT_NAME, PRODUCT_VERSION } from "./product.t
 import { setUpAiClients } from "./setup/client-setup.ts";
 import { DEFAULT_TOOLSET_NAMES, TOOLSET_PROFILES } from "./tools/toolset-profiles.ts";
 import { ALL_TOOLSETS } from "./tools/toolsets.ts";
-import {
-  installNewestRelease,
-  isRunningAsExecutable,
-  isUpdateCheckDisabled,
-  removePreviousExecutable,
-} from "./updates/updates.ts";
+import { installNewestRelease, isUpdateCheckDisabled, removePreviousExecutable } from "./updates/updates.ts";
 
 const HELP_TEXT = `${PRODUCT_DISPLAY_NAME} ${PRODUCT_VERSION} - lets AI assistants use the Godot editor.
 
@@ -187,7 +183,7 @@ async function runWelcome(): Promise<void> {
 This program lets AI apps (Codex, Claude, Cursor...) use the Godot editor.
 You do not need to open it yourself: your AI app starts it in the background.
 `);
-  if (isRunningAsExecutable()) {
+  if (getInstallationKind() !== "source") {
     const answer = prompt(`Add ${PRODUCT_DISPLAY_NAME} to the AI apps on this computer now? [Y/n]`);
     if (answer !== null && (answer.trim() === "" || /^y/i.test(answer.trim()))) {
       console.log("");
@@ -198,14 +194,17 @@ You do not need to open it yourself: your AI app starts it in the background.
 }
 
 async function runSetupCommand(): Promise<void> {
-  if (!isRunningAsExecutable()) {
+  if (getInstallationKind() === "source") {
     console.error(
-      "setup adds the downloaded executable to your AI apps. When running from source, follow docs/INSTALL.md.",
+      "setup adds an installed Godot Wingman to your AI apps. When running from source, follow docs/INSTALL.md.",
     );
     process.exit(1);
   }
-  console.log(`Adding ${PRODUCT_DISPLAY_NAME} (${process.execPath}) to your AI apps:\n`);
-  const steps = await setUpAiClients({ executablePath: process.execPath });
+  const launch = getServerLaunchCommand();
+  console.log(
+    `Adding ${PRODUCT_DISPLAY_NAME} (${[launch.command, ...launch.args].join(" ")}) to your AI apps:\n`,
+  );
+  const steps = await setUpAiClients({ launch });
   for (const step of steps) {
     console.log(`  ${step.client.padEnd(18)} ${step.outcome.padEnd(15)} ${step.detail}`);
   }
