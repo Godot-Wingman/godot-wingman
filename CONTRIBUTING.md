@@ -16,6 +16,7 @@ You need [Bun](https://bun.sh) and Godot 4.5 or newer.
 bun install
 bun run test         # every test: unit tests and end-to-end tests with a real headless Godot
 bun run test:unit    # only the unit tests; fast, no Godot needed
+GODOT_PILOT_WINDOWED=1 bun test tests/windowed   # with a real editor window (needs a screen)
 bun run lint
 bun run typecheck
 ```
