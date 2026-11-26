@@ -1,10 +1,11 @@
 @tool
 extends RefCounted
-## Requests about permissions, the activity list and checkpoints (session/pilot_session.gd).
+## Requests about permissions, the activity list, checkpoints and messages between AIs
+## (session/pilot_session.gd).
 ##
 ## The MCP server calls authorize_tool_call before every tool that changes something
-## and finish_tool_call after it. No AI tool exposes the other methods; they exist for
-## tests and for the server's own use.
+## and finish_tool_call after it. tell_other_ais uses post_message_to_other_ais. The
+## other methods exist for tests and for the server's own use.
 
 const PilotError := preload("../utils/pilot_error.gd")
 const PilotSession := preload("../session/pilot_session.gd")
@@ -22,6 +23,7 @@ func register_methods(dispatcher: RefCounted) -> void:
 	dispatcher.register_method("get_session_state", _get_session_state)
 	dispatcher.register_method("set_editor_permission_mode", _set_editor_permission_mode)
 	dispatcher.register_method("go_back_to_before_step", _go_back_to_before_step)
+	dispatcher.register_method("post_message_to_other_ais", _post_message_to_other_ais)
 
 
 func _authorize_tool_call(params: Dictionary) -> Dictionary:
@@ -54,3 +56,14 @@ func _go_back_to_before_step(params: Dictionary) -> Variant:
 	if outcome.is_empty():
 		return PilotError.new("NO_CHECKPOINT", "That step has no checkpoint.", "Only changes made in this editor session can be undone this way.")
 	return outcome
+
+
+func _post_message_to_other_ais(params: Dictionary) -> Variant:
+	var message := String(params.get("message", "")).strip_edges()
+	if message.is_empty():
+		return PilotError.new("EMPTY_MESSAGE", "The message is empty.", "Write what you are about to change, for example: \"I am rewriting res://player.gd\".")
+	var caller: Dictionary = params.get("_caller", {}) if params.get("_caller") is Dictionary else {}
+	var connection_id := int(caller.get("connection_id", -1))
+	var sender := String(caller.get("ai_client", "AI"))
+	var receivers: PackedStringArray = _context.session.post_message(connection_id, sender, message)
+	return {"delivered_to": Array(receivers)}
