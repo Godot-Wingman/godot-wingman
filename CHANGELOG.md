@@ -4,6 +4,15 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-11-26
+
+### Changed
+
+- The installers use [Bun](https://bun.sh) when it is installed, or install it, and then download a 1-2 MB `godot-wingman.js` instead of the 100 MB executable. The executable is still in every release and is used when Bun cannot be (or with `GODOT_WINGMAN_USE_EXECUTABLE=1`).
+- `godot-wingman setup` changes an existing entry that starts Godot Wingman another way, and keeps its options such as `--mode`.
+- Updates replace the same kind of file that is installed (bundle or executable).
+- The landing page is dark and lives at https://godot-wingman.pages.dev.
+
 ## [0.4.0] - 2026-11-26
 
 ### Changed
