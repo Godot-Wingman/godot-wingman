@@ -1,5 +1,7 @@
-# Publishes a release when a version tag is pushed, for example: git tag v0.2.0 && git push --tags
+# Publishes a release when a version tag is pushed, for example: git tag v0.4.0 && git push --tags
 # Builds one executable per platform and a zip of the Godot addon.
+# The Windows executable is built on Windows, because only there can Bun write its file
+# details (product name, description, version).
 name: Release
 
 on:
@@ -10,14 +12,32 @@ permissions:
   contents: write
 
 jobs:
+  windows-executable:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run build -- windows
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-executable
+          path: dist/godot-wingman-windows-x64.exe
+          if-no-files-found: error
+
   release:
+    needs: windows-executable
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
       - run: bun run lint && bun run typecheck && bun run test:unit
-      - run: bun run build
+      - run: bun run build -- without-windows
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-executable
+          path: dist
       - name: Zip the addon for manual installation
         run: cd addon && zip -r ../dist/godot-wingman-addon.zip godot_wingman
       - name: Write checksums (the update command checks downloads against them)
