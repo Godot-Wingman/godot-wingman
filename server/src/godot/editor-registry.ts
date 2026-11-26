@@ -10,7 +10,7 @@ import { join } from "node:path";
 import { z } from "zod";
 import { getEditorRegistryDirectory, normalizePathForComparison } from "../paths.ts";
 
-/** Shape of the JSON file written by the addon (addon/godot_pilot/plugin.gd). */
+/** Shape of the JSON file written by the addon (addon/godot_wingman/plugin.gd). */
 const registryFileSchema = z.object({
   process_id: z.number(),
   port: z.number(),

@@ -1,7 +1,7 @@
 /**
  * One WebSocket connection to one running Godot editor.
  *
- * Protocol (see addon/godot_pilot/bridge/bridge_server.gd):
+ * Protocol (see addon/godot_wingman/bridge/bridge_server.gd):
  * 1. We send {"type": "hello", "token": ...}; the editor answers "hello_ok" or closes.
  * 2. We send {"type": "request", "id", "method", "params"}; the editor answers with
  *    {"type": "response", "id", "ok": true, "result"} or {"ok": false, "error"}.
@@ -29,14 +29,14 @@ export class EditorRequestError extends Error {
   }
 }
 
-/** Who is connecting, shown in the Godot Pilot panel of the editor. */
+/** Who is connecting, shown in the Godot Wingman panel of the editor. */
 export interface ClientDescription {
   /** Name of the AI application, for example "claude-code". */
   aiClient: string;
   permissionMode: string;
 }
 
-/** News from the editor for the AI (addon/godot_pilot/session/notice_board.gd). */
+/** News from the editor for the AI (addon/godot_wingman/session/notice_board.gd). */
 export interface EditorNotice {
   /** Clock time in the editor, for example "14:02:11". */
   time: string;

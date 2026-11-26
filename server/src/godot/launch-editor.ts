@@ -26,7 +26,7 @@ export interface LaunchEditorOptions {
   /** The first start of a big project imports every asset and can take minutes. */
   waitSeconds?: number;
   extraArguments?: string[];
-  /** Passed to the Godot process, for example GODOT_PILOT_HOME in tests. */
+  /** Passed to the Godot process, for example GODOT_WINGMAN_HOME in tests. */
   environment?: Record<string, string>;
 }
 

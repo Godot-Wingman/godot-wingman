@@ -115,7 +115,7 @@ export class EditorManager {
     if (registrations.length === 0) {
       throw new EditorRequestError(
         "NO_EDITOR_RUNNING",
-        "No Godot editor with the Godot Pilot addon is running.",
+        "No Godot editor with the Godot Wingman addon is running.",
         "Call launch_editor with the project folder. It installs the addon if needed and opens the editor.",
       );
     }
