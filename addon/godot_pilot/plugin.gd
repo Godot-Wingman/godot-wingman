@@ -100,6 +100,10 @@ func _enter_tree() -> void:
 		return
 	add_child(_bridge_server)
 	_bridge_server.client_count_changed.connect(_on_client_count_changed)
+	_bridge_server.client_connected.connect(_session.notices.add_connection)
+	_bridge_server.client_disconnected.connect(_session.notices.remove_connection)
+	_bridge_server.take_notices = _session.notices.take_pending
+	scene_changed.connect(_on_scene_changed)
 	if DisplayServer.get_name() != "headless":
 		_dock = PilotDock.new(_session, context.addon_version)
 		add_control_to_bottom_panel(_dock, "Godot Pilot")
@@ -138,6 +142,8 @@ func _exit_tree() -> void:
 		remove_control_from_bottom_panel(_dock)
 		_dock.queue_free()
 		_dock = null
+	if _session != null:
+		_session.shut_down()
 	_session = null
 	if _game_debugger_bridge != null:
 		remove_debugger_plugin(_game_debugger_bridge)
@@ -193,6 +199,11 @@ func _collect_editor_information(addon_version: String) -> Dictionary:
 		"headless": DisplayServer.get_name() == "headless",
 		"started_at_unix": int(Time.get_unix_time_from_system()),
 	}
+
+
+func _on_scene_changed(_scene_root: Node) -> void:
+	if _session != null:
+		_session.on_scene_changed()
 
 
 func _on_client_count_changed(authenticated_client_count: int) -> void:
