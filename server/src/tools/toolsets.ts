@@ -21,6 +21,7 @@ import {
 } from "./core/editor-tools.ts";
 import { getClassDocsTool, getGuideTool, searchDocsTool } from "./core/knowledge-tools.ts";
 import {
+  createProjectTool,
   getStatusTool,
   installAddonTool,
   launchEditorTool,
@@ -44,6 +45,7 @@ export const ALL_TOOLSETS: Toolset[] = [
     alwaysEnabled: true,
     tools: [
       getStatusTool,
+      createProjectTool,
       launchEditorTool,
       installAddonTool,
       selectEditorTool,

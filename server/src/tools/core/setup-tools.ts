@@ -1,11 +1,13 @@
 /**
- * Core tools for getting started: status, starting the editor, installing the addon,
+ * Core tools for getting started: status, creating a project, starting the editor, installing the addon,
  * choosing an editor, switching toolsets on and off, and updating Godot Pilot.
  */
 import { resolve } from "node:path";
 import { z } from "zod";
 import { getBundledAddonVersion, installAddon } from "../../addon/addon-installer.ts";
+import { CreateProjectError, createProject, RENDERERS } from "../../godot/create-project.ts";
 import { findRegistrationForProject } from "../../godot/editor-registry.ts";
+import { findBestGodotExecutable, readGodotVersion } from "../../godot/find-godot-executable.ts";
 import { launchEditor } from "../../godot/launch-editor.ts";
 import { describePermissionMode } from "../../mcp/permission-mode.ts";
 import { defineTool, errorResult, jsonResult, textResult } from "../../mcp/tool-definition.ts";
@@ -70,6 +72,81 @@ export const getStatusTool = defineTool({
         .join(", ")} (see list_toolsets, enable with toggle_toolsets)`,
     );
     return textResult(lines.join("\n"));
+  },
+});
+
+export const createProjectTool = defineTool({
+  name: "create_project",
+  title: "Create a new Godot project",
+  description:
+    'Creates a new, empty Godot project in a folder (new or empty), like "Create" in the Godot project manager, then opens it in the editor with the addon. Use it when the person wants to start a new game. renderer: "forward_plus" (default, best looking, desktop), "mobile" (phones, simpler 3D), "compatibility" (oldest hardware and the web; choose it for browser games).',
+  inputShape: {
+    project_path: z
+      .string()
+      .describe('Folder for the new project, for example "C:/games/space-shooter". Created if missing.'),
+    name: z
+      .string()
+      .optional()
+      .describe("Project name shown in Godot and the window title. Default: the folder name."),
+    renderer: z.enum(RENDERERS).optional().describe('Default: "forward_plus".'),
+    allow_non_empty_folder: z
+      .boolean()
+      .optional()
+      .describe("Create it in a folder that already has files. Only when the person agreed."),
+    open_editor: z.boolean().optional().describe("Open the new project in the editor. Default: true."),
+    godot_executable: z
+      .string()
+      .optional()
+      .describe("Full path of Godot, if it cannot be found automatically."),
+    headless: z
+      .boolean()
+      .optional()
+      .describe("Open the editor without a window (automation). Default: false."),
+  },
+  access: "setup",
+  async run(input, context) {
+    const godot = await findBestGodotExecutable(input.godot_executable);
+    if (!godot) {
+      return errorResult(
+        "Could not find Godot on this computer.",
+        "Ask the person where Godot is and pass godot_executable, or tell them to download Godot 4.5 or newer from godotengine.org.",
+      );
+    }
+    try {
+      const created = await createProject({
+        projectPath: input.project_path,
+        name: input.name,
+        renderer: input.renderer,
+        godotVersion: await readGodotVersion(godot.path),
+        allowNonEmptyFolder: input.allow_non_empty_folder,
+      });
+      if (input.open_editor === false) {
+        return jsonResult({
+          created: created.projectPath,
+          files: created.files,
+          next_step: "Call launch_editor to open it.",
+        });
+      }
+      const launchResult = await launchEditor({
+        projectPath: created.projectPath,
+        godotExecutable: godot.path,
+        headless: input.headless,
+      });
+      context.editors.selectProject(launchResult.registration.projectPath);
+      return jsonResult({
+        created: created.projectPath,
+        files: created.files,
+        status: "opened in the editor and connected",
+        godot_version: launchResult.registration.godotVersion,
+        next_step:
+          "The project is empty: create a main scene (create_scene), set it as the main scene (project setting application/run/main_scene), then build the game.",
+      });
+    } catch (error) {
+      if (error instanceof CreateProjectError) {
+        return errorResult(error.message, error.hint);
+      }
+      throw error;
+    }
   },
 });
 
