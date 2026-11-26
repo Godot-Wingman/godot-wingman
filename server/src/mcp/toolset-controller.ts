@@ -34,6 +34,7 @@ export interface ToolsetSummary {
 }
 
 const DEFAULT_CONFIRMATION_TIMEOUT_SECONDS = 180;
+const FINISH_REPORT_TIMEOUT_MILLISECONDS = 5000;
 
 export interface ToolsetControllerOptions {
   /** How long the approval dialog waits in "confirm" mode. */
@@ -203,7 +204,7 @@ export class ToolsetController {
         result = errorToResult(error);
       }
       if (authorization.activityId !== undefined) {
-        this.reportFinished(authorization.activityId, result, context);
+        await this.reportFinished(authorization.activityId, result, context);
       }
       return result;
     } catch (error) {
@@ -300,15 +301,27 @@ ${JSON.stringify(input, null, 2)}`,
     return answer.allowed;
   }
 
-  /** Tells the editor's activity panel how the call ended. Not awaited: it is only a record. */
-  private reportFinished(activityId: number, result: CallToolResult, context: ToolContext): void {
+  /**
+   * Tells the editor's activity panel how the call ended. Waited for (it takes a few
+   * milliseconds) so the record is complete even when the AI disconnects right after;
+   * a failure is ignored because the tool result itself is what matters.
+   */
+  private async reportFinished(
+    activityId: number,
+    result: CallToolResult,
+    context: ToolContext,
+  ): Promise<void> {
     const firstText = result.content.find((item) => item.type === "text");
-    context.editors
-      .request("finish_tool_call", {
-        activity_id: activityId,
-        succeeded: result.isError !== true,
-        result: firstText && "text" in firstText ? firstText.text : "",
-      })
+    await context.editors
+      .request(
+        "finish_tool_call",
+        {
+          activity_id: activityId,
+          succeeded: result.isError !== true,
+          result: firstText && "text" in firstText ? firstText.text : "",
+        },
+        FINISH_REPORT_TIMEOUT_MILLISECONDS,
+      )
       .catch(() => {
         // The editor may have closed meanwhile; the tool result itself is what matters.
       });
