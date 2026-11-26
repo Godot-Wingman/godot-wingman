@@ -1,4 +1,4 @@
-# Working in Godot with Godot Pilot
+# Working in Godot with Godot Wingman
 
 Work the way an experienced Godot developer would: look first, change in small steps, check every step.
 

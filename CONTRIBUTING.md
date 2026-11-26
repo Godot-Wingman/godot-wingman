@@ -1,4 +1,4 @@
-# Contributing to Godot Pilot
+# Contributing to Godot Wingman
 
 Thank you for helping! Bug reports, ideas, documentation and code are all welcome.
 
@@ -16,7 +16,7 @@ You need [Bun](https://bun.sh) and Godot 4.5 or newer.
 bun install
 bun run test         # every test: unit tests and end-to-end tests with a real headless Godot
 bun run test:unit    # only the unit tests; fast, no Godot needed
-GODOT_PILOT_WINDOWED=1 bun test tests/windowed   # with a real editor window (needs a screen)
+GODOT_WINGMAN_WINDOWED=1 bun test tests/windowed   # with a real editor window (needs a screen)
 bun run lint
 bun run typecheck
 ```
@@ -34,7 +34,7 @@ server/src/            MCP server (TypeScript, runs on Bun)
   docs/                Godot class reference from the installed Godot version
   tools/<toolset>/     the tools, one folder per toolset
 server/guides/         guides for the AI (Markdown)
-addon/godot_pilot/     the Godot editor addon (GDScript)
+addon/godot_wingman/     the Godot editor addon (GDScript)
   bridge/              WebSocket server and request routing
   handlers/            the editor side of the tools, one file per group
 tests/                 unit tests and end-to-end tests
@@ -45,7 +45,7 @@ test-project/          small Godot project used by the tests
 
 1. The AI calls a tool, for example `get_logs`.
 2. The tool (`server/src/tools/...`) checks the input and sends a request, for example `get_logs`, to the editor.
-3. The addon routes the request to a handler (`addon/godot_pilot/handlers/...`), which does the work in the editor and returns JSON.
+3. The addon routes the request to a handler (`addon/godot_wingman/handlers/...`), which does the work in the editor and returns JSON.
 
 To add a tool:
 
@@ -91,7 +91,7 @@ These rules are for AI agents (Claude Code, Codex, Cursor and others) that write
 
 ## License of contributions
 
-Godot Pilot is licensed under the [GNU AGPL-3.0](LICENSE). By contributing, you agree that your contribution is licensed under the same license.
+Godot Wingman is licensed under the [GNU AGPL-3.0](LICENSE). By contributing, you agree that your contribution is licensed under the same license.
 
 ## Code of conduct
 

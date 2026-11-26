@@ -1,8 +1,8 @@
-# Godot Pilot
+# Godot Wingman
 
 **Ein lokaler MCP-Server, mit dem jeder KI-Assistent den Godot-Editor so benutzen kann, wie ein Mensch es tut.** Er kann den Editor sehen, Szenen aufbauen, Eigenschaften im Inspector ändern, Skripte schreiben und prüfen, das Spiel mit echten Eingaben spielen und Fehler lesen und beheben.
 
-> **Inoffiziell.** Godot Pilot ist ein Community-Projekt. Es steht in keiner Verbindung zur Godot Foundation oder zum Godot-Engine-Projekt und wird von ihnen nicht unterstützt. „Godot“ ist eine Marke der Godot Foundation.
+> **Inoffiziell.** Godot Wingman ist ein Community-Projekt. Es steht in keiner Verbindung zur Godot Foundation oder zum Godot-Engine-Projekt und wird von ihnen nicht unterstützt. „Godot“ ist eine Marke der Godot Foundation.
 
 > **Status: frühe Entwicklung (0.x).** Vor Version 1.0 muss das Projekt stabil werden und von echten Nutzern gut getestet sein.
 
@@ -14,7 +14,7 @@ Details stehen im [englischen README](README.md) und im [Installationsleitfaden]
 - Die KI sieht den Editor, die 2D/3D-Ansicht und das laufende Spiel.
 - Sie spielt das Spiel mit echten Eingaben: Tasten gedrückt halten, Timing, Bild für Bild weiterlaufen lassen und „warten, bis etwas eintritt“.
 - Sie liest die Dokumentation der installierten Godot-Version und die Klassen deiner GDExtensions.
-- Das Godot-Pilot-Panel unten im Editor listet jede Änderung der KI auf. Es kann Skripte, Szenen, Ressourcen und Einstellungen auf den Stand vor einem beliebigen Schritt zurücksetzen.
+- Das Godot-Wingman-Panel unten im Editor listet jede Änderung der KI auf. Es kann Skripte, Szenen, Ressourcen und Einstellungen auf den Stand vor einem beliebigen Schritt zurücksetzen.
 - Wenn du Strg+Z drückst, selbst etwas änderst oder im Panel zurückgehst, erfährt die KI das mit ihrem nächsten Schritt. Sie arbeitet dann nicht weiter an einem Zustand, den es nicht mehr gibt.
 - KIs, die im selben Editor arbeiten (zum Beispiel Claude Code und Cursor), können einander sagen, was sie ändern wollen. Du kannst aus dem Panel an alle schreiben.
 - Die Werkzeuge sind in Gruppen geordnet: 121 Werkzeuge in 20 Gruppen (Szene, Inspector, Skript, Animation, Tilemap, Oberfläche, 3D, Shader, Audio, Export, Spiel spielen ...). Die KI schaltet nur die Gruppen ein, die sie braucht.
@@ -27,7 +27,7 @@ Details stehen im [englischen README](README.md) und im [Installationsleitfaden]
 | `confirm` | Die KI darf frei lesen. Vor jeder Änderung zeigt Godot, was die KI tun will (bei GDScript den ganzen Code), und du klickst auf „Erlauben“ oder „Ablehnen“. |
 | `read-only` | Die KI darf nur ansehen. Werkzeuge, die Dateien ändern, GDScript ausführen, das Spiel starten oder Eingaben senden, werden ausgeblendet. |
 
-Den Modus legst du beim Hinzufügen von Godot Pilot zu deinem KI-Client fest (`--mode`) oder im Godot-Pilot-Panel in Godot. Wenn beide unterschiedlich sind, gilt der strengere. Im Bestätigungsfenster kannst du ein Werkzeug für den Rest der Sitzung erlauben. So fragt eine lange Reihe ähnlicher Änderungen nicht jedes Mal nach.
+Den Modus legst du beim Hinzufügen von Godot Wingman zu deinem KI-Client fest (`--mode`) oder im Godot-Wingman-Panel in Godot. Wenn beide unterschiedlich sind, gilt der strengere. Im Bestätigungsfenster kannst du ein Werkzeug für den Rest der Sitzung erlauben. So fragt eine lange Reihe ähnlicher Änderungen nicht jedes Mal nach.
 
 ## Sprachen
 
@@ -39,22 +39,22 @@ Die wichtigsten End-to-End-Tests laufen mit einem GDScript-Projekt. Jede Nacht u
 
 ## Datenschutz
 
-Godot Pilot läuft auf deinem Computer und sendet nichts über dich oder dein Projekt irgendwohin: keine Konten, keine Cloud, **keine Telemetrie**.
+Godot Wingman läuft auf deinem Computer und sendet nichts über dich oder dein Projekt irgendwohin: keine Konten, keine Cloud, **keine Telemetrie**.
 
-Um dich über neue Versionen zu informieren, lädt es höchstens einmal am Tag die Liste der Godot-Pilot-Releases von GitHub herunter. Das ist wie das Öffnen der Releases-Seite im Browser; dabei wird nichts gesendet. Abschalten mit `--no-update-check`. Wenn eine neue Version erscheint, sagt dir die KI Bescheid und installiert sie auf Wunsch. Oder du führst `godot-pilot update` aus.
+Um dich über neue Versionen zu informieren, lädt es höchstens einmal am Tag die Liste der Godot-Wingman-Releases von GitHub herunter. Das ist wie das Öffnen der Releases-Seite im Browser; dabei wird nichts gesendet. Abschalten mit `--no-update-check`. Wenn eine neue Version erscheint, sagt dir die KI Bescheid und installiert sie auf Wunsch. Oder du führst `godot-wingman update` aus.
 
-Dein KI-Client ist eine andere Sache: Alles, was die KI über Godot Pilot liest (Code, Szenen, Screenshots, Fehler), geht an das KI-Modell, das du verwendest, und gilt nach den Regeln dieses Anbieters. Damit alles auf deinem Computer bleibt, muss auch das Modell auf deinem eigenen Computer laufen.
+Dein KI-Client ist eine andere Sache: Alles, was die KI über Godot Wingman liest (Code, Szenen, Screenshots, Fehler), geht an das KI-Modell, das du verwendest, und gilt nach den Regeln dieses Anbieters. Damit alles auf deinem Computer bleibt, muss auch das Modell auf deinem eigenen Computer laufen.
 
 Godot 4.5 oder neuer ist nötig. Jede Änderung wird mit Godot 4.5.2, 4.6.3 und 4.7.2 getestet.
 
 ## Lizenz
 
-[GNU AGPL-3.0](LICENSE). Du darfst Godot Pilot verwenden, untersuchen, ändern und weitergeben. Wenn du eine geänderte Version verbreitest oder sie anderen über ein Netzwerk anbietest, musst du ihren Quellcode unter derselben Lizenz teilen.
+[GNU AGPL-3.0](LICENSE). Du darfst Godot Wingman verwenden, untersuchen, ändern und weitergeben. Wenn du eine geänderte Version verbreitest oder sie anderen über ein Netzwerk anbietest, musst du ihren Quellcode unter derselben Lizenz teilen.
 
-**Spiele, die du mit Godot Pilot machst, sind von dieser Lizenz nicht betroffen.** Das Addon läuft nur im Editor und ist nicht im exportierten Spiel enthalten. Du kannst dein Spiel unter der Lizenz deiner Wahl verkaufen.
+**Spiele, die du mit Godot Wingman machst, sind von dieser Lizenz nicht betroffen.** Das Addon läuft nur im Editor und ist nicht im exportierten Spiel enthalten. Du kannst dein Spiel unter der Lizenz deiner Wahl verkaufen.
 
-- **Steht der KI-geschriebene Code unter der AGPL?** Nein. Die AGPL gilt nur für die Dateien von Godot Pilot selbst (Server und Ordner `addons/godot_pilot`). Was du und die KI in deinem Projekt erstellt, gehört dir.
+- **Steht der KI-geschriebene Code unter der AGPL?** Nein. Die AGPL gilt nur für die Dateien von Godot Wingman selbst (Server und Ordner `addons/godot_wingman`). Was du und die KI in deinem Projekt erstellt, gehört dir.
 - **Darf ich es in einer Firma benutzen?** Ja. Die Nutzung zwingt dich nicht, irgendetwas zu teilen.
-- **Wann muss ich den Quellcode teilen?** Nur wenn du Godot Pilot selbst weitergibst (verändert oder unverändert) oder eine veränderte Version anderen über ein Netzwerk zur Nutzung überlässt. Dann teilst du den Quellcode dieser Version unter der AGPL-3.0.
+- **Wann muss ich den Quellcode teilen?** Nur wenn du Godot Wingman selbst weitergibst (verändert oder unverändert) oder eine veränderte Version anderen über ein Netzwerk zur Nutzung überlässt. Dann teilst du den Quellcode dieser Version unter der AGPL-3.0.
 
 Dies ist eine Zusammenfassung, keine Rechtsberatung. Maßgeblich ist der [Lizenztext](LICENSE).

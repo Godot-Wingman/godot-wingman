@@ -10,7 +10,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 - `create_project`: the AI creates a new, empty Godot project (name, renderer) and opens it.
 - One-line installers for Windows (`install/install.ps1`) and macOS/Linux (`install/install.sh`): download the newest release, check its checksum, install it and run setup. Files downloaded this way get no "unknown app" warning.
-- `godot-pilot setup` adds Godot Pilot to Codex, Claude Desktop, Claude Code, Cursor, Gemini CLI and Windsurf, keeping a copy of each changed settings file. Codex gets a longer tool timeout.
+- `godot-wingman setup` adds Godot Wingman to Codex, Claude Desktop, Claude Code, Cursor, Gemini CLI and Windsurf, keeping a copy of each changed settings file. Codex gets a longer tool timeout.
 - README in Spanish, Portuguese (Brazil), German, French, Russian, Simplified Chinese, Japanese and Korean.
 
 ## [0.2.0] - 2026-11-26
@@ -18,8 +18,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 ### Added
 
 - News for the AI at the end of its tool results: when the person undoes or redoes a change (saying whether it was that AI's change), changes things by hand, or goes back to an earlier step in the panel.
-- Several AIs in one editor: they are told when another AI connects or leaves, can message each other with the new `tell_other_ais` tool, and an AI that connects later gets the recent messages. The person can write to the AIs from the Godot Pilot panel.
-- Update check: at most once a day the server reads the list of releases from GitHub and tells the AI about a newer version. The new `update_godot_pilot` tool and the `godot-pilot update` command install it after checking its SHA-256 checksum. Off with `--no-update-check`.
+- Several AIs in one editor: they are told when another AI connects or leaves, can message each other with the new `tell_other_ais` tool, and an AI that connects later gets the recent messages. The person can write to the AIs from the Godot Wingman panel.
+- Update check: at most once a day the server reads the list of releases from GitHub and tells the AI about a newer version. The new `update_godot_wingman` tool and the `godot-wingman update` command install it after checking its SHA-256 checksum. Off with `--no-update-check`.
 - Releases include a `SHA256SUMS` file.
 - End-to-end tests with a C# project and a Rust GDExtension, run every night and before releases.
 - The addon folder contains a copy of the license.
@@ -60,7 +60,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - An export plugin keeps the addon out of exported games.
 - `launch_editor` keeps Godot's console output in a log and shows its end when startup fails.
 - `input_sequence` steps can wait for game conditions (`wait_until`), and inputs still held when a sequence ends or fails are released.
-- Godot Pilot panel in the editor: connected AIs, permission mode for the project (the stricter of the panel and `--mode` applies), and a list of every change the AI made with its result, also written to `.godot/godot_pilot/activity.log`.
+- Godot Wingman panel in the editor: connected AIs, permission mode for the project (the stricter of the panel and `--mode` applies), and a list of every change the AI made with its result, also written to `.godot/godot_wingman/activity.log`.
 - Going back: before every change, the project's text files (scripts, scenes, resources, settings, import options) are remembered, and the panel can put them back to how they were before any step.
 - The approval dialog of `confirm` mode shows the AI, the tool and every argument in full (code in a scrollable box), and can allow one tool for the rest of the session.
 - A wrong node path suggests nodes with a similar name.

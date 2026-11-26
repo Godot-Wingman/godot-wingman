@@ -1,8 +1,8 @@
-# Godot Pilot
+# Godot Wingman
 
 **Un servidor MCP que se ejecuta en tu computadora y permite que cualquier asistente de IA use el editor de Godot como lo haría una persona.** Puede ver el editor, crear escenas, cambiar propiedades en el inspector, escribir y revisar scripts, ejecutar el juego y jugarlo con entradas reales de teclado, y leer los errores para corregirlos.
 
-> **No es oficial.** Godot Pilot es un proyecto de la comunidad. No tiene relación con la Godot Foundation ni con el proyecto Godot Engine. "Godot" es una marca de la Godot Foundation.
+> **No es oficial.** Godot Wingman es un proyecto de la comunidad. No tiene relación con la Godot Foundation ni con el proyecto Godot Engine. "Godot" es una marca de la Godot Foundation.
 
 > **Estado: desarrollo temprano (0.x).** La versión 1.0 no saldrá hasta que el proyecto sea estable y lo hayan probado usuarios reales.
 
@@ -14,7 +14,7 @@ Más detalles en el [README en inglés](README.md) y en la [guía de instalació
 - La IA ve el editor, la vista 2D/3D y el juego en ejecución.
 - Juega el juego con entradas reales: mantener una tecla presionada, controlar el tiempo, avanzar cuadro por cuadro, "esperar hasta que se cumpla una condición".
 - Lee la documentación de la versión de Godot instalada y las clases de tus GDExtensions.
-- El panel de Godot Pilot, debajo del editor, muestra cada cambio que hizo la IA y puede devolver scripts, escenas, recursos y ajustes al estado que tenían antes del paso que elijas.
+- El panel de Godot Wingman, debajo del editor, muestra cada cambio que hizo la IA y puede devolver scripts, escenas, recursos y ajustes al estado que tenían antes del paso que elijas.
 - Cuando presionas Ctrl+Z, cambias algo a mano o vuelves atrás desde el panel, la IA se entera en su siguiente paso; así no sigue trabajando sobre un estado que ya no existe.
 - Varias IA que trabajan en el mismo editor (por ejemplo, Claude Code y Cursor) pueden avisarse entre sí qué van a cambiar, y tú puedes escribir a todas desde el panel.
 - Las herramientas están en grupos (121 herramientas en 20 grupos: escena, inspector, script, animación, tilemap, interfaz, 3D, shader, audio, exportación, jugar el juego...). La IA activa solo los grupos que necesita.
@@ -27,7 +27,7 @@ Más detalles en el [README en inglés](README.md) y en la [guía de instalació
 | `confirm` | Puede mirar libremente. Antes de cada cambio, Godot muestra lo que la IA quiere hacer (en GDScript, el código completo) y tú eliges Permitir o Rechazar. |
 | `read-only` | Solo mira. Se ocultan las herramientas que modifican archivos, ejecutan GDScript, inician el juego o envían entradas. |
 
-Puedes elegir el modo al agregar Godot Pilot a tu cliente de IA (`--mode`, ver la [guía de instalación](docs/INSTALL.md)) o en Godot, en el panel de Godot Pilot. Si los dos son distintos, se aplica el más estricto. En la ventana de confirmación también puedes permitir una herramienta durante el resto de la sesión, para que una serie larga de cambios parecidos no pregunte cada vez.
+Puedes elegir el modo al agregar Godot Wingman a tu cliente de IA (`--mode`, ver la [guía de instalación](docs/INSTALL.md)) o en Godot, en el panel de Godot Wingman. Si los dos son distintos, se aplica el más estricto. En la ventana de confirmación también puedes permitir una herramienta durante el resto de la sesión, para que una serie larga de cambios parecidos no pregunte cada vez.
 
 ## Idiomas
 
@@ -39,22 +39,22 @@ Las pruebas principales de extremo a extremo usan un proyecto de GDScript. Cada 
 
 ## Privacidad
 
-Godot Pilot se ejecuta en tu computadora y no envía nada sobre ti ni sobre tu proyecto a ningún lugar: no hay cuentas, no hay nube, **sin telemetría**.
+Godot Wingman se ejecuta en tu computadora y no envía nada sobre ti ni sobre tu proyecto a ningún lugar: no hay cuentas, no hay nube, **sin telemetría**.
 
-Para avisarte de nuevas versiones, descarga como máximo una vez al día la lista de versiones de Godot Pilot desde GitHub. Es como abrir la página de versiones en un navegador; no se envía nada. Se desactiva con `--no-update-check`. Cuando sale una versión nueva, la IA te lo dice y, si quieres, la instala; o puedes ejecutar `godot-pilot update`.
+Para avisarte de nuevas versiones, descarga como máximo una vez al día la lista de versiones de Godot Wingman desde GitHub. Es como abrir la página de versiones en un navegador; no se envía nada. Se desactiva con `--no-update-check`. Cuando sale una versión nueva, la IA te lo dice y, si quieres, la instala; o puedes ejecutar `godot-wingman update`.
 
-El cliente de IA es otro tema: lo que la IA lee a través de Godot Pilot (código, escenas, capturas de pantalla, errores) va al modelo de IA que uses, según las reglas de ese proveedor. Solo un modelo que funcione en tu propia computadora mantiene todo en local.
+El cliente de IA es otro tema: lo que la IA lee a través de Godot Wingman (código, escenas, capturas de pantalla, errores) va al modelo de IA que uses, según las reglas de ese proveedor. Solo un modelo que funcione en tu propia computadora mantiene todo en local.
 
 Se necesita Godot 4.5 o superior. Cada cambio se prueba con Godot 4.5.2, 4.6.3 y 4.7.2.
 
 ## Licencia
 
-[GNU AGPL-3.0](LICENSE). Puedes usar, estudiar, modificar y compartir Godot Pilot. Si distribuyes una versión modificada, o la ofreces a otros por red, debes compartir su código fuente con la misma licencia.
+[GNU AGPL-3.0](LICENSE). Puedes usar, estudiar, modificar y compartir Godot Wingman. Si distribuyes una versión modificada, o la ofreces a otros por red, debes compartir su código fuente con la misma licencia.
 
-**Los juegos que hagas con Godot Pilot no se ven afectados por esta licencia.** El addon es solo una herramienta del editor y no se incluye en los juegos exportados, así que puedes vender tu juego con la licencia que quieras.
+**Los juegos que hagas con Godot Wingman no se ven afectados por esta licencia.** El addon es solo una herramienta del editor y no se incluye en los juegos exportados, así que puedes vender tu juego con la licencia que quieras.
 
-- **¿El código que escribe la IA queda bajo AGPL?** No. La AGPL cubre solo los archivos propios de Godot Pilot (el servidor y la carpeta `addons/godot_pilot`). Lo que tú y la IA creen en tu proyecto es tuyo.
+- **¿El código que escribe la IA queda bajo AGPL?** No. La AGPL cubre solo los archivos propios de Godot Wingman (el servidor y la carpeta `addons/godot_wingman`). Lo que tú y la IA creen en tu proyecto es tuyo.
 - **¿Puedo usarlo en una empresa?** Sí. Usarlo no te obliga a compartir nada.
-- **¿Cuándo tengo que compartir el código fuente?** Solo cuando entregas Godot Pilot en sí a otras personas, modificado o no, o cuando dejas que otros usen una versión modificada por red. Entonces compartes el código fuente de esa versión bajo AGPL-3.0.
+- **¿Cuándo tengo que compartir el código fuente?** Solo cuando entregas Godot Wingman en sí a otras personas, modificado o no, o cuando dejas que otros usen una versión modificada por red. Entonces compartes el código fuente de esa versión bajo AGPL-3.0.
 
 Esto es un resumen, no un consejo legal; lo que vale es el [texto de la licencia](LICENSE).

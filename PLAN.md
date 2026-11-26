@@ -42,7 +42,7 @@ AI istemcisi ──stdio──▶ MCP sunucusu (TypeScript + Bun, tek çalışt�
   - Export edilmiş oyuna hiçbir şey girmez.
 - **Neden TypeScript + Bun (Node/npm değil):**
   - Resmi MCP SDK'sı TypeScript'te ve Bun üzerinde çalışır.
-  - **Kullanıcıya tek bir dosya veririz.** `bun build --compile` her işletim sistemi için tek bir çalıştırılabilir dosya üretir (`godot-pilot.exe` gibi). Kullanıcının Node, npm ya da Bun kurmasına gerek yoktur. GitHub Releases'tan indirir ve MCP ayarına dosyanın yolunu yazar.
+  - **Kullanıcıya tek bir dosya veririz.** `bun build --compile` her işletim sistemi için tek bir çalıştırılabilir dosya üretir (`godot-wingman.exe` gibi). Kullanıcının Node, npm ya da Bun kurmasına gerek yoktur. GitHub Releases'tan indirir ve MCP ayarına dosyanın yolunu yazar.
   - Windows, macOS ve Linux dosyaları tek bilgisayardan üretilir.
   - Bun'ın kendi test aracı ve paketleyicisi vardır. Ekstra araç yığını gerekmez.
   - Ağır iş zaten Godot tarafında, o yüzden Rust'ın hızı burada fark yaratmaz.
@@ -193,4 +193,4 @@ Hedef: Herkes kullanabilir, fork'layabilir, değiştirebilir ve PR açabilir. Ki
 
 ## Açık kararlar
 
-- **Proje adı.** Aday: `godot-pilot`.
+- **Proje adı.** Aday: `godot-wingman`.
