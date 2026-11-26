@@ -4,6 +4,14 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-26
+
+### Changed
+
+- The project is now called Godot Wingman (it was Godot Pilot). The executable is `godot-wingman`, the addon folder is `addons/godot_wingman`, and the environment variables start with `GODOT_WINGMAN_`. Installing the addon removes the old `addons/godot_pilot` folder. Versions 0.1 to 0.3 cannot update themselves to this one: install it again with the one-line installer.
+- Opening the executable by hand explains what it is and offers to run setup, instead of showing an empty window.
+- The Windows executable shows its name, description and version in its file properties.
+
 ## [0.3.0] - 2026-11-26
 
 ### Added
