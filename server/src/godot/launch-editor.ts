@@ -52,7 +52,7 @@ export async function launchEditor(options: LaunchEditorOptions): Promise<Launch
   if (!existsSync(getProjectFilePath(projectPath))) {
     throw new LaunchEditorError(
       `'${projectPath}' is not a Godot project (no project.godot).`,
-      "Pass the folder that contains project.godot. To start a new game, create that folder with a project.godot file first.",
+      "Pass the folder that contains project.godot. To start a new game, call create_project.",
     );
   }
 
