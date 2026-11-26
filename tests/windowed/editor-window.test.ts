@@ -1,15 +1,15 @@
 /**
  * Smoke tests with a real editor window: what headless tests cannot show. Screenshots,
- * renders, the Godot Pilot panel, the approval dialog and a game in its own window.
+ * renders, the Godot Wingman panel, the approval dialog and a game in its own window.
  *
- * They need a screen, so they only run when GODOT_PILOT_WINDOWED=1 is set:
- *   GODOT_PILOT_WINDOWED=1 bun test tests/windowed
+ * They need a screen, so they only run when GODOT_WINGMAN_WINDOWED=1 is set:
+ *   GODOT_WINGMAN_WINDOWED=1 bun test tests/windowed
  * On Linux CI they run inside a virtual screen (xvfb-run).
  */
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { startTestEditor, type TestEditor } from "../helpers/test-editor.ts";
 
-const isEnabled = process.env.GODOT_PILOT_WINDOWED === "1";
+const isEnabled = process.env.GODOT_WINGMAN_WINDOWED === "1";
 let editor: TestEditor | null = null;
 
 beforeAll(async () => {
@@ -52,11 +52,11 @@ describe("seeing the editor", () => {
     expect(render.imageCount).toBe(1);
   }, 30_000);
 
-  test("the Godot Pilot panel is in the editor", async () => {
+  test("the Godot Wingman panel is in the editor", async () => {
     if (!editor) return;
     const found = await runInEditor<boolean>(
       editor,
-      'return editor.get_base_control().find_child("GodotPilotDock", true, false) != null',
+      'return editor.get_base_control().find_child("GodotWingmanDock", true, false) != null',
     );
     expect(found).toBe(true);
   });

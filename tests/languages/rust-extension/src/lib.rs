@@ -1,17 +1,17 @@
-//! A GDExtension class for the tests: PilotGreeter, a Node2D with an exported
+//! A GDExtension class for the tests: WingmanGreeter, a Node2D with an exported
 //! property, a method and a signal.
 
 use godot::prelude::*;
 
-struct PilotExtension;
+struct WingmanExtension;
 
 #[gdextension]
-unsafe impl ExtensionLibrary for PilotExtension {}
+unsafe impl ExtensionLibrary for WingmanExtension {}
 
 /// Says hello when the game starts.
 #[derive(GodotClass)]
 #[class(base = Node2D, init)]
-struct PilotGreeter {
+struct WingmanGreeter {
     #[export]
     #[init(val = GString::from("hello from Rust"))]
     greeting: GString,
@@ -19,14 +19,14 @@ struct PilotGreeter {
 }
 
 #[godot_api]
-impl INode2D for PilotGreeter {
+impl INode2D for WingmanGreeter {
     fn ready(&mut self) {
-        godot_print!("PilotGreeter is ready: {}", self.greeting);
+        godot_print!("WingmanGreeter is ready: {}", self.greeting);
     }
 }
 
 #[godot_api]
-impl PilotGreeter {
+impl WingmanGreeter {
     #[signal]
     fn greeted();
 

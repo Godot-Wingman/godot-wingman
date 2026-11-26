@@ -25,7 +25,7 @@ describe("core toolset", () => {
     if (!testEditor) return;
     const status = await testEditor.callTool("get_status");
     expect(status.isError).toBe(false);
-    expect(status.text).toContain("Godot Pilot Test Project");
+    expect(status.text).toContain("Godot Wingman Test Project");
     expect(status.text).toContain("USED BY TOOLS");
   });
 

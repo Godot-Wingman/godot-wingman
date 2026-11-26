@@ -111,14 +111,16 @@ describe("messages between AIs", () => {
     const otherAi = await editor.connectOtherAi("second-ai");
 
     const firstCall = await otherAi.callTool("get_editor_state");
-    expect(newsOf(firstCall.texts)).toContain("Other AIs are working in this editor too: godot-pilot-tests");
+    expect(newsOf(firstCall.texts)).toContain(
+      "Other AIs are working in this editor too: godot-wingman-tests",
+    );
 
     const heardAboutIt = await editor.callTool("get_editor_state");
     expect(newsOf(heardAboutIt.texts)).toContain("second-ai connected to this editor");
 
     const sent = await otherAi.callTool("tell_other_ais", { message: "I am rewriting res://player.gd" });
     expect(sent.isError).toBe(false);
-    expect(sent.text).toContain("Sent to godot-pilot-tests");
+    expect(sent.text).toContain("Sent to godot-wingman-tests");
 
     const received = await editor.callTool("get_editor_state");
     expect(newsOf(received.texts)).toContain('Message from second-ai: "I am rewriting res://player.gd"');

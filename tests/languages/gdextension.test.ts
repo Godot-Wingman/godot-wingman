@@ -4,7 +4,7 @@
  * scene, sets its property and calls its method in the running game.
  *
  * Needs Rust (cargo) and downloads the godot-rust crate, so it only runs when asked:
- *   GODOT_PILOT_GDEXTENSION=1 bun test tests/languages/gdextension.test.ts
+ *   GODOT_WINGMAN_GDEXTENSION=1 bun test tests/languages/gdextension.test.ts
  * CI runs it every night (.github/workflows/languages.yml).
  */
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
@@ -12,15 +12,15 @@ import { copyFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { parseJson, startTestEditor, type TestEditor } from "../helpers/test-editor.ts";
 
-const isEnabled = process.env.GODOT_PILOT_GDEXTENSION === "1";
+const isEnabled = process.env.GODOT_WINGMAN_GDEXTENSION === "1";
 const crateDirectory = join(import.meta.dir, "rust-extension");
 let editor: TestEditor | null = null;
 
 /** File name of the built library on this system. */
 function libraryFileName(): string {
-  if (process.platform === "win32") return "pilot_extension.dll";
-  if (process.platform === "darwin") return "libpilot_extension.dylib";
-  return "libpilot_extension.so";
+  if (process.platform === "win32") return "wingman_extension.dll";
+  if (process.platform === "darwin") return "libwingman_extension.dylib";
+  return "libwingman_extension.so";
 }
 
 async function buildExtension(): Promise<string> {
@@ -37,23 +37,23 @@ async function addExtension(projectPath: string, libraryPath: string): Promise<v
   await mkdir(join(projectPath, "bin"), { recursive: true });
   await copyFile(libraryPath, join(projectPath, "bin", libraryFileName()));
   await Bun.write(
-    join(projectPath, "pilot_extension.gdextension"),
+    join(projectPath, "wingman_extension.gdextension"),
     `[configuration]
 entry_symbol = "gdext_rust_init"
 compatibility_minimum = 4.1
 
 [libraries]
-linux.debug.x86_64 = "res://bin/libpilot_extension.so"
-linux.release.x86_64 = "res://bin/libpilot_extension.so"
-windows.debug.x86_64 = "res://bin/pilot_extension.dll"
-windows.release.x86_64 = "res://bin/pilot_extension.dll"
-macos.debug = "res://bin/libpilot_extension.dylib"
-macos.release = "res://bin/libpilot_extension.dylib"
+linux.debug.x86_64 = "res://bin/libwingman_extension.so"
+linux.release.x86_64 = "res://bin/libwingman_extension.so"
+windows.debug.x86_64 = "res://bin/wingman_extension.dll"
+windows.release.x86_64 = "res://bin/wingman_extension.dll"
+macos.debug = "res://bin/libwingman_extension.dylib"
+macos.release = "res://bin/libwingman_extension.dylib"
 `,
   );
   // The editor loads the extensions listed here when it starts.
   await mkdir(join(projectPath, ".godot"), { recursive: true });
-  await Bun.write(join(projectPath, ".godot", "extension_list.cfg"), "res://pilot_extension.gdextension\n");
+  await Bun.write(join(projectPath, ".godot", "extension_list.cfg"), "res://wingman_extension.gdextension\n");
 }
 
 beforeAll(async () => {
@@ -76,12 +76,12 @@ describe("GDExtension written in Rust", () => {
   test("the editor lists the loaded extension", async () => {
     if (!editor) return;
     const state = parseJson<{ gdextensions: string[] }>(await editor.callTool("get_editor_state"));
-    expect(state.gdextensions).toContain("res://pilot_extension.gdextension");
+    expect(state.gdextensions).toContain("res://wingman_extension.gdextension");
   });
 
   test("get_class_docs describes the class the extension adds", async () => {
     if (!editor) return;
-    const docs = await editor.callTool("get_class_docs", { class_name: "PilotGreeter" });
+    const docs = await editor.callTool("get_class_docs", { class_name: "WingmanGreeter" });
     expect(docs.isError).toBe(false);
     expect(docs.text).toContain("Node2D");
     expect(docs.text).toContain("greeting");
@@ -92,7 +92,7 @@ describe("GDExtension written in Rust", () => {
   test("the class can be added, edited and used in the running game", async () => {
     if (!editor) return;
     const added = await editor.callTool("add_node", {
-      type: "PilotGreeter",
+      type: "WingmanGreeter",
       name: "Greeter",
       properties: { greeting: "hi from the test" },
     });
@@ -105,7 +105,7 @@ describe("GDExtension written in Rust", () => {
     const shouted = await editor.callTool("call_game_method", { node_path: "Greeter", method: "shout" });
     expect(shouted.isError).toBe(false);
     expect(shouted.text).toContain("HI FROM THE TEST");
-    const logs = await editor.callTool("get_game_logs", { search: "PilotGreeter is ready" });
+    const logs = await editor.callTool("get_game_logs", { search: "WingmanGreeter is ready" });
     expect(logs.text).toContain("hi from the test");
     await editor.callTool("stop_game");
   }, 300_000);

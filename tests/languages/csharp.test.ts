@@ -3,15 +3,15 @@
  * to a node, and runs in the game.
  *
  * Needs the .NET build of Godot and the .NET SDK, so it only runs when asked:
- *   GODOT_PILOT_CSHARP=1 GODOT_PATH=/path/to/Godot_mono bun test tests/languages/csharp.test.ts
+ *   GODOT_WINGMAN_CSHARP=1 GODOT_PATH=/path/to/Godot_mono bun test tests/languages/csharp.test.ts
  * CI runs it every night (.github/workflows/languages.yml).
  */
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { join } from "node:path";
 import { parseJson, startTestEditor, type TestEditor } from "../helpers/test-editor.ts";
 
-const isEnabled = process.env.GODOT_PILOT_CSHARP === "1";
-const ASSEMBLY_NAME = "PilotCSharpTest";
+const isEnabled = process.env.GODOT_WINGMAN_CSHARP === "1";
+const ASSEMBLY_NAME = "WingmanCSharpTest";
 let editor: TestEditor | null = null;
 
 const MOVER_SCRIPT = `using Godot;
@@ -65,7 +65,7 @@ beforeAll(async () => {
   if (!isEnabled) {
     return;
   }
-  const godotVersion = process.env.GODOT_PILOT_CSHARP_SDK_VERSION ?? "4.7.2";
+  const godotVersion = process.env.GODOT_WINGMAN_CSHARP_SDK_VERSION ?? "4.7.2";
   editor = await startTestEditor({
     initialToolsets: ["core", "scene", "inspector", "script", "play", "game_inspect", "debug"],
     godotExecutable: process.env.GODOT_PATH,

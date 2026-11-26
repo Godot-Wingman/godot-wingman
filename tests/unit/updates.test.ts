@@ -60,7 +60,7 @@ function fakeGitHub(options: { checksum?: string } = {}) {
 let temporaryDirectory = "";
 
 beforeEach(async () => {
-  temporaryDirectory = await mkdtemp(join(tmpdir(), "godot-pilot-updates-"));
+  temporaryDirectory = await mkdtemp(join(tmpdir(), "godot-wingman-updates-"));
   process.env[HOME_OVERRIDE_ENVIRONMENT_VARIABLE] = temporaryDirectory;
   delete process.env[NO_UPDATE_CHECK_ENVIRONMENT_VARIABLE];
 });
@@ -84,8 +84,8 @@ describe("compareVersions", () => {
 
 test("parseChecksums reads sha256sum output", () => {
   const checksum = "a".repeat(64);
-  const checksums = parseChecksums(`${checksum}  godot-pilot-linux-x64\n${checksum} *other.zip\n`);
-  expect(checksums.get("godot-pilot-linux-x64")).toBe(checksum);
+  const checksums = parseChecksums(`${checksum}  godot-wingman-linux-x64\n${checksum} *other.zip\n`);
+  expect(checksums.get("godot-wingman-linux-x64")).toBe(checksum);
   expect(checksums.get("other.zip")).toBe(checksum);
 });
 
@@ -165,7 +165,7 @@ describe("installing the newest release", () => {
       executablePath,
     });
     expect(outcome.updated).toBe(true);
-    expect(outcome.message).toContain("Installed Godot Pilot 0.3.0");
+    expect(outcome.message).toContain("Installed Godot Wingman 0.3.0");
     expect(await readFile(executablePath, "utf8")).toBe("the new version");
     // The old file is kept next to it until the next start.
     expect(await readFile(`${executablePath}.old`, "utf8")).toBe("the old version");

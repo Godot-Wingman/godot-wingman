@@ -371,8 +371,8 @@ describe("export", () => {
     );
     expect(packText).toContain("main.tscn");
     // Only the editor_plugins setting may name the addon; games ignore editor plugins.
-    expect(packText).not.toMatch(/godot_pilot\/[\w/]+\.(gd|gdc|remap|tscn|tres)\b/);
-    expect(packText).not.toContain("GodotPilotGameBridge");
+    expect(packText).not.toMatch(/godot_wingman\/[\w/]+\.(gd|gdc|remap|tscn|tres)\b/);
+    expect(packText).not.toContain("GodotWingmanGameBridge");
   }, 180_000);
 
   test("export_project explains missing export templates", async () => {

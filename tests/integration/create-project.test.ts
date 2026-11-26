@@ -15,7 +15,7 @@ import {
 import { launchEditor } from "../../server/src/godot/launch-editor.ts";
 import { HOME_OVERRIDE_ENVIRONMENT_VARIABLE } from "../../server/src/product.ts";
 
-const temporaryRoot = await mkdtemp(join(tmpdir(), "godot-pilot-create-"));
+const temporaryRoot = await mkdtemp(join(tmpdir(), "godot-wingman-create-"));
 const startedProcessIds: number[] = [];
 
 afterAll(async () => {

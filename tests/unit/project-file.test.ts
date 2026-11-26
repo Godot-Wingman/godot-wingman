@@ -1,7 +1,11 @@
 import { describe, expect, test } from "bun:test";
-import { addEnabledEditorPlugin, parsePackedStringArray } from "../../server/src/addon/project-file.ts";
+import {
+  addEnabledEditorPlugin,
+  parsePackedStringArray,
+  removeEnabledEditorPlugin,
+} from "../../server/src/addon/project-file.ts";
 
-const PLUGIN = "res://addons/godot_pilot/plugin.cfg";
+const PLUGIN = "res://addons/godot_wingman/plugin.cfg";
 
 describe("addEnabledEditorPlugin", () => {
   test("adds the section when the project has no plugins", () => {
@@ -37,4 +41,21 @@ describe("addEnabledEditorPlugin", () => {
 test("parsePackedStringArray reads quoted items", () => {
   expect(parsePackedStringArray('PackedStringArray("a", "b c")')).toEqual(["a", "b c"]);
   expect(parsePackedStringArray("PackedStringArray()")).toEqual([]);
+});
+
+describe("removeEnabledEditorPlugin", () => {
+  const OLD_PLUGIN = "res://addons/godot_pilot/plugin.cfg";
+
+  test("removes the plugin and keeps the others", () => {
+    const original = `[editor_plugins]\n\nenabled=PackedStringArray("res://addons/other/plugin.cfg", "${OLD_PLUGIN}")\n`;
+    const { text, changed } = removeEnabledEditorPlugin(original, OLD_PLUGIN);
+    expect(changed).toBe(true);
+    expect(text).toBe('[editor_plugins]\n\nenabled=PackedStringArray("res://addons/other/plugin.cfg")\n');
+  });
+
+  test("changes nothing when the plugin is not enabled", () => {
+    const original = `[editor_plugins]\n\nenabled=PackedStringArray("${PLUGIN}")\n`;
+    expect(removeEnabledEditorPlugin(original, OLD_PLUGIN)).toEqual({ text: original, changed: false });
+    expect(removeEnabledEditorPlugin("config_version=5\n", OLD_PLUGIN).changed).toBe(false);
+  });
 });

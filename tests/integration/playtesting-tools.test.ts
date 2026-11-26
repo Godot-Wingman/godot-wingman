@@ -47,7 +47,7 @@ describe("playing the game", () => {
     if (!editor) return;
     // An export made while the game runs must not list the bridge as an autoload.
     const projectFile = await Bun.file(join(editor.projectPath, "project.godot")).text();
-    expect(projectFile).not.toContain("GodotPilotGameBridge");
+    expect(projectFile).not.toContain("GodotWingmanGameBridge");
   });
 
   test("holding the Right key moves the player like a real key press", async () => {

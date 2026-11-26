@@ -1,6 +1,6 @@
 /**
  * End-to-end tests of what happens around every change the AI makes: the permission
- * mode chosen in the editor's Godot Pilot panel, the activity list, checkpoints for
+ * mode chosen in the editor's Godot Wingman panel, the activity list, checkpoints for
  * going back, and helpful errors.
  */
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
@@ -53,7 +53,7 @@ describe("activity list", () => {
     expect(written.isError).toBe(false);
     const entry = await lastActivityEntry(editor);
     expect(entry?.tool).toBe("write_file");
-    expect(entry?.client).toBe("godot-pilot-tests");
+    expect(entry?.client).toBe("godot-wingman-tests");
     expect(entry?.status).toBe("done");
   });
 

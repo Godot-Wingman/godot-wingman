@@ -64,7 +64,7 @@ export async function startTestEditor(options: StartTestEditorOptions = {}): Pro
     return null;
   }
 
-  const temporaryRoot = await mkdtemp(join(tmpdir(), "godot-pilot-test-"));
+  const temporaryRoot = await mkdtemp(join(tmpdir(), "godot-wingman-test-"));
   const homeDirectory = join(temporaryRoot, "home");
   const projectPath = join(temporaryRoot, "project");
   await cp(join(repositoryRoot, "test-project"), projectPath, {
@@ -101,7 +101,7 @@ run/main_run_args="--headless"
     initialToolsets: options.initialToolsets ?? ["core", "scene", "inspector", "script", "project"],
     confirmationTimeoutSeconds: options.confirmationTimeoutSeconds,
   };
-  const { client, editors, callTool } = await connectAiClient("godot-pilot-tests", serverOptions);
+  const { client, editors, callTool } = await connectAiClient("godot-wingman-tests", serverOptions);
   const otherAis: OtherAi[] = [];
 
   // The editor reopens the main scene a moment after the addon is ready; wait for it so

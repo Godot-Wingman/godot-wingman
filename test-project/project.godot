@@ -1,12 +1,12 @@
-; Test project used by the automated tests of Godot Pilot.
+; Test project used by the automated tests of Godot Wingman.
 
 config_version=5
 
 [application]
 
-config/name="Godot Pilot Test Project"
+config/name="Godot Wingman Test Project"
 run/main_scene="res://main.tscn"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/godot_pilot/plugin.cfg")
+enabled=PackedStringArray("res://addons/godot_wingman/plugin.cfg")
