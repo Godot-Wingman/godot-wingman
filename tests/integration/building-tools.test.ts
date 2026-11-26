@@ -4,6 +4,7 @@
  * and build on each other; the 3D tests come last because they open a new 3D scene.
  */
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { join } from "node:path";
 import { ALL_TOOLSETS } from "../../server/src/tools/toolsets.ts";
 import { startTestEditor, type TestEditor } from "../helpers/test-editor.ts";
 
@@ -364,6 +365,14 @@ describe("export", () => {
     expect(report.output_size_bytes).toBeGreaterThan(0);
     // The export loads the addon too, but must not start a second AI bridge.
     expect(report.log_tail.join("\n")).not.toContain("ready for AI connections");
+    // Nothing of the addon may end up in the game: no file, no autoload, no plugin code.
+    const packText = new TextDecoder("latin1").decode(
+      await Bun.file(join(editor.projectPath, "build", "game.pck")).arrayBuffer(),
+    );
+    expect(packText).toContain("main.tscn");
+    // Only the editor_plugins setting may name the addon; games ignore editor plugins.
+    expect(packText).not.toMatch(/godot_pilot\/[\w/]+\.(gd|gdc|remap|tscn|tres)\b/);
+    expect(packText).not.toContain("GodotPilotGameBridge");
   }, 180_000);
 
   test("export_project explains missing export templates", async () => {

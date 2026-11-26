@@ -54,9 +54,7 @@ describe("activity list", () => {
     const entry = await lastActivityEntry(editor);
     expect(entry?.tool).toBe("write_file");
     expect(entry?.client).toBe("godot-pilot-tests");
-    // finish_tool_call is sent without waiting, so give it a moment to arrive.
-    await Bun.sleep(300);
-    expect((await lastActivityEntry(editor))?.status).toBe("done");
+    expect(entry?.status).toBe("done");
   });
 
   test("tools that only look are not listed", async () => {
