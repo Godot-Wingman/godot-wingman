@@ -1,5 +1,5 @@
 {
-  "name": "godot-pilot",
+  "name": "godot-wingman",
   "version": "0.3.0",
   "description": "A local MCP server that lets any AI use the Godot editor like a human: see it, edit scenes, write scripts and play the game.",
   "license": "AGPL-3.0-only",

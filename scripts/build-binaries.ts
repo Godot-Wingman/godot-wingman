@@ -7,6 +7,7 @@
  *        bun run build -- current  (only this computer's platform, faster)
  */
 import { join } from "node:path";
+import packageJson from "../package.json" with { type: "json" };
 
 const repositoryRoot = join(import.meta.dir, "..");
 const entryPoint = join(repositoryRoot, "server", "src", "main.ts");
@@ -18,11 +19,11 @@ interface BuildTarget {
 }
 
 const ALL_TARGETS: BuildTarget[] = [
-  { bunTarget: "bun-windows-x64", outputName: "godot-pilot-windows-x64.exe" },
-  { bunTarget: "bun-linux-x64", outputName: "godot-pilot-linux-x64" },
-  { bunTarget: "bun-linux-arm64", outputName: "godot-pilot-linux-arm64" },
-  { bunTarget: "bun-darwin-x64", outputName: "godot-pilot-macos-x64" },
-  { bunTarget: "bun-darwin-arm64", outputName: "godot-pilot-macos-arm64" },
+  { bunTarget: "bun-windows-x64", outputName: "godot-wingman-windows-x64.exe" },
+  { bunTarget: "bun-linux-x64", outputName: "godot-wingman-linux-x64" },
+  { bunTarget: "bun-linux-arm64", outputName: "godot-wingman-linux-arm64" },
+  { bunTarget: "bun-darwin-x64", outputName: "godot-wingman-macos-x64" },
+  { bunTarget: "bun-darwin-arm64", outputName: "godot-wingman-macos-arm64" },
 ];
 
 function currentPlatformTarget(): BuildTarget {
@@ -33,8 +34,26 @@ function currentPlatformTarget(): BuildTarget {
   const readablePlatform = platformName === "darwin" ? "macos" : platformName;
   return {
     bunTarget: `bun-${platformName}-${architecture}`,
-    outputName: `godot-pilot-${readablePlatform}-${architecture}${extension}`,
+    outputName: `godot-wingman-${readablePlatform}-${architecture}${extension}`,
   };
+}
+
+/**
+ * Name, description and version shown in the Windows file properties, so the program
+ * does not look like an unknown file.
+ */
+function windowsDetails(target: BuildTarget): string[] {
+  if (!target.bunTarget.startsWith("bun-windows")) {
+    return [];
+  }
+  const numericVersion = `${packageJson.version.replace(/[^0-9.].*$/, "")}.0`;
+  return [
+    "--windows-title=Godot Wingman",
+    "--windows-publisher=Godot Wingman",
+    "--windows-description=Godot Wingman: lets AI apps use the Godot editor",
+    `--windows-version=${numericVersion}`,
+    "--windows-copyright=AGPL-3.0, Godot Wingman contributors",
+  ];
 }
 
 const onlyCurrentPlatform = process.argv.includes("current");
@@ -52,6 +71,7 @@ for (const target of targets) {
       `--target=${target.bunTarget}`,
       "--outfile",
       outputPath,
+      ...windowsDetails(target),
     ],
     { stdout: "inherit", stderr: "inherit" },
   );
