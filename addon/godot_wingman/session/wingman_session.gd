@@ -2,12 +2,12 @@
 extends RefCounted
 ## What the AI is allowed to do in this editor, and what it has done.
 ##
-## - Permission mode chosen in the Godot Pilot panel. The MCP server has its own mode
+## - Permission mode chosen in the Godot Wingman panel. The MCP server has its own mode
 ##   (its --mode option); the stricter of the two applies, so neither side can loosen
 ##   the other.
 ## - In "confirm" mode the person can allow one tool for the rest of the session.
 ## - Activity: every change the AI asks for and its result. Shown in the panel and
-##   appended to .godot/godot_pilot/activity.log; nothing leaves the computer.
+##   appended to .godot/godot_wingman/activity.log; nothing leaves the computer.
 ## - Checkpoints: before each change the project's text files are remembered, so the
 ##   panel can put the project back to how it was before any step.
 ##
@@ -26,7 +26,7 @@ const EditorChangeWatcher := preload("editor_change_watcher.gd")
 
 ## From the least to the most strict.
 const MODES: Array[String] = ["full", "confirm", "read-only"]
-const DATA_DIRECTORY := "res://.godot/godot_pilot"
+const DATA_DIRECTORY := "res://.godot/godot_wingman"
 const SETTINGS_PATH := DATA_DIRECTORY + "/settings.cfg"
 const ACTIVITY_LOG_PATH := DATA_DIRECTORY + "/activity.log"
 const MAXIMUM_ACTIVITY_ENTRIES := 300
@@ -119,7 +119,7 @@ func authorize(request: Dictionary) -> Dictionary:
 
 	if effective_mode == "read-only":
 		_update_entry(entry, STATUS_BLOCKED, "")
-		return _refusal(entry, effective_mode, "The person set Godot Pilot to read-only in the Godot Pilot panel, so the AI may only look.")
+		return _refusal(entry, effective_mode, "The person set Godot Wingman to read-only in the Godot Wingman panel, so the AI may only look.")
 
 	if effective_mode == "confirm" and not _tools_allowed_for_session.has(tool_name):
 		_update_entry(entry, STATUS_WAITING, "")

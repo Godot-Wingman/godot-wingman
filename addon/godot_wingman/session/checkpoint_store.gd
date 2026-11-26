@@ -5,7 +5,7 @@ extends RefCounted
 ## It works like a very small git: every file content is stored once, named by its
 ## SHA-256 hash (blobs/<hash>), and a checkpoint is a list of "file path -> hash".
 ## A file is only read again when its modification time changed, so taking a
-## checkpoint stays fast. Everything lives in .godot/godot_pilot/checkpoints, which
+## checkpoint stays fast. Everything lives in .godot/godot_wingman/checkpoints, which
 ## Godot and version control ignore, and is cleared when the editor starts.
 ##
 ## Only text files are covered (scripts, scenes, resources, settings, import options).

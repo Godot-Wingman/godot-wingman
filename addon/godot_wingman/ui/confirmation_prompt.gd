@@ -27,7 +27,7 @@ static func ask_about_tool(
 	timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS
 ) -> String:
 	var dialog := ConfirmationDialog.new()
-	dialog.title = "Godot Pilot: the AI wants to make a change"
+	dialog.title = "Godot Wingman: the AI wants to make a change"
 	dialog.ok_button_text = "Allow"
 	dialog.cancel_button_text = "Deny"
 	dialog.add_button("Allow \"%s\" for this session" % tool_name, false, ANSWER_ALLOW_FOR_SESSION)

@@ -9,7 +9,7 @@ extends RefCounted
 ##
 ## News is:
 ## - what the person did: undo or redo with Ctrl+Z, changes by hand, going back to
-##   before a step in the Godot Pilot panel, a message typed in the panel;
+##   before a step in the Godot Wingman panel, a message typed in the panel;
 ## - what other AIs said with tell_other_ais, and when they connect or leave.
 ##
 ## An AI that connects later gets the recent messages, so it knows what others are doing.
@@ -119,7 +119,7 @@ func report_went_back(step_description: String, outcome: Dictionary) -> void:
 		parts.append("deleted (created after that step): " + ", ".join(PackedStringArray(outcome["removed"])))
 	var changes := "; ".join(parts) if not parts.is_empty() else "no files changed"
 	_add(_make_notice(KIND_WENT_BACK, PERSON, "",
-		"The person went back to before %s in the Godot Pilot panel (%s). Read these files again before you change them; work done after that step is gone." % [step_description, changes]))
+		"The person went back to before %s in the Godot Wingman panel (%s). Read these files again before you change them; work done after that step is gone." % [step_description, changes]))
 
 
 ## The news for one connection, as text lines, and empties its queue.

@@ -1,6 +1,6 @@
 @tool
 extends VBoxContainer
-## The "Godot Pilot" panel at the bottom of the editor.
+## The "Godot Wingman" panel at the bottom of the editor.
 ##
 ## It shows which AIs are connected, lets the person choose the permission mode for
 ## this project, lists every change the AI made, and can put the project back to how
@@ -8,7 +8,7 @@ extends VBoxContainer
 ## the message with their next tool result.
 
 const ConfirmationPrompt := preload("confirmation_prompt.gd")
-const PilotSession := preload("../session/pilot_session.gd")
+const WingmanSession := preload("../session/wingman_session.gd")
 
 const MODE_LABELS := {"full": "Full", "confirm": "Confirm each change", "read-only": "Read-only"}
 const COLUMN_TIME := 0
@@ -31,7 +31,7 @@ var _message_field: LineEdit
 
 
 func _init(session: RefCounted, addon_version: String) -> void:
-	name = "GodotPilotDock"
+	name = "GodotWingmanDock"
 	_session = session
 	_addon_version = addon_version
 	custom_minimum_size = Vector2(0, 240 * EditorInterface.get_editor_scale())
@@ -48,7 +48,7 @@ func _init(session: RefCounted, addon_version: String) -> void:
 ## `clients` are the descriptions from the bridge server: {ai_client, server_version, permission_mode}.
 func show_connected_clients(clients: Array) -> void:
 	if clients.is_empty():
-		_connection_label.text = "Godot Pilot %s · no AI connected" % _addon_version
+		_connection_label.text = "Godot Wingman %s · no AI connected" % _addon_version
 		_version_warning_label.visible = false
 		return
 	var client_texts: Array[String] = []
@@ -58,7 +58,7 @@ func show_connected_clients(clients: Array) -> void:
 		var server_version := String(client.get("server_version", ""))
 		if server_version != "" and server_version != _addon_version and not outdated_versions.has(server_version):
 			outdated_versions.append(server_version)
-	_connection_label.text = "Godot Pilot %s · connected: %s" % [_addon_version, ", ".join(client_texts)]
+	_connection_label.text = "Godot Wingman %s · connected: %s" % [_addon_version, ", ".join(client_texts)]
 	_version_warning_label.visible = not outdated_versions.is_empty()
 	_version_warning_label.text = "This addon is version %s, but the MCP server is %s. Ask the AI to run install_addon, then restart the editor." % [_addon_version, ", ".join(outdated_versions)]
 
@@ -83,10 +83,10 @@ func _build_header() -> void:
 	mode_label.text = "Permission mode:"
 	header.add_child(mode_label)
 	_mode_button = OptionButton.new()
-	for mode: String in PilotSession.MODES:
+	for mode: String in WingmanSession.MODES:
 		_mode_button.add_item(MODE_LABELS[mode])
 	_mode_button.tooltip_text = "Full: the AI changes the project freely.\nConfirm each change: Godot asks you before every change.\nRead-only: the AI can only look.\nThe MCP server's --mode also applies; the stricter one wins."
-	_mode_button.item_selected.connect(func(index: int) -> void: _session.set_editor_mode(PilotSession.MODES[index]))
+	_mode_button.item_selected.connect(func(index: int) -> void: _session.set_editor_mode(WingmanSession.MODES[index]))
 	header.add_child(_mode_button)
 
 	_version_warning_label = Label.new()
@@ -155,7 +155,7 @@ func _send_message() -> void:
 
 
 func _refresh_settings() -> void:
-	_mode_button.select(PilotSession.MODES.find(_session.editor_mode))
+	_mode_button.select(WingmanSession.MODES.find(_session.editor_mode))
 	var allowed_tools: PackedStringArray = _session.get_tools_allowed_for_session()
 	_approvals_label.text = "Allowed for this session: %s" % ", ".join(allowed_tools) if not allowed_tools.is_empty() else ""
 	_forget_approvals_button.visible = not allowed_tools.is_empty()
@@ -218,7 +218,7 @@ func _on_go_back_pressed() -> void:
 
 func _show_message(text: String) -> void:
 	var message_dialog := AcceptDialog.new()
-	message_dialog.title = "Godot Pilot"
+	message_dialog.title = "Godot Wingman"
 	message_dialog.dialog_text = text
 	message_dialog.confirmed.connect(message_dialog.queue_free)
 	message_dialog.canceled.connect(message_dialog.queue_free)
