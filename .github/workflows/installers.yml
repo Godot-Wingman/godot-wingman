@@ -1,0 +1,45 @@
+# Checks that the one-line installers (install/) download, verify and run the newest
+# release on Windows, macOS and Linux. Runs when they change, and by hand.
+name: Installers
+
+on:
+  push:
+    branches: [main]
+    paths: ["install/**", ".github/workflows/installers.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unix:
+    name: install.sh (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install into a temporary folder
+        run: sh install/install.sh
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GODOT_PILOT_INSTALL_DIR: ${{ runner.temp }}/godot-pilot
+          GODOT_PILOT_NO_SETUP: "1"
+      - run: '"$RUNNER_TEMP/godot-pilot/godot-pilot" --version'
+
+  windows:
+    name: install.ps1 (windows-latest)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install into a temporary folder (Windows PowerShell 5.1)
+        shell: powershell
+        run: ./install/install.ps1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GODOT_PILOT_INSTALL_DIR: ${{ runner.temp }}\godot-pilot
+          GODOT_PILOT_NO_SETUP: "1"
+      - shell: powershell
+        run: '& "$env:RUNNER_TEMP\godot-pilot\godot-pilot.exe" --version'
