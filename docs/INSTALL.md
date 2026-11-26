@@ -7,13 +7,13 @@ Godot Wingman comes in two forms: a small file (`godot-wingman.js`, about 1-2 MB
 **Windows** (PowerShell):
 
 ```powershell
-irm https://raw.githubusercontent.com/Albis0/godot-wingman/main/install/install.ps1 | iex
+irm https://raw.githubusercontent.com/Godot-wingman/godot-wingman/main/install/install.ps1 | iex
 ```
 
 **macOS and Linux** (Terminal):
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/Albis0/godot-wingman/main/install/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/Godot-wingman/godot-wingman/main/install/install.sh | sh
 ```
 
 The script uses Bun when it is installed (version 1.3 or newer) and installs it with Bun's own installer when it is missing; then it downloads the small `godot-wingman.js`. If Bun cannot be used, it downloads the single executable instead. To always use the executable and never install Bun, set `GODOT_WINGMAN_USE_EXECUTABLE=1` first. It checks the download's SHA-256 checksum, installs it (Windows: `%LOCALAPPDATA%\Programs\godot-wingman`, added to your PATH; macOS and Linux: `~/.local/bin`) and runs `godot-wingman setup`. That adds Godot Wingman to the AI apps it finds: Codex, Claude Desktop, Claude Code, Cursor, Gemini CLI and Windsurf. A copy of every settings file it changes is kept next to it (`.before-godot-wingman`). Restart those apps afterwards.
@@ -26,7 +26,7 @@ Then ask your AI: *"Create a new Godot game in C:/games/my-game"* or *"Open my G
 
 ### 1. Download
 
-Get the file for your system from [Releases](https://github.com/Albis0/godot-wingman/releases):
+Get the file for your system from [Releases](https://github.com/Godot-wingman/godot-wingman/releases):
 
 | System | File |
 |---|---|
@@ -191,7 +191,7 @@ Godot Wingman looks for Godot in the usual places (PATH, Desktop, Downloads, `~/
 ## Running from source
 
 ```
-git clone https://github.com/Albis0/godot-wingman
+git clone https://github.com/Godot-wingman/godot-wingman
 cd godot-wingman
 bun install
 bun run bundle-addon

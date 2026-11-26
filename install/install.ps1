@@ -1,6 +1,6 @@
 # Installs Godot Wingman on Windows and adds it to the AI apps on this computer.
 #
-#   irm https://raw.githubusercontent.com/Albis0/godot-wingman/main/install/install.ps1 | iex
+#   irm https://raw.githubusercontent.com/Godot-wingman/godot-wingman/main/install/install.ps1 | iex
 #
 # What it does:
 # 1. Looks for Bun (https://bun.sh). When it is missing, installs it with Bun's own
@@ -23,7 +23,7 @@
 #   GITHUB_TOKEN                     GitHub token, needed only while the repository is private
 
 $ErrorActionPreference = "Stop"
-$Repository = "Albis0/godot-wingman"
+$Repository = "Godot-wingman/godot-wingman"
 $ExecutableAssetName = "godot-wingman-windows-x64.exe"
 $BundleAssetName = "godot-wingman.js"
 # The bundle is built and tested with this Bun version or newer.

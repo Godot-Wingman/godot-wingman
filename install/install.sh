@@ -1,7 +1,7 @@
 #!/bin/sh
 # Installs Godot Wingman on macOS or Linux and adds it to the AI apps on this computer.
 #
-#   curl -fsSL https://raw.githubusercontent.com/Albis0/godot-wingman/main/install/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/Godot-wingman/godot-wingman/main/install/install.sh | sh
 #
 # What it does:
 # 1. Looks for Bun (https://bun.sh). When it is missing, installs it with Bun's own
@@ -22,7 +22,7 @@
 #   GITHUB_TOKEN                     GitHub token, needed only while the repository is private
 set -eu
 
-repository="Albis0/godot-wingman"
+repository="Godot-wingman/godot-wingman"
 install_folder="${GODOT_WINGMAN_INSTALL_DIR:-$HOME/.local/bin}"
 launcher_path="$install_folder/godot-wingman"
 bundle_name="godot-wingman.js"

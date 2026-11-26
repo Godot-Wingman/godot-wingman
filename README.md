@@ -52,11 +52,11 @@ Your AI client is a different matter: what the AI reads through Godot Wingman (c
 
 1. Install it with one command. Windows (PowerShell):
    ```powershell
-   irm https://raw.githubusercontent.com/Albis0/godot-wingman/main/install/install.ps1 | iex
+   irm https://raw.githubusercontent.com/Godot-wingman/godot-wingman/main/install/install.ps1 | iex
    ```
    macOS and Linux:
    ```sh
-   curl -fsSL https://raw.githubusercontent.com/Albis0/godot-wingman/main/install/install.sh | sh
+   curl -fsSL https://raw.githubusercontent.com/Godot-wingman/godot-wingman/main/install/install.sh | sh
    ```
    It downloads the newest release, checks it, and adds it to the AI apps it finds (Codex, Claude Desktop, Claude Code, Cursor, Gemini CLI, Windsurf). Installing by hand and other clients: **[installation guide](docs/INSTALL.md)**.
 2. Restart your AI app and ask: *"Create a new Godot game in C:/games/my-game"*, or *"Open my Godot project at C:/games/my-game and show me the main scene."*
