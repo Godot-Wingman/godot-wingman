@@ -44,12 +44,14 @@ github() {
 
 # The API URL of the asset with this name in the newest release that is not a draft.
 # The releases list is newest first; only the first release's assets are read.
+# Works with compact and indented JSON: one value per line, spaces around ":" removed.
 find_asset_url() {
   github -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$repository/releases?per_page=1" |
-    tr ',' '\n' |
-    awk -v wanted="\"name\": \"$1\"" '
-      /"url": "https:\/\/api.github.com\/repos\/.*\/releases\/assets\// { url = $0 }
-      index($0, wanted) { sub(/.*"url": "/, "", url); sub(/".*/, "", url); print url; exit }
+    tr ',{}' '\n\n\n' |
+    sed -e 's/^[[:space:]]*//' -e 's/"[[:space:]]*:[[:space:]]*"/":"/' |
+    awk -v wanted="\"name\":\"$1\"" '
+      /^"url":"https:\/\/api\.github\.com\/repos\/.*\/releases\/assets\// { url = $0 }
+      $0 == wanted { sub(/^"url":"/, "", url); sub(/".*/, "", url); print url; exit }
     '
 }
 
