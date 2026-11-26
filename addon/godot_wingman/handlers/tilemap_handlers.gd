@@ -6,7 +6,7 @@ extends RefCounted
 ## Every change to the cells of a layer is one undo step: the layer's packed cell data is
 ## remembered before and after the change.
 
-const PilotError := preload("../utils/pilot_error.gd")
+const WingmanError := preload("../utils/wingman_error.gd")
 const ValueCodec := preload("../utils/value_codec.gd")
 
 ## Characters used to draw a layer as text; each different tile gets the next one.
@@ -37,13 +37,13 @@ func _get_tilemap_info(params: Dictionary) -> Variant:
 	if params.has("tileset_path"):
 		var tileset_path := String(params["tileset_path"])
 		if not ResourceLoader.exists(tileset_path):
-			return PilotError.new("FILE_NOT_FOUND", "No TileSet at '%s'." % tileset_path)
+			return WingmanError.new("FILE_NOT_FOUND", "No TileSet at '%s'." % tileset_path)
 		tile_set = load(tileset_path) as TileSet
 		if tile_set == null:
-			return PilotError.new("NOT_A_TILESET", "'%s' is not a TileSet." % tileset_path)
+			return WingmanError.new("NOT_A_TILESET", "'%s' is not a TileSet." % tileset_path)
 	else:
 		var layer: Variant = _find_layer(String(params.get("node_path", "")))
-		if layer is PilotError:
+		if layer is WingmanError:
 			return layer
 		tile_set = layer.tile_set
 		var used_rect: Rect2i = layer.get_used_rect()
@@ -103,16 +103,16 @@ func _get_tilemap_info(params: Dictionary) -> Variant:
 func _create_tileset(params: Dictionary) -> Variant:
 	var texture_path := String(params.get("texture", ""))
 	if not ResourceLoader.exists(texture_path):
-		return PilotError.new("FILE_NOT_FOUND", "No image at '%s'." % texture_path, "Use list_files with filter \"*.png\" to find tile sheets.")
+		return WingmanError.new("FILE_NOT_FOUND", "No image at '%s'." % texture_path, "Use list_files with filter \"*.png\" to find tile sheets.")
 	var texture := load(texture_path) as Texture2D
 	if texture == null:
-		return PilotError.new("NOT_A_TEXTURE", "'%s' is not an image texture." % texture_path)
+		return WingmanError.new("NOT_A_TEXTURE", "'%s' is not an image texture." % texture_path)
 	var tile_size_conversion := ValueCodec.from_json_value(params.get("tile_size", [16, 16]), TYPE_VECTOR2I)
 	if not tile_size_conversion["ok"]:
-		return PilotError.new("INVALID_TILE_SIZE", String(tile_size_conversion["error"]))
+		return WingmanError.new("INVALID_TILE_SIZE", String(tile_size_conversion["error"]))
 	var tile_size: Vector2i = tile_size_conversion["value"]
 	if tile_size.x <= 0 or tile_size.y <= 0:
-		return PilotError.new("INVALID_TILE_SIZE", "tile_size must be positive, for example [16, 16].")
+		return WingmanError.new("INVALID_TILE_SIZE", "tile_size must be positive, for example [16, 16].")
 	var margins: Vector2i = ValueCodec.from_json_value(params.get("margins", [0, 0]), TYPE_VECTOR2I).get("value", Vector2i.ZERO)
 	var separation: Vector2i = ValueCodec.from_json_value(params.get("separation", [0, 0]), TYPE_VECTOR2I).get("value", Vector2i.ZERO)
 
@@ -159,14 +159,14 @@ func _create_tileset(params: Dictionary) -> Variant:
 		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(save_path.get_base_dir()))
 		var save_error := ResourceSaver.save(tile_set, save_path)
 		if save_error != OK:
-			return PilotError.new("SAVE_FAILED", "Could not save '%s': %s." % [save_path, error_string(save_error)])
+			return WingmanError.new("SAVE_FAILED", "Could not save '%s': %s." % [save_path, error_string(save_error)])
 		tile_set.take_over_path(save_path)
 		EditorInterface.get_resource_filesystem().update_file(save_path)
 		result["saved"] = save_path
 
 	if params.has("assign_to"):
 		var layer: Variant = _find_layer(String(params["assign_to"]))
-		if layer is PilotError:
+		if layer is WingmanError:
 			return layer
 		var undo_redo: EditorUndoRedoManager = _context.get_undo_redo()
 		undo_redo.create_action("Assign TileSet", UndoRedo.MERGE_DISABLE, layer)
@@ -179,7 +179,7 @@ func _create_tileset(params: Dictionary) -> Variant:
 
 func _set_tiles(params: Dictionary) -> Variant:
 	var layer: Variant = _find_layer_with_tileset(String(params.get("node_path", "")))
-	if layer is PilotError:
+	if layer is WingmanError:
 		return layer
 	var tile_set: TileSet = layer.tile_set
 	var default_source_id := tile_set.get_source_id(0) if tile_set.get_source_count() > 0 else -1
@@ -188,22 +188,22 @@ func _set_tiles(params: Dictionary) -> Variant:
 	var placements: Array[Array] = []
 	for cell_description: Variant in params.get("cells", []):
 		if not cell_description is Dictionary:
-			return PilotError.new("INVALID_CELL", "Each cell looks like {\"cell\": [3, 5], \"atlas\": [0, 0]}.")
+			return WingmanError.new("INVALID_CELL", "Each cell looks like {\"cell\": [3, 5], \"atlas\": [0, 0]}.")
 		var tile: Variant = _parse_tile(cell_description, tile_set, default_source_id)
-		if tile is PilotError:
+		if tile is WingmanError:
 			return tile
 		var cell_conversion := ValueCodec.from_json_value(cell_description.get("cell"), TYPE_VECTOR2I)
 		if not cell_conversion["ok"]:
-			return PilotError.new("INVALID_CELL", "Bad cell coordinates: %s" % cell_conversion["error"])
+			return WingmanError.new("INVALID_CELL", "Bad cell coordinates: %s" % cell_conversion["error"])
 		placements.append([cell_conversion["value"], tile])
 	for rectangle_description: Variant in params.get("rectangles", []):
 		if not rectangle_description is Dictionary:
-			return PilotError.new("INVALID_RECTANGLE", "Each rectangle looks like {\"from\": [0, 10], \"to\": [19, 10], \"atlas\": [1, 0]}.")
+			return WingmanError.new("INVALID_RECTANGLE", "Each rectangle looks like {\"from\": [0, 10], \"to\": [19, 10], \"atlas\": [1, 0]}.")
 		var tile: Variant = _parse_tile(rectangle_description, tile_set, default_source_id)
-		if tile is PilotError:
+		if tile is WingmanError:
 			return tile
 		var rectangle: Variant = _parse_rectangle(rectangle_description)
-		if rectangle is PilotError:
+		if rectangle is WingmanError:
 			return rectangle
 		for cell in _cells_in_rectangle(rectangle):
 			placements.append([cell, tile])
@@ -211,10 +211,10 @@ func _set_tiles(params: Dictionary) -> Variant:
 	for erase_description: Variant in params.get("erase", []):
 		var cell_conversion := ValueCodec.from_json_value(erase_description, TYPE_VECTOR2I)
 		if not cell_conversion["ok"]:
-			return PilotError.new("INVALID_CELL", "Bad cell to erase: %s" % cell_conversion["error"])
+			return WingmanError.new("INVALID_CELL", "Bad cell to erase: %s" % cell_conversion["error"])
 		erased_cells.append(cell_conversion["value"])
 	if placements.is_empty() and erased_cells.is_empty():
-		return PilotError.new("NOTHING_TO_DO", "Pass cells, rectangles or erase.")
+		return WingmanError.new("NOTHING_TO_DO", "Pass cells, rectangles or erase.")
 
 	var data_before: PackedByteArray = layer.tile_map_data
 	for cell in erased_cells:
@@ -229,14 +229,14 @@ func _set_tiles(params: Dictionary) -> Variant:
 ## Paints cells with a terrain: Godot picks the right edge and corner tiles automatically.
 func _paint_terrain(params: Dictionary) -> Variant:
 	var layer: Variant = _find_layer_with_tileset(String(params.get("node_path", "")))
-	if layer is PilotError:
+	if layer is WingmanError:
 		return layer
 	var tile_set: TileSet = layer.tile_set
 	if tile_set.get_terrain_sets_count() == 0:
-		return PilotError.new("NO_TERRAINS", "The TileSet has no terrain sets.", "Terrains are set up in the TileSet editor (Terrains tab, then paint peering bits on tiles). Use set_tiles to place tiles by hand.")
+		return WingmanError.new("NO_TERRAINS", "The TileSet has no terrain sets.", "Terrains are set up in the TileSet editor (Terrains tab, then paint peering bits on tiles). Use set_tiles to place tiles by hand.")
 	var terrain_set := int(params.get("terrain_set", 0))
 	if terrain_set < 0 or terrain_set >= tile_set.get_terrain_sets_count():
-		return PilotError.new("INVALID_TERRAIN_SET", "terrain_set must be between 0 and %d." % (tile_set.get_terrain_sets_count() - 1))
+		return WingmanError.new("INVALID_TERRAIN_SET", "terrain_set must be between 0 and %d." % (tile_set.get_terrain_sets_count() - 1))
 	var terrain := -1
 	var terrain_input: Variant = params.get("terrain", 0)
 	if terrain_input is String and not String(terrain_input).is_valid_int():
@@ -244,7 +244,7 @@ func _paint_terrain(params: Dictionary) -> Variant:
 			if tile_set.get_terrain_name(terrain_set, terrain_index) == terrain_input:
 				terrain = terrain_index
 		if terrain == -1:
-			return PilotError.new("TERRAIN_NOT_FOUND", "Terrain set %d has no terrain named '%s'." % [terrain_set, terrain_input], "Use get_tilemap_info to see the terrains.")
+			return WingmanError.new("TERRAIN_NOT_FOUND", "Terrain set %d has no terrain named '%s'." % [terrain_set, terrain_input], "Use get_tilemap_info to see the terrains.")
 	else:
 		terrain = int(terrain_input)
 
@@ -252,15 +252,15 @@ func _paint_terrain(params: Dictionary) -> Variant:
 	for cell_input: Variant in params.get("cells", []):
 		var cell_conversion := ValueCodec.from_json_value(cell_input, TYPE_VECTOR2I)
 		if not cell_conversion["ok"]:
-			return PilotError.new("INVALID_CELL", "Bad cell: %s" % cell_conversion["error"])
+			return WingmanError.new("INVALID_CELL", "Bad cell: %s" % cell_conversion["error"])
 		cells.append(cell_conversion["value"])
 	if params.get("rectangle") is Dictionary:
 		var rectangle: Variant = _parse_rectangle(params["rectangle"])
-		if rectangle is PilotError:
+		if rectangle is WingmanError:
 			return rectangle
 		cells.append_array(_cells_in_rectangle(rectangle))
 	if cells.is_empty():
-		return PilotError.new("NOTHING_TO_DO", "Pass cells or a rectangle.")
+		return WingmanError.new("NOTHING_TO_DO", "Pass cells or a rectangle.")
 
 	var data_before: PackedByteArray = layer.tile_map_data
 	if String(params.get("mode", "connect")) == "path":
@@ -274,12 +274,12 @@ func _paint_terrain(params: Dictionary) -> Variant:
 ## The cells of a layer, drawn as a text grid with a legend when the area is small.
 func _get_tiles(params: Dictionary) -> Variant:
 	var layer: Variant = _find_layer(String(params.get("node_path", "")))
-	if layer is PilotError:
+	if layer is WingmanError:
 		return layer
 	var area: Rect2i = layer.get_used_rect()
 	if params.get("rectangle") is Dictionary:
 		var rectangle: Variant = _parse_rectangle(params["rectangle"])
-		if rectangle is PilotError:
+		if rectangle is WingmanError:
 			return rectangle
 		area = rectangle
 	var result := {"node_path": _context.describe_node_path(layer), "area": {"from": [area.position.x, area.position.y], "to": [area.end.x - 1, area.end.y - 1]}}
@@ -340,15 +340,15 @@ func _commit_cell_change(layer: TileMapLayer, data_before: PackedByteArray, acti
 func _parse_tile(description: Dictionary, tile_set: TileSet, default_source_id: int) -> Variant:
 	var source_id := int(description.get("source_id", default_source_id))
 	if not tile_set.has_source(source_id):
-		return PilotError.new("SOURCE_NOT_FOUND", "The TileSet has no source %d." % source_id, "Use get_tilemap_info to see the sources and their tiles.")
+		return WingmanError.new("SOURCE_NOT_FOUND", "The TileSet has no source %d." % source_id, "Use get_tilemap_info to see the sources and their tiles.")
 	var atlas_conversion := ValueCodec.from_json_value(description.get("atlas", [0, 0]), TYPE_VECTOR2I)
 	if not atlas_conversion["ok"]:
-		return PilotError.new("INVALID_ATLAS", "Bad atlas coordinates: %s" % atlas_conversion["error"])
+		return WingmanError.new("INVALID_ATLAS", "Bad atlas coordinates: %s" % atlas_conversion["error"])
 	var atlas_coordinates: Vector2i = atlas_conversion["value"]
 	var alternative := int(description.get("alternative", 0))
 	var source := tile_set.get_source(source_id)
 	if source is TileSetAtlasSource and not source.has_tile(atlas_coordinates):
-		return PilotError.new("TILE_NOT_FOUND", "Source %d has no tile at atlas %d,%d." % [source_id, atlas_coordinates.x, atlas_coordinates.y], "Use get_tilemap_info to see which atlas coordinates exist.")
+		return WingmanError.new("TILE_NOT_FOUND", "Source %d has no tile at atlas %d,%d." % [source_id, atlas_coordinates.x, atlas_coordinates.y], "Use get_tilemap_info to see which atlas coordinates exist.")
 	return {"source_id": source_id, "atlas": atlas_coordinates, "alternative": alternative}
 
 
@@ -357,7 +357,7 @@ func _parse_rectangle(description: Dictionary) -> Variant:
 	var from_conversion := ValueCodec.from_json_value(description.get("from"), TYPE_VECTOR2I)
 	var to_conversion := ValueCodec.from_json_value(description.get("to"), TYPE_VECTOR2I)
 	if not from_conversion["ok"] or not to_conversion["ok"]:
-		return PilotError.new("INVALID_RECTANGLE", "A rectangle needs from and to corners, for example {\"from\": [0, 0], \"to\": [9, 3]}.")
+		return WingmanError.new("INVALID_RECTANGLE", "A rectangle needs from and to corners, for example {\"from\": [0, 0], \"to\": [9, 3]}.")
 	var first_corner: Vector2i = from_conversion["value"]
 	var second_corner: Vector2i = to_conversion["value"]
 	var top_left := Vector2i(mini(first_corner.x, second_corner.x), mini(first_corner.y, second_corner.y))
@@ -375,21 +375,21 @@ func _cells_in_rectangle(rectangle: Rect2i) -> Array[Vector2i]:
 
 func _find_layer(node_path: String) -> Variant:
 	var node: Variant = _context.find_node_in_edited_scene(node_path)
-	if node is PilotError:
+	if node is WingmanError:
 		return node
 	if node.get_class() == "TileMap":
-		return PilotError.new("OLD_TILEMAP_NODE", "%s is the old TileMap node." % node.name, "Select it in the editor and use the TileMap panel's \"Extract TileMap layers as individual TileMapLayer nodes\", or add a TileMapLayer node.")
+		return WingmanError.new("OLD_TILEMAP_NODE", "%s is the old TileMap node." % node.name, "Select it in the editor and use the TileMap panel's \"Extract TileMap layers as individual TileMapLayer nodes\", or add a TileMapLayer node.")
 	if not node is TileMapLayer:
-		return PilotError.new("NOT_A_TILEMAP_LAYER", "%s is a %s, not a TileMapLayer." % [node.name, node.get_class()], "Add one with add_node (type TileMapLayer).")
+		return WingmanError.new("NOT_A_TILEMAP_LAYER", "%s is a %s, not a TileMapLayer." % [node.name, node.get_class()], "Add one with add_node (type TileMapLayer).")
 	return node
 
 
 func _find_layer_with_tileset(node_path: String) -> Variant:
 	var layer: Variant = _find_layer(node_path)
-	if layer is PilotError:
+	if layer is WingmanError:
 		return layer
 	if layer.tile_set == null:
-		return PilotError.new("NO_TILESET", "%s has no TileSet." % layer.name, "Make one with create_tileset (assign_to this layer).")
+		return WingmanError.new("NO_TILESET", "%s has no TileSet." % layer.name, "Make one with create_tileset (assign_to this layer).")
 	return layer
 
 

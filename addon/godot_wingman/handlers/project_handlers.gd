@@ -3,7 +3,7 @@ extends RefCounted
 ## Handlers of the "project" toolset: project settings, the input map, autoloads and
 ## editor plugins, like the Project Settings window.
 
-const PilotError := preload("../utils/pilot_error.gd")
+const WingmanError := preload("../utils/wingman_error.gd")
 const ValueCodec := preload("../utils/value_codec.gd")
 const InputEventText := preload("../utils/input_event_text.gd")
 
@@ -64,18 +64,18 @@ func _get_project_settings(params: Dictionary) -> Variant:
 func _set_project_settings(params: Dictionary) -> Variant:
 	var new_settings: Variant = params.get("settings", {})
 	if not new_settings is Dictionary or new_settings.is_empty():
-		return PilotError.new("NO_SETTINGS", "settings must be an object like {\"display/window/size/viewport_width\": 1280}.")
+		return WingmanError.new("NO_SETTINGS", "settings must be an object like {\"display/window/size/viewport_width\": 1280}.")
 	var changed := {}
 	for setting_name in new_settings:
 		var current_value: Variant = ProjectSettings.get_setting(setting_name) if ProjectSettings.has_setting(setting_name) else null
 		var conversion := ValueCodec.from_json_value(new_settings[setting_name], typeof(current_value) if current_value != null else TYPE_NIL)
 		if not conversion["ok"]:
-			return PilotError.new("INVALID_VALUE", "%s: %s" % [setting_name, conversion["error"]])
+			return WingmanError.new("INVALID_VALUE", "%s: %s" % [setting_name, conversion["error"]])
 		ProjectSettings.set_setting(setting_name, conversion["value"])
 		changed[setting_name] = ValueCodec.to_json_value(conversion["value"])
 	var save_error := ProjectSettings.save()
 	if save_error != OK:
-		return PilotError.new("SAVE_FAILED", "Could not save project.godot: %s." % error_string(save_error))
+		return WingmanError.new("SAVE_FAILED", "Could not save project.godot: %s." % error_string(save_error))
 	return {"changed": changed, "note": "Saved to project.godot. Some settings (window size, rendering) apply the next time the game starts."}
 
 #endregion
@@ -108,12 +108,12 @@ func _get_input_map(params: Dictionary) -> Dictionary:
 func _set_input_action(params: Dictionary) -> Variant:
 	var action_name := String(params.get("name", "")).strip_edges()
 	if action_name == "":
-		return PilotError.new("MISSING_NAME", "The action needs a name, for example \"jump\".")
+		return WingmanError.new("MISSING_NAME", "The action needs a name, for example \"jump\".")
 	var events: Array[InputEvent] = []
 	for description in params.get("events", []):
 		var parsed: Variant = InputEventText.parse(String(description))
 		if parsed is String:
-			return PilotError.new("INVALID_EVENT", parsed)
+			return WingmanError.new("INVALID_EVENT", parsed)
 		events.append(parsed)
 
 	ProjectSettings.set_setting(INPUT_SETTING_PREFIX + action_name, {
@@ -122,14 +122,14 @@ func _set_input_action(params: Dictionary) -> Variant:
 	})
 	var save_error := ProjectSettings.save()
 	if save_error != OK:
-		return PilotError.new("SAVE_FAILED", "Could not save project.godot: %s." % error_string(save_error))
+		return WingmanError.new("SAVE_FAILED", "Could not save project.godot: %s." % error_string(save_error))
 	return {"action": action_name, "events": events.map(func(event: InputEvent) -> String: return InputEventText.describe(event))}
 
 
 func _remove_input_action(params: Dictionary) -> Variant:
 	var setting_name := INPUT_SETTING_PREFIX + String(params.get("name", ""))
 	if not ProjectSettings.has_setting(setting_name):
-		return PilotError.new("ACTION_NOT_FOUND", "No input action named '%s'." % params.get("name", ""))
+		return WingmanError.new("ACTION_NOT_FOUND", "No input action named '%s'." % params.get("name", ""))
 	ProjectSettings.clear(setting_name)
 	ProjectSettings.save()
 	return {"removed": params.get("name")}
@@ -159,9 +159,9 @@ func _add_autoload(params: Dictionary) -> Variant:
 	var autoload_name := String(params.get("name", ""))
 	var autoload_path := String(params.get("path", ""))
 	if autoload_name == "" or not autoload_name.is_valid_identifier():
-		return PilotError.new("INVALID_NAME", "'%s' is not a valid autoload name. Use a name like GameState." % autoload_name)
+		return WingmanError.new("INVALID_NAME", "'%s' is not a valid autoload name. Use a name like GameState." % autoload_name)
 	if not ResourceLoader.exists(autoload_path):
-		return PilotError.new("FILE_NOT_FOUND", "No script or scene at '%s'." % autoload_path)
+		return WingmanError.new("FILE_NOT_FOUND", "No script or scene at '%s'." % autoload_path)
 	_context.plugin.add_autoload_singleton(autoload_name, autoload_path)
 	return {"added": autoload_name, "path": autoload_path, "note": "Available in every scene as %s when the game runs." % autoload_name}
 
@@ -169,7 +169,7 @@ func _add_autoload(params: Dictionary) -> Variant:
 func _remove_autoload(params: Dictionary) -> Variant:
 	var autoload_name := String(params.get("name", ""))
 	if not ProjectSettings.has_setting(AUTOLOAD_SETTING_PREFIX + autoload_name):
-		return PilotError.new("AUTOLOAD_NOT_FOUND", "No autoload named '%s'." % autoload_name)
+		return WingmanError.new("AUTOLOAD_NOT_FOUND", "No autoload named '%s'." % autoload_name)
 	_context.plugin.remove_autoload_singleton(autoload_name)
 	return {"removed": autoload_name}
 
@@ -197,9 +197,9 @@ func _list_plugins(_params: Dictionary) -> Dictionary:
 func _set_plugin_enabled(params: Dictionary) -> Variant:
 	var folder_name := String(params.get("folder", ""))
 	if folder_name == _context.addon_directory.get_file():
-		return PilotError.new("CANNOT_DISABLE_SELF", "Godot Pilot cannot turn itself off; the connection would be lost.")
+		return WingmanError.new("CANNOT_DISABLE_SELF", "Godot Wingman cannot turn itself off; the connection would be lost.")
 	if not FileAccess.file_exists("res://addons/%s/plugin.cfg" % folder_name):
-		return PilotError.new("PLUGIN_NOT_FOUND", "No plugin in res://addons/%s." % folder_name, "Use list_plugins to see the folder names.")
+		return WingmanError.new("PLUGIN_NOT_FOUND", "No plugin in res://addons/%s." % folder_name, "Use list_plugins to see the folder names.")
 	EditorInterface.set_plugin_enabled(folder_name, bool(params.get("enabled", true)))
 	return {"plugin": folder_name, "enabled": EditorInterface.is_plugin_enabled(folder_name)}
 

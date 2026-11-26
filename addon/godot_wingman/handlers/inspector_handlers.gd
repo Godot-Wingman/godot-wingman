@@ -3,7 +3,7 @@ extends RefCounted
 ## Handlers of the "inspector" toolset: reading and changing node properties and groups,
 ## like a person does in the Inspector dock.
 
-const PilotError := preload("../utils/pilot_error.gd")
+const WingmanError := preload("../utils/wingman_error.gd")
 const ValueCodec := preload("../utils/value_codec.gd")
 const PropertyEditing := preload("../utils/property_editing.gd")
 
@@ -26,7 +26,7 @@ func register_methods(dispatcher: RefCounted) -> void:
 ## matters and saves a lot of space.
 func _get_properties(params: Dictionary) -> Variant:
 	var node: Variant = _context.find_node_in_edited_scene(String(params.get("node_path", ".")))
-	if node is PilotError:
+	if node is WingmanError:
 		return node
 	var scene_root: Node = _context.get_edited_scene_root()
 	var include_defaults := bool(params.get("include_defaults", false))
@@ -67,27 +67,27 @@ func _format_value(value: Variant, scene_root: Node) -> String:
 
 func _set_properties(params: Dictionary) -> Variant:
 	var node: Variant = _context.find_node_in_edited_scene(String(params.get("node_path", ".")))
-	if node is PilotError:
+	if node is WingmanError:
 		return node
 	var new_values: Variant = params.get("properties", {})
 	if not new_values is Dictionary or new_values.is_empty():
-		return PilotError.new("NO_PROPERTIES", "properties must be an object like {\"position\": [100, 50]}.")
+		return WingmanError.new("NO_PROPERTIES", "properties must be an object like {\"position\": [100, 50]}.")
 	var outcome := PropertyEditing.set_properties_with_undo(
 		node, new_values, _context.get_undo_redo(), _context.get_edited_scene_root(), "Set properties of %s" % node.name
 	)
 	if outcome.has("errors"):
-		return PilotError.new("INVALID_PROPERTY", "Nothing was changed. " + " ".join(outcome["errors"]))
+		return WingmanError.new("INVALID_PROPERTY", "Nothing was changed. " + " ".join(outcome["errors"]))
 	return {"node": _context.describe_node_path(node), "changed": outcome["changed"]}
 
 
 func _reset_properties(params: Dictionary) -> Variant:
 	var node: Variant = _context.find_node_in_edited_scene(String(params.get("node_path", ".")))
-	if node is PilotError:
+	if node is WingmanError:
 		return node
 	var default_values := {}
 	for property_name in params.get("names", []):
 		if PropertyEditing.find_property_information(node, String(property_name)).is_empty():
-			return PilotError.new("INVALID_PROPERTY", "%s has no property '%s'." % [node.get_class(), property_name])
+			return WingmanError.new("INVALID_PROPERTY", "%s has no property '%s'." % [node.get_class(), property_name])
 		default_values[String(property_name)] = PropertyEditing.get_default_value(node, String(property_name))
 
 	var undo_redo: EditorUndoRedoManager = _context.get_undo_redo()
@@ -102,7 +102,7 @@ func _reset_properties(params: Dictionary) -> Variant:
 ## Groups let scripts find nodes ("enemies", "coins"). Persistent groups are saved with the scene.
 func _set_groups(params: Dictionary) -> Variant:
 	var node: Variant = _context.find_node_in_edited_scene(String(params.get("node_path", ".")))
-	if node is PilotError:
+	if node is WingmanError:
 		return node
 	var undo_redo: EditorUndoRedoManager = _context.get_undo_redo()
 	undo_redo.create_action("Change groups of %s" % node.name)

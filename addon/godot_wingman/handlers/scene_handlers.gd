@@ -6,7 +6,7 @@ extends RefCounted
 ## Every change goes through the editor's undo history, so Ctrl+Z works, and new nodes
 ## get the scene root as owner, so they are saved with the scene.
 
-const PilotError := preload("../utils/pilot_error.gd")
+const WingmanError := preload("../utils/wingman_error.gd")
 const ValueCodec := preload("../utils/value_codec.gd")
 const PropertyEditing := preload("../utils/property_editing.gd")
 
@@ -39,7 +39,7 @@ func register_methods(dispatcher: RefCounted) -> void:
 
 func _get_scene_tree(params: Dictionary) -> Variant:
 	var start_node: Variant = _context.find_node_in_edited_scene(String(params.get("node_path", ".")))
-	if start_node is PilotError:
+	if start_node is WingmanError:
 		return start_node
 	var scene_root: Node = _context.get_edited_scene_root()
 	var max_depth := int(params.get("max_depth", DEFAULT_TREE_DEPTH))
@@ -106,7 +106,7 @@ func _belongs_to_scene(node: Node, scene_root: Node) -> bool:
 func _open_scene(params: Dictionary) -> Variant:
 	var scene_path := String(params.get("path", ""))
 	if not ResourceLoader.exists(scene_path):
-		return PilotError.new("SCENE_NOT_FOUND", "No scene at '%s'." % scene_path, "Use list_files with filter \"*.tscn\" to find scenes.")
+		return WingmanError.new("SCENE_NOT_FOUND", "No scene at '%s'." % scene_path, "Use list_files with filter \"*.tscn\" to find scenes.")
 	EditorInterface.open_scene_from_path(scene_path)
 	await _context.get_scene_tree().process_frame
 	return {"opened": scene_path, "root": _describe_root()}
@@ -114,27 +114,27 @@ func _open_scene(params: Dictionary) -> Variant:
 
 func _save_scene(params: Dictionary) -> Variant:
 	if _context.get_edited_scene_root() == null:
-		return PilotError.new("NO_OPEN_SCENE", "No scene is open.")
+		return WingmanError.new("NO_OPEN_SCENE", "No scene is open.")
 	var new_path := String(params.get("path", ""))
 	if new_path != "":
 		EditorInterface.save_scene_as(new_path)
 		return {"saved_as": new_path}
 	var save_error := EditorInterface.save_scene()
 	if save_error != OK:
-		return PilotError.new("SAVE_FAILED", "Saving failed: %s." % error_string(save_error), "A new scene needs a path: pass path, for example \"res://levels/level_1.tscn\".")
+		return WingmanError.new("SAVE_FAILED", "Saving failed: %s." % error_string(save_error), "A new scene needs a path: pass path, for example \"res://levels/level_1.tscn\".")
 	return {"saved": _context.get_edited_scene_root().scene_file_path}
 
 
 func _create_scene(params: Dictionary) -> Variant:
 	var scene_path := String(params.get("path", ""))
 	if not scene_path.begins_with("res://") or not (scene_path.ends_with(".tscn") or scene_path.ends_with(".scn")):
-		return PilotError.new("INVALID_PATH", "The scene path must start with res:// and end with .tscn.")
+		return WingmanError.new("INVALID_PATH", "The scene path must start with res:// and end with .tscn.")
 	if FileAccess.file_exists(scene_path) and not bool(params.get("overwrite", false)):
-		return PilotError.new("ALREADY_EXISTS", "'%s' already exists." % scene_path, "Open it with open_scene, or pass overwrite: true.")
+		return WingmanError.new("ALREADY_EXISTS", "'%s' already exists." % scene_path, "Open it with open_scene, or pass overwrite: true.")
 
 	var root_type := String(params.get("root_type", "Node2D"))
 	var root_node: Variant = instantiate_node_type(root_type)
-	if root_node is PilotError:
+	if root_node is WingmanError:
 		return root_node
 	root_node.name = String(params.get("root_name", scene_path.get_file().get_basename().to_pascal_case()))
 
@@ -144,7 +144,7 @@ func _create_scene(params: Dictionary) -> Variant:
 	var save_error := ResourceSaver.save(packed_scene, scene_path)
 	root_node.free()
 	if save_error != OK:
-		return PilotError.new("SAVE_FAILED", "Could not save '%s': %s." % [scene_path, error_string(save_error)])
+		return WingmanError.new("SAVE_FAILED", "Could not save '%s': %s." % [scene_path, error_string(save_error)])
 
 	EditorInterface.get_resource_filesystem().update_file(scene_path)
 	EditorInterface.open_scene_from_path(scene_path)
@@ -155,14 +155,14 @@ func _create_scene(params: Dictionary) -> Variant:
 func _close_scene(params: Dictionary) -> Variant:
 	var scene_root: Node = _context.get_edited_scene_root()
 	if scene_root == null:
-		return PilotError.new("NO_OPEN_SCENE", "No scene is open.")
+		return WingmanError.new("NO_OPEN_SCENE", "No scene is open.")
 	var unsaved_scenes: PackedStringArray = _context.call_editor_interface("get_unsaved_scenes", [], PackedStringArray())
 	var has_unsaved_changes := unsaved_scenes.has(scene_root.scene_file_path)
 	if has_unsaved_changes and not bool(params.get("discard_changes", false)):
-		return PilotError.new("UNSAVED_CHANGES", "The scene has unsaved changes.", "Save it with save_scene first, or pass discard_changes: true.")
+		return WingmanError.new("UNSAVED_CHANGES", "The scene has unsaved changes.", "Save it with save_scene first, or pass discard_changes: true.")
 	var closed_path := scene_root.scene_file_path
 	if not EditorInterface.has_method("close_scene"):
-		return PilotError.new("NOT_SUPPORTED", "This Godot version cannot close scenes from a plugin.", "Close the tab by hand, or update Godot.")
+		return WingmanError.new("NOT_SUPPORTED", "This Godot version cannot close scenes from a plugin.", "Close the tab by hand, or update Godot.")
 	_context.call_editor_interface("close_scene")
 	await _context.get_scene_tree().process_frame
 	return {"closed": closed_path}
@@ -182,12 +182,12 @@ func _describe_root() -> Variant:
 func _add_node(params: Dictionary) -> Variant:
 	var scene_root: Node = _context.get_edited_scene_root()
 	var parent: Variant = _context.find_node_in_edited_scene(String(params.get("parent_path", ".")))
-	if parent is PilotError:
+	if parent is WingmanError:
 		return parent
 
 	var node_type := String(params.get("type", ""))
 	var new_node: Variant = instantiate_node_type(node_type)
-	if new_node is PilotError:
+	if new_node is WingmanError:
 		return new_node
 	if params.has("name"):
 		new_node.name = String(params["name"])
@@ -198,7 +198,7 @@ func _add_node(params: Dictionary) -> Variant:
 		var conversion := PropertyEditing.convert_for_property(new_node, String(property_path), initial_properties[property_path], scene_root)
 		if not conversion["ok"]:
 			new_node.free()
-			return PilotError.new("INVALID_PROPERTY", String(conversion["error"]))
+			return WingmanError.new("INVALID_PROPERTY", String(conversion["error"]))
 		new_node.set_indexed(NodePath(String(property_path)), conversion["value"])
 
 	var undo_redo: EditorUndoRedoManager = _context.get_undo_redo()
@@ -219,21 +219,21 @@ func _add_node(params: Dictionary) -> Variant:
 ## Shared with the ui handlers (build_ui).
 static func instantiate_node_type(node_type: String) -> Variant:
 	if node_type == "":
-		return PilotError.new("MISSING_TYPE", "No node type given.", "Use a class like \"Sprite2D\" or a scene path like \"res://enemy.tscn\".")
+		return WingmanError.new("MISSING_TYPE", "No node type given.", "Use a class like \"Sprite2D\" or a scene path like \"res://enemy.tscn\".")
 
 	if node_type.begins_with("res://") or node_type.begins_with("uid://"):
 		if not ResourceLoader.exists(node_type):
-			return PilotError.new("SCENE_NOT_FOUND", "No file at '%s'." % node_type)
+			return WingmanError.new("SCENE_NOT_FOUND", "No file at '%s'." % node_type)
 		var packed_scene := load(node_type) as PackedScene
 		if packed_scene == null:
-			return PilotError.new("NOT_A_SCENE", "'%s' is not a scene." % node_type)
+			return WingmanError.new("NOT_A_SCENE", "'%s' is not a scene." % node_type)
 		return packed_scene.instantiate(PackedScene.GEN_EDIT_STATE_INSTANCE)
 
 	if ClassDB.class_exists(node_type):
 		if not ClassDB.is_parent_class(node_type, "Node"):
-			return PilotError.new("NOT_A_NODE", "%s is not a node class." % node_type, "Resources like materials are created with create_resource.")
+			return WingmanError.new("NOT_A_NODE", "%s is not a node class." % node_type, "Resources like materials are created with create_resource.")
 		if not ClassDB.can_instantiate(node_type):
-			return PilotError.new("ABSTRACT_CLASS", "%s cannot be created directly (it is a base class)." % node_type, "Use get_class_docs to find classes that inherit from it.")
+			return WingmanError.new("ABSTRACT_CLASS", "%s cannot be created directly (it is a base class)." % node_type, "Use get_class_docs to find classes that inherit from it.")
 		return ClassDB.instantiate(node_type)
 
 	for global_class in ProjectSettings.get_global_class_list():
@@ -241,13 +241,13 @@ static func instantiate_node_type(node_type: String) -> Variant:
 			var script: Script = load(String(global_class["path"]))
 			var native_base_class := script.get_instance_base_type()
 			if not ClassDB.is_parent_class(native_base_class, "Node"):
-				return PilotError.new("NOT_A_NODE", "%s is not a node class." % node_type)
+				return WingmanError.new("NOT_A_NODE", "%s is not a node class." % node_type)
 			var script_node: Node = ClassDB.instantiate(native_base_class)
 			script_node.set_script(script)
 			script_node.name = node_type
 			return script_node
 
-	return PilotError.new("UNKNOWN_TYPE", "Unknown node type '%s'." % node_type, "Class names are case-sensitive, for example \"CharacterBody2D\". Use search_docs to find the right class.")
+	return WingmanError.new("UNKNOWN_TYPE", "Unknown node type '%s'." % node_type, "Class names are case-sensitive, for example \"CharacterBody2D\". Use search_docs to find the right class.")
 
 
 func _delete_nodes(params: Dictionary) -> Variant:
@@ -255,13 +255,13 @@ func _delete_nodes(params: Dictionary) -> Variant:
 	var nodes_to_delete: Array[Node] = []
 	for node_path in params.get("node_paths", []):
 		var node: Variant = _context.find_node_in_edited_scene(String(node_path))
-		if node is PilotError:
+		if node is WingmanError:
 			return node
 		if node == scene_root:
-			return PilotError.new("CANNOT_DELETE_ROOT", "The scene root cannot be deleted.", "Create a new scene with create_scene instead.")
+			return WingmanError.new("CANNOT_DELETE_ROOT", "The scene root cannot be deleted.", "Create a new scene with create_scene instead.")
 		nodes_to_delete.append(node)
 	if nodes_to_delete.is_empty():
-		return PilotError.new("NOTHING_TO_DELETE", "node_paths is empty.")
+		return WingmanError.new("NOTHING_TO_DELETE", "node_paths is empty.")
 
 	var deleted_paths: Array[String] = []
 	var undo_redo: EditorUndoRedoManager = _context.get_undo_redo()
@@ -283,10 +283,10 @@ func _delete_nodes(params: Dictionary) -> Variant:
 func _duplicate_node(params: Dictionary) -> Variant:
 	var scene_root: Node = _context.get_edited_scene_root()
 	var original: Variant = _context.find_node_in_edited_scene(String(params.get("node_path", "")))
-	if original is PilotError:
+	if original is WingmanError:
 		return original
 	if original == scene_root:
-		return PilotError.new("CANNOT_DUPLICATE_ROOT", "The scene root cannot be duplicated.")
+		return WingmanError.new("CANNOT_DUPLICATE_ROOT", "The scene root cannot be duplicated.")
 
 	var copy: Node = original.duplicate(Node.DUPLICATE_SIGNALS | Node.DUPLICATE_GROUPS | Node.DUPLICATE_SCRIPTS | Node.DUPLICATE_USE_INSTANTIATION)
 	if params.has("new_name"):
@@ -309,21 +309,21 @@ func _duplicate_node(params: Dictionary) -> Variant:
 func _move_node(params: Dictionary) -> Variant:
 	var scene_root: Node = _context.get_edited_scene_root()
 	var node: Variant = _context.find_node_in_edited_scene(String(params.get("node_path", "")))
-	if node is PilotError:
+	if node is WingmanError:
 		return node
 	if node == scene_root:
-		return PilotError.new("CANNOT_MOVE_ROOT", "The scene root cannot be moved.")
+		return WingmanError.new("CANNOT_MOVE_ROOT", "The scene root cannot be moved.")
 
 	var old_parent: Node = node.get_parent()
 	var old_index: int = node.get_index()
 	var new_parent: Node = old_parent
 	if params.has("new_parent_path"):
 		var found_parent: Variant = _context.find_node_in_edited_scene(String(params["new_parent_path"]))
-		if found_parent is PilotError:
+		if found_parent is WingmanError:
 			return found_parent
 		new_parent = found_parent
 		if new_parent == node or node.is_ancestor_of(new_parent):
-			return PilotError.new("INVALID_PARENT", "A node cannot be moved inside itself.")
+			return WingmanError.new("INVALID_PARENT", "A node cannot be moved inside itself.")
 
 	var owned_nodes := _collect_owned_nodes(node, scene_root)
 	var undo_redo: EditorUndoRedoManager = _context.get_undo_redo()
@@ -345,14 +345,14 @@ func _move_node(params: Dictionary) -> Variant:
 
 func _rename_node(params: Dictionary) -> Variant:
 	var node: Variant = _context.find_node_in_edited_scene(String(params.get("node_path", "")))
-	if node is PilotError:
+	if node is WingmanError:
 		return node
 	var new_name := String(params.get("new_name", "")).validate_node_name()
 	if new_name == "":
-		return PilotError.new("INVALID_NAME", "The new name is empty or only has characters that names cannot contain (. : @ / \" %).")
+		return WingmanError.new("INVALID_NAME", "The new name is empty or only has characters that names cannot contain (. : @ / \" %).")
 	var parent: Node = node.get_parent()
 	if parent != null and parent.has_node(NodePath(new_name)) and parent.get_node(NodePath(new_name)) != node:
-		return PilotError.new("NAME_TAKEN", "'%s' already has a child named '%s'." % [parent.name, new_name])
+		return WingmanError.new("NAME_TAKEN", "'%s' already has a child named '%s'." % [parent.name, new_name])
 
 	var undo_redo: EditorUndoRedoManager = _context.get_undo_redo()
 	undo_redo.create_action("Rename %s to %s" % [node.name, new_name])
@@ -369,7 +369,7 @@ func _select_nodes(params: Dictionary) -> Variant:
 	var last_node: Node = null
 	for node_path in params.get("node_paths", []):
 		var node: Variant = _context.find_node_in_edited_scene(String(node_path))
-		if node is PilotError:
+		if node is WingmanError:
 			return node
 		selection.add_node(node)
 		selected_paths.append(_context.describe_node_path(node))
@@ -426,7 +426,7 @@ func _batch_edit(params: Dictionary) -> Variant:
 				break
 			continue
 		var result: Variant = await handlers_by_action[operation["action"]].call(operation)
-		if result is PilotError:
+		if result is WingmanError:
 			results.append({"action": operation["action"], "error": result.to_dictionary()})
 			if stop_on_error:
 				break
@@ -437,11 +437,11 @@ func _batch_edit(params: Dictionary) -> Variant:
 
 func _set_properties_for_batch(params: Dictionary) -> Variant:
 	var node: Variant = _context.find_node_in_edited_scene(String(params.get("node_path", "")))
-	if node is PilotError:
+	if node is WingmanError:
 		return node
 	var outcome := PropertyEditing.set_properties_with_undo(node, params.get("properties", {}), _context.get_undo_redo(), _context.get_edited_scene_root(), "Set properties of %s" % node.name)
 	if outcome.has("errors"):
-		return PilotError.new("INVALID_PROPERTY", "; ".join(outcome["errors"]))
+		return WingmanError.new("INVALID_PROPERTY", "; ".join(outcome["errors"]))
 	return outcome
 
 #endregion

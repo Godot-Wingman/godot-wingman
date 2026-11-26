@@ -7,7 +7,7 @@ extends RefCounted
 ## and text references ("res://old/path") in scenes, resources and scripts are updated.
 ## Deleting moves files to the operating system's trash, so they can be restored.
 
-const PilotError := preload("../utils/pilot_error.gd")
+const WingmanError := preload("../utils/wingman_error.gd")
 
 const DEFAULT_LIST_LIMIT := 500
 const DEFAULT_SEARCH_LIMIT := 100
@@ -45,7 +45,7 @@ func _list_files(params: Dictionary) -> Variant:
 	var file_system := EditorInterface.get_resource_filesystem()
 	var folder := file_system.get_filesystem_path(folder_path)
 	if folder == null:
-		return PilotError.new("FOLDER_NOT_FOUND", "No folder '%s' in the project." % folder_path)
+		return WingmanError.new("FOLDER_NOT_FOUND", "No folder '%s' in the project." % folder_path)
 	var name_filter := String(params.get("filter", "*"))
 	var limit := int(params.get("limit", DEFAULT_LIST_LIMIT))
 	var entries: Array[String] = []
@@ -77,22 +77,22 @@ func _collect_files(folder: EditorFileSystemDirectory, recursive: bool, name_fil
 func _read_file(params: Dictionary) -> Variant:
 	var file_path := String(params.get("path", ""))
 	if not FileAccess.file_exists(file_path):
-		return PilotError.new("FILE_NOT_FOUND", "No file at '%s'." % file_path)
+		return WingmanError.new("FILE_NOT_FOUND", "No file at '%s'." % file_path)
 	if not TEXT_FILE_EXTENSIONS.has(file_path.get_extension().to_lower()):
-		return PilotError.new("NOT_TEXT", "'%s' is not a text file." % file_path, "Images and other binary files cannot be read as text. Use get_resource_properties for resources.")
+		return WingmanError.new("NOT_TEXT", "'%s' is not a text file." % file_path, "Images and other binary files cannot be read as text. Use get_resource_properties for resources.")
 	return {"path": file_path, "content": FileAccess.get_file_as_string(file_path)}
 
 
 func _write_file(params: Dictionary) -> Variant:
 	var file_path := String(params.get("path", ""))
 	if not file_path.begins_with("res://"):
-		return PilotError.new("INVALID_PATH", "Paths must start with res://.")
+		return WingmanError.new("INVALID_PATH", "Paths must start with res://.")
 	if file_path.get_extension() in ["gd", "cs"]:
-		return PilotError.new("USE_SCRIPT_TOOLS", "Use create_script or edit_script for scripts; they also check for errors.")
+		return WingmanError.new("USE_SCRIPT_TOOLS", "Use create_script or edit_script for scripts; they also check for errors.")
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(file_path.get_base_dir()))
 	var file := FileAccess.open(file_path, FileAccess.WRITE)
 	if file == null:
-		return PilotError.new("WRITE_FAILED", "Could not write '%s': %s." % [file_path, error_string(FileAccess.get_open_error())])
+		return WingmanError.new("WRITE_FAILED", "Could not write '%s': %s." % [file_path, error_string(FileAccess.get_open_error())])
 	file.store_string(String(params.get("content", "")))
 	file.close()
 	await _make_files_known(PackedStringArray([file_path]))
@@ -103,12 +103,12 @@ func _write_file(params: Dictionary) -> Variant:
 func _search_project(params: Dictionary) -> Variant:
 	var query := String(params.get("query", ""))
 	if query == "":
-		return PilotError.new("EMPTY_QUERY", "query is empty.")
+		return WingmanError.new("EMPTY_QUERY", "query is empty.")
 	var pattern: RegEx = null
 	if bool(params.get("regex", false)):
 		pattern = RegEx.create_from_string(query)
 		if pattern == null or not pattern.is_valid():
-			return PilotError.new("INVALID_REGEX", "'%s' is not a valid regular expression." % query)
+			return WingmanError.new("INVALID_REGEX", "'%s' is not a valid regular expression." % query)
 	var file_filter := String(params.get("file_filter", "*"))
 	var limit := int(params.get("limit", DEFAULT_SEARCH_LIMIT))
 	var lowercase_query := query.to_lower()
@@ -149,16 +149,16 @@ func _move_file(params: Dictionary) -> Variant:
 	var old_path := String(params.get("from", ""))
 	var new_path := String(params.get("to", ""))
 	if not FileAccess.file_exists(old_path) and not DirAccess.dir_exists_absolute(old_path):
-		return PilotError.new("FILE_NOT_FOUND", "Nothing at '%s'." % old_path)
+		return WingmanError.new("FILE_NOT_FOUND", "Nothing at '%s'." % old_path)
 	if FileAccess.file_exists(new_path) or DirAccess.dir_exists_absolute(new_path):
-		return PilotError.new("ALREADY_EXISTS", "'%s' already exists." % new_path)
+		return WingmanError.new("ALREADY_EXISTS", "'%s' already exists." % new_path)
 	if not new_path.begins_with("res://"):
-		return PilotError.new("INVALID_PATH", "The new path must start with res://.")
+		return WingmanError.new("INVALID_PATH", "The new path must start with res://.")
 
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(new_path.get_base_dir()))
 	var move_error := DirAccess.rename_absolute(old_path, new_path)
 	if move_error != OK:
-		return PilotError.new("MOVE_FAILED", "Could not move '%s': %s." % [old_path, error_string(move_error)])
+		return WingmanError.new("MOVE_FAILED", "Could not move '%s': %s." % [old_path, error_string(move_error)])
 	for companion_suffix in COMPANION_SUFFIXES:
 		if FileAccess.file_exists(old_path + companion_suffix):
 			DirAccess.rename_absolute(old_path + companion_suffix, new_path + companion_suffix)
@@ -187,17 +187,17 @@ func _replace_references(old_path: String, new_path: String) -> Array[String]:
 func _delete_file(params: Dictionary) -> Variant:
 	var file_path := String(params.get("path", ""))
 	if not FileAccess.file_exists(file_path) and not DirAccess.dir_exists_absolute(file_path):
-		return PilotError.new("FILE_NOT_FOUND", "Nothing at '%s'." % file_path)
+		return WingmanError.new("FILE_NOT_FOUND", "Nothing at '%s'." % file_path)
 	if file_path in ["res://", "res://project.godot"] or file_path.begins_with(_context.addon_directory):
-		return PilotError.new("PROTECTED", "'%s' cannot be deleted with this tool." % file_path)
+		return WingmanError.new("PROTECTED", "'%s' cannot be deleted with this tool." % file_path)
 
 	var users := _find_files_referencing(file_path)
 	if not users.is_empty() and not bool(params.get("force", false)):
-		return PilotError.new("STILL_USED", "'%s' is still used by: %s" % [file_path, ", ".join(users)], "Remove those references first, or pass force: true.")
+		return WingmanError.new("STILL_USED", "'%s' is still used by: %s" % [file_path, ", ".join(users)], "Remove those references first, or pass force: true.")
 
 	var trash_error := OS.move_to_trash(ProjectSettings.globalize_path(file_path))
 	if trash_error != OK:
-		return PilotError.new("DELETE_FAILED", "Could not move '%s' to the trash: %s." % [file_path, error_string(trash_error)])
+		return WingmanError.new("DELETE_FAILED", "Could not move '%s' to the trash: %s." % [file_path, error_string(trash_error)])
 	for companion_suffix in COMPANION_SUFFIXES:
 		if FileAccess.file_exists(file_path + companion_suffix):
 			OS.move_to_trash(ProjectSettings.globalize_path(file_path + companion_suffix))
@@ -216,10 +216,10 @@ func _find_files_referencing(file_path: String) -> Array[String]:
 func _create_folder(params: Dictionary) -> Variant:
 	var folder_path := String(params.get("path", ""))
 	if not folder_path.begins_with("res://"):
-		return PilotError.new("INVALID_PATH", "Paths must start with res://.")
+		return WingmanError.new("INVALID_PATH", "Paths must start with res://.")
 	var create_error := DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(folder_path))
 	if create_error != OK:
-		return PilotError.new("CREATE_FAILED", "Could not create '%s': %s." % [folder_path, error_string(create_error)])
+		return WingmanError.new("CREATE_FAILED", "Could not create '%s': %s." % [folder_path, error_string(create_error)])
 	EditorInterface.get_resource_filesystem().scan()
 	return {"created": folder_path}
 
@@ -229,7 +229,7 @@ func _create_folder(params: Dictionary) -> Variant:
 func _get_dependencies(params: Dictionary) -> Variant:
 	var file_path := String(params.get("path", ""))
 	if not ResourceLoader.exists(file_path):
-		return PilotError.new("FILE_NOT_FOUND", "No resource at '%s'." % file_path)
+		return WingmanError.new("FILE_NOT_FOUND", "No resource at '%s'." % file_path)
 	var dependencies: Array[String] = []
 	for dependency in ResourceLoader.get_dependencies(file_path):
 		# Entries look like "uid://...::Type::res://path"; the path is the last part.
@@ -240,10 +240,10 @@ func _get_dependencies(params: Dictionary) -> Variant:
 func _reimport_files(params: Dictionary) -> Variant:
 	var file_paths := PackedStringArray(params.get("paths", []))
 	if file_paths.is_empty():
-		return PilotError.new("NO_FILES", "paths is empty.")
+		return WingmanError.new("NO_FILES", "paths is empty.")
 	for file_path in file_paths:
 		if not FileAccess.file_exists(file_path):
-			return PilotError.new("FILE_NOT_FOUND", "No file at '%s'." % file_path)
+			return WingmanError.new("FILE_NOT_FOUND", "No file at '%s'." % file_path)
 	var file_system := EditorInterface.get_resource_filesystem()
 	var newly_found := await _make_files_known(file_paths)
 	var known_files := PackedStringArray()

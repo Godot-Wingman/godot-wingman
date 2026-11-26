@@ -3,7 +3,7 @@ extends RefCounted
 ## Handlers of the "signals" toolset: listing, connecting and disconnecting signals, like
 ## the Node dock's Signals tab. Connections made here are saved with the scene.
 
-const PilotError := preload("../utils/pilot_error.gd")
+const WingmanError := preload("../utils/wingman_error.gd")
 const CoreHandlers := preload("core_handlers.gd")
 
 var _context: RefCounted
@@ -21,7 +21,7 @@ func register_methods(dispatcher: RefCounted) -> void:
 
 func _list_signals(params: Dictionary) -> Variant:
 	var node: Variant = _context.find_node_in_edited_scene(String(params.get("node_path", ".")))
-	if node is PilotError:
+	if node is WingmanError:
 		return node
 	var only_connected := bool(params.get("only_connected", false))
 	var signals := []
@@ -47,22 +47,22 @@ func _list_signals(params: Dictionary) -> Variant:
 ## target's GDScript, like the editor's "Connect" dialog does.
 func _connect_signal(params: Dictionary) -> Variant:
 	var source: Variant = _context.find_node_in_edited_scene(String(params.get("from_node", "")))
-	if source is PilotError:
+	if source is WingmanError:
 		return source
 	var target: Variant = _context.find_node_in_edited_scene(String(params.get("to_node", "")))
-	if target is PilotError:
+	if target is WingmanError:
 		return target
 	var signal_name := String(params.get("signal", ""))
 	if not source.has_signal(signal_name):
-		return PilotError.new("SIGNAL_NOT_FOUND", "%s has no signal '%s'." % [source.get_class(), signal_name], "Use list_signals to see the available signals.")
+		return WingmanError.new("SIGNAL_NOT_FOUND", "%s has no signal '%s'." % [source.get_class(), signal_name], "Use list_signals to see the available signals.")
 	var method_name := String(params.get("method", "_on_%s_%s" % [String(source.name).to_snake_case(), signal_name]))
 
 	var created_method := false
 	if not target.has_method(method_name):
 		if not bool(params.get("create_method", true)):
-			return PilotError.new("METHOD_NOT_FOUND", "%s has no method '%s'." % [target.name, method_name], "Pass create_method: true to add it.")
+			return WingmanError.new("METHOD_NOT_FOUND", "%s has no method '%s'." % [target.name, method_name], "Pass create_method: true to add it.")
 		var creation_problem: Variant = _add_method_to_script(target, method_name, _find_signal_arguments(source, signal_name))
-		if creation_problem is PilotError:
+		if creation_problem is WingmanError:
 			return creation_problem
 		created_method = true
 
@@ -71,7 +71,7 @@ func _connect_signal(params: Dictionary) -> Variant:
 	if not binds.is_empty():
 		callable = callable.bindv(binds)
 	if source.is_connected(signal_name, callable):
-		return PilotError.new("ALREADY_CONNECTED", "%s.%s is already connected to %s()." % [source.name, signal_name, method_name])
+		return WingmanError.new("ALREADY_CONNECTED", "%s.%s is already connected to %s()." % [source.name, signal_name, method_name])
 
 	var connection_flags := CONNECT_PERSIST
 	if bool(params.get("deferred", false)):
@@ -92,7 +92,7 @@ func _connect_signal(params: Dictionary) -> Variant:
 
 func _disconnect_signal(params: Dictionary) -> Variant:
 	var source: Variant = _context.find_node_in_edited_scene(String(params.get("from_node", "")))
-	if source is PilotError:
+	if source is WingmanError:
 		return source
 	var signal_name := String(params.get("signal", ""))
 	var method_name := String(params.get("method", ""))
@@ -106,7 +106,7 @@ func _disconnect_signal(params: Dictionary) -> Variant:
 		undo_redo.add_undo_method(source, "connect", signal_name, callable, int(connection["flags"]))
 		undo_redo.commit_action()
 		return {"disconnected": "%s.%s -> %s()" % [source.name, signal_name, method_name]}
-	return PilotError.new("NOT_CONNECTED", "%s.%s is not connected to a method named '%s'." % [source.name, signal_name, method_name])
+	return WingmanError.new("NOT_CONNECTED", "%s.%s is not connected to a method named '%s'." % [source.name, signal_name, method_name])
 
 
 func _find_signal_arguments(source: Node, signal_name: String) -> Array:
@@ -120,7 +120,7 @@ func _find_signal_arguments(source: Node, signal_name: String) -> Array:
 func _add_method_to_script(target: Node, method_name: String, signal_arguments: Array) -> Variant:
 	var script: Script = target.get_script()
 	if script == null or not script is GDScript or script.resource_path == "" or script.resource_path.contains("::"):
-		return PilotError.new("NO_SCRIPT", "%s has no GDScript file to add '%s' to." % [target.name, method_name], "Attach a script first (create_script with attach_to), or connect to an existing method.")
+		return WingmanError.new("NO_SCRIPT", "%s has no GDScript file to add '%s' to." % [target.name, method_name], "Attach a script first (create_script with attach_to), or connect to an existing method.")
 	var argument_declarations: Array[String] = []
 	for argument in signal_arguments:
 		argument_declarations.append("%s: %s" % [argument["name"], CoreHandlers.describe_property_type(argument)])
@@ -129,7 +129,7 @@ func _add_method_to_script(target: Node, method_name: String, signal_arguments: 
 
 	var file := FileAccess.open(script.resource_path, FileAccess.WRITE)
 	if file == null:
-		return PilotError.new("WRITE_FAILED", "Could not write '%s'." % script.resource_path)
+		return WingmanError.new("WRITE_FAILED", "Could not write '%s'." % script.resource_path)
 	file.store_string(source_code)
 	file.close()
 	script.source_code = source_code

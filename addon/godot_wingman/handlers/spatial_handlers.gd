@@ -4,7 +4,7 @@ extends RefCounted
 ## collision, sky and sun, collision for imported models), measuring the size of things
 ## and pointing cameras or lights at a target. get_bounds also works for 2D nodes.
 
-const PilotError := preload("../utils/pilot_error.gd")
+const WingmanError := preload("../utils/wingman_error.gd")
 const ValueCodec := preload("../utils/value_codec.gd")
 const PropertyEditing := preload("../utils/property_editing.gd")
 
@@ -41,16 +41,16 @@ func register_methods(dispatcher: RefCounted) -> void:
 func _add_mesh(params: Dictionary) -> Variant:
 	var scene_root: Node = _context.get_edited_scene_root()
 	var parent: Variant = _context.find_node_in_edited_scene(String(params.get("parent_path", ".")))
-	if parent is PilotError:
+	if parent is WingmanError:
 		return parent
 	var shape_name := String(params.get("shape", "box"))
 	if not MESH_TYPES.has(shape_name):
-		return PilotError.new("INVALID_SHAPE", "Unknown mesh shape '%s'." % shape_name, "Use one of: %s. For models, add the .glb/.gltf scene with add_node (type \"res://model.glb\")." % ", ".join(MESH_TYPES.keys()))
+		return WingmanError.new("INVALID_SHAPE", "Unknown mesh shape '%s'." % shape_name, "Use one of: %s. For models, add the .glb/.gltf scene with add_node (type \"res://model.glb\")." % ", ".join(MESH_TYPES.keys()))
 	var size_conversion := ValueCodec.from_json_value(params.get("size", [1, 1, 1]), TYPE_VECTOR3)
 	if params.get("size") is float or params.get("size") is int:
 		size_conversion = {"ok": true, "value": Vector3.ONE * float(params["size"])}
 	if not size_conversion["ok"]:
-		return PilotError.new("INVALID_SIZE", String(size_conversion["error"]))
+		return WingmanError.new("INVALID_SIZE", String(size_conversion["error"]))
 	var size: Vector3 = size_conversion["value"]
 	var mesh: PrimitiveMesh = ClassDB.instantiate(MESH_TYPES[shape_name])
 	_apply_mesh_size(mesh, shape_name, size)
@@ -58,18 +58,18 @@ func _add_mesh(params: Dictionary) -> Variant:
 		for property_name in params["mesh_properties"]:
 			var conversion := PropertyEditing.convert_for_property(mesh, String(property_name), params["mesh_properties"][property_name], scene_root)
 			if not conversion["ok"]:
-				return PilotError.new("INVALID_PROPERTY", String(conversion["error"]))
+				return WingmanError.new("INVALID_PROPERTY", String(conversion["error"]))
 			mesh.set(String(property_name), conversion["value"])
 
 	if params.has("material"):
 		var material_conversion := ValueCodec.from_json_value(params["material"], TYPE_OBJECT, "Material", scene_root)
 		if not material_conversion["ok"]:
-			return PilotError.new("INVALID_MATERIAL", String(material_conversion["error"]))
+			return WingmanError.new("INVALID_MATERIAL", String(material_conversion["error"]))
 		mesh.material = material_conversion["value"]
 	elif params.has("color"):
 		var color_conversion := ValueCodec.from_json_value(params["color"], TYPE_COLOR)
 		if not color_conversion["ok"]:
-			return PilotError.new("INVALID_COLOR", String(color_conversion["error"]))
+			return WingmanError.new("INVALID_COLOR", String(color_conversion["error"]))
 		var material := StandardMaterial3D.new()
 		material.albedo_color = color_conversion["value"]
 		if material.albedo_color.a < 1.0:
@@ -85,7 +85,7 @@ func _add_mesh(params: Dictionary) -> Variant:
 	if body_name != "none":
 		if not BODY_TYPES.has(body_name):
 			mesh_instance.free()
-			return PilotError.new("INVALID_BODY", "Unknown body '%s'." % body_name, "Use none, %s." % ", ".join(BODY_TYPES.keys()))
+			return WingmanError.new("INVALID_BODY", "Unknown body '%s'." % body_name, "Use none, %s." % ", ".join(BODY_TYPES.keys()))
 		var body: Node3D = ClassDB.instantiate(BODY_TYPES[body_name])
 		body.name = node_name
 		mesh_instance.name = "Mesh"
@@ -104,7 +104,7 @@ func _add_mesh(params: Dictionary) -> Variant:
 			var conversion := ValueCodec.from_json_value(params[transform_property], TYPE_VECTOR3)
 			if not conversion["ok"]:
 				top_node.free()
-				return PilotError.new("INVALID_TRANSFORM", "%s: %s" % [transform_property, conversion["error"]])
+				return WingmanError.new("INVALID_TRANSFORM", "%s: %s" % [transform_property, conversion["error"]])
 			top_node.set(transform_property, conversion["value"])
 
 	_add_nodes_with_undo(parent, top_node, created_nodes, "Add %s" % node_name)
@@ -121,10 +121,10 @@ func _add_mesh(params: Dictionary) -> Variant:
 func _setup_environment(params: Dictionary) -> Variant:
 	var scene_root: Node = _context.get_edited_scene_root()
 	if scene_root == null:
-		return PilotError.new("NO_OPEN_SCENE", "No scene is open in the editor.")
+		return WingmanError.new("NO_OPEN_SCENE", "No scene is open in the editor.")
 	var preset_name := String(params.get("preset", "day"))
 	if not ENVIRONMENT_PRESETS.has(preset_name):
-		return PilotError.new("INVALID_PRESET", "Unknown preset '%s'." % preset_name, "Use one of: %s." % ", ".join(ENVIRONMENT_PRESETS.keys()))
+		return WingmanError.new("INVALID_PRESET", "Unknown preset '%s'." % preset_name, "Use one of: %s." % ", ".join(ENVIRONMENT_PRESETS.keys()))
 	var preset: Dictionary = ENVIRONMENT_PRESETS[preset_name]
 
 	var sky_material := ProceduralSkyMaterial.new()
@@ -148,7 +148,7 @@ func _setup_environment(params: Dictionary) -> Variant:
 		for property_name in params["environment_properties"]:
 			var conversion := PropertyEditing.convert_for_property(environment, String(property_name), params["environment_properties"][property_name], scene_root)
 			if not conversion["ok"]:
-				return PilotError.new("INVALID_PROPERTY", String(conversion["error"]))
+				return WingmanError.new("INVALID_PROPERTY", String(conversion["error"]))
 			environment.set_indexed(NodePath(String(property_name)), conversion["value"])
 
 	var undo_redo: EditorUndoRedoManager = _context.get_undo_redo()
@@ -201,29 +201,29 @@ func _setup_environment(params: Dictionary) -> Variant:
 ## Collision shapes made from the meshes under a node (works for imported .glb models).
 func _generate_collision(params: Dictionary) -> Variant:
 	var node: Variant = _context.find_node_in_edited_scene(String(params.get("node_path", "")))
-	if node is PilotError:
+	if node is WingmanError:
 		return node
 	if not node is Node3D:
-		return PilotError.new("NOT_A_3D_NODE", "%s is a %s, not a 3D node." % [node.name, node.get_class()])
+		return WingmanError.new("NOT_A_3D_NODE", "%s is a %s, not a 3D node." % [node.name, node.get_class()])
 	var shape_kind := String(params.get("shape", "trimesh"))
 	var body_name := String(params.get("body", "static"))
 	if shape_kind == "trimesh" and body_name in ["rigid", "character"]:
-		return PilotError.new("CONCAVE_ON_MOVING_BODY", "Moving bodies cannot use trimesh (concave) shapes.", "Use shape: \"convex\" for rigid and character bodies.")
+		return WingmanError.new("CONCAVE_ON_MOVING_BODY", "Moving bodies cannot use trimesh (concave) shapes.", "Use shape: \"convex\" for rigid and character bodies.")
 	var mesh_instances: Array[Node] = []
 	_collect_mesh_instances(node, mesh_instances)
 	if mesh_instances.is_empty():
-		return PilotError.new("NO_MESHES", "There is no MeshInstance3D with a mesh under %s." % node.name)
+		return WingmanError.new("NO_MESHES", "There is no MeshInstance3D with a mesh under %s." % node.name)
 
 	var holder: Node3D = node
 	var created_nodes: Array[Node] = []
 	if body_name != "none":
 		if not BODY_TYPES.has(body_name):
-			return PilotError.new("INVALID_BODY", "Unknown body '%s'." % body_name, "Use none (add shapes to this node, which must be a physics body), %s." % ", ".join(BODY_TYPES.keys()))
+			return WingmanError.new("INVALID_BODY", "Unknown body '%s'." % body_name, "Use none (add shapes to this node, which must be a physics body), %s." % ", ".join(BODY_TYPES.keys()))
 		holder = ClassDB.instantiate(BODY_TYPES[body_name])
 		holder.name = String(params.get("name", BODY_TYPES[body_name].trim_suffix("3D")))
 		created_nodes.append(holder)
 	elif not node is CollisionObject3D:
-		return PilotError.new("NOT_A_BODY", "%s is not a physics body, so it cannot hold collision shapes." % node.name, "Pass body: \"static\" (or another body) to add one.")
+		return WingmanError.new("NOT_A_BODY", "%s is not a physics body, so it cannot hold collision shapes." % node.name, "Pass body: \"static\" (or another body) to add one.")
 
 	var shape_lines: Array[String] = []
 	for mesh_instance: MeshInstance3D in mesh_instances:
@@ -242,7 +242,7 @@ func _generate_collision(params: Dictionary) -> Variant:
 	if shape_lines.is_empty():
 		for created_node in created_nodes:
 			created_node.free()
-		return PilotError.new("NO_SHAPES", "Godot could not build collision shapes from these meshes.")
+		return WingmanError.new("NO_SHAPES", "Godot could not build collision shapes from these meshes.")
 
 	var undo_redo: EditorUndoRedoManager = _context.get_undo_redo()
 	undo_redo.create_action("Generate collision", UndoRedo.MERGE_DISABLE, node)
@@ -258,7 +258,7 @@ func _generate_collision(params: Dictionary) -> Variant:
 ## The space a node and its children take: a box in 3D (meters), a rectangle in 2D (pixels).
 func _get_bounds(params: Dictionary) -> Variant:
 	var node: Variant = _context.find_node_in_edited_scene(String(params.get("node_path", ".")))
-	if node is PilotError:
+	if node is WingmanError:
 		return node
 	if node is Node3D:
 		var bounds := AABB()
@@ -304,41 +304,41 @@ func _get_bounds(params: Dictionary) -> Variant:
 			"size": [rectangle.size.x, rectangle.size.y],
 			"center": [rectangle.get_center().x, rectangle.get_center().y],
 		}
-	return PilotError.new("NO_SPACE", "%s is a %s, which has no position in 2D or 3D." % [node.name, node.get_class()])
+	return WingmanError.new("NO_SPACE", "%s is a %s, which has no position in 2D or 3D." % [node.name, node.get_class()])
 
 
 ## Turns a 3D node (camera, light, character...) so its front (-Z) faces a target point
 ## or node. Optionally moves it first.
 func _look_at(params: Dictionary) -> Variant:
 	var node: Variant = _context.find_node_in_edited_scene(String(params.get("node_path", "")))
-	if node is PilotError:
+	if node is WingmanError:
 		return node
 	if not node is Node3D:
-		return PilotError.new("NOT_A_3D_NODE", "%s is a %s; look_at is for 3D nodes." % [node.name, node.get_class()], "In 2D, set rotation with set_properties (look_at is a 3D helper).")
+		return WingmanError.new("NOT_A_3D_NODE", "%s is a %s; look_at is for 3D nodes." % [node.name, node.get_class()], "In 2D, set rotation with set_properties (look_at is a 3D helper).")
 	var node_3d: Node3D = node
 	var new_position := node_3d.global_position
 	if params.has("position"):
 		var position_conversion := ValueCodec.from_json_value(params["position"], TYPE_VECTOR3)
 		if not position_conversion["ok"]:
-			return PilotError.new("INVALID_POSITION", String(position_conversion["error"]))
+			return WingmanError.new("INVALID_POSITION", String(position_conversion["error"]))
 		new_position = position_conversion["value"]
 	var target_point: Vector3
 	if params.has("target_node"):
 		var target_node: Variant = _context.find_node_in_edited_scene(String(params["target_node"]))
-		if target_node is PilotError:
+		if target_node is WingmanError:
 			return target_node
 		if not target_node is Node3D:
-			return PilotError.new("NOT_A_3D_NODE", "The target %s is not a 3D node." % target_node.name)
+			return WingmanError.new("NOT_A_3D_NODE", "The target %s is not a 3D node." % target_node.name)
 		target_point = (target_node as Node3D).global_position
 	elif params.has("target"):
 		var target_conversion := ValueCodec.from_json_value(params["target"], TYPE_VECTOR3)
 		if not target_conversion["ok"]:
-			return PilotError.new("INVALID_TARGET", String(target_conversion["error"]))
+			return WingmanError.new("INVALID_TARGET", String(target_conversion["error"]))
 		target_point = target_conversion["value"]
 	else:
-		return PilotError.new("MISSING_TARGET", "Pass target ([x, y, z]) or target_node.")
+		return WingmanError.new("MISSING_TARGET", "Pass target ([x, y, z]) or target_node.")
 	if new_position.is_equal_approx(target_point):
-		return PilotError.new("SAME_POSITION", "The node is already at the target point, so there is no direction to look at.")
+		return WingmanError.new("SAME_POSITION", "The node is already at the target point, so there is no direction to look at.")
 	var direction := (target_point - new_position).normalized()
 	var up := Vector3.UP if absf(direction.dot(Vector3.UP)) < 0.999 else Vector3.FORWARD
 	var new_transform := Transform3D(node_3d.global_basis.orthonormalized(), new_position).looking_at(target_point, up)

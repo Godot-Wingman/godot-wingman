@@ -3,7 +3,7 @@ extends RefCounted
 ## Handlers that are always available: health check, editor state, running GDScript
 ## in the editor, reading logs, screenshots and the confirmation dialog.
 
-const PilotError := preload("../utils/pilot_error.gd")
+const WingmanError := preload("../utils/wingman_error.gd")
 const ValueCodec := preload("../utils/value_codec.gd")
 const ConfirmationPrompt := preload("../ui/confirmation_prompt.gd")
 const ImageEncoding := preload("../utils/image_encoding.gd")
@@ -66,7 +66,7 @@ func _get_editor_state(_params: Dictionary) -> Dictionary:
 func _execute_script(params: Dictionary) -> Variant:
 	var code := String(params.get("code", ""))
 	if code.strip_edges() == "":
-		return PilotError.new("EMPTY_CODE", "The code is empty.")
+		return WingmanError.new("EMPTY_CODE", "The code is empty.")
 
 	var prepared_source := ScriptSource.prepare(code, _context.addon_directory.path_join("scripting/script_context.gd"), true)
 	var first_log_id: int = _context.get_next_log_id()
@@ -76,7 +76,7 @@ func _execute_script(params: Dictionary) -> Variant:
 	var compile_result := script.reload()
 	if compile_result != OK:
 		var compile_errors := ScriptSource.clean_log_entries(_context.get_logs_since(first_log_id, ["error", "script_error", "warning"]), prepared_source["line_offset"])
-		return PilotError.new(
+		return WingmanError.new(
 			"SCRIPT_COMPILE_ERROR",
 			"The code did not compile (%s)." % error_string(compile_result),
 			"Line numbers refer to your code. The code is the body of `func run():` unless you write `func run():` yourself. Use tabs for indentation inside blocks.",
@@ -91,7 +91,7 @@ func _execute_script(params: Dictionary) -> Variant:
 		script_instance.tree = _context.get_scene_tree()
 
 	if not script_instance.has_method("run"):
-		return PilotError.new("NO_RUN_FUNCTION", "The script has no run() function.")
+		return WingmanError.new("NO_RUN_FUNCTION", "The script has no run() function.")
 
 	var returned_value: Variant = await script_instance.run()
 
@@ -133,7 +133,7 @@ func _get_logs(params: Dictionary) -> Dictionary:
 
 func _take_screenshot(params: Dictionary) -> Variant:
 	if DisplayServer.get_name() == "headless":
-		return PilotError.new(
+		return WingmanError.new(
 			"NO_DISPLAY",
 			"This editor runs without a window (headless), so there is nothing to capture.",
 			"Open the project in a normal editor window with the launch_editor tool."
@@ -152,10 +152,10 @@ func _take_screenshot(params: Dictionary) -> Variant:
 		"editor":
 			image = EditorInterface.get_base_control().get_viewport().get_texture().get_image()
 		_:
-			return PilotError.new("INVALID_VIEW", "Unknown view '%s'." % view, "Use \"editor\", \"2d\" or \"3d\".")
+			return WingmanError.new("INVALID_VIEW", "Unknown view '%s'." % view, "Use \"editor\", \"2d\" or \"3d\".")
 
 	if image == null or image.is_empty():
-		return PilotError.new("EMPTY_IMAGE", "The %s view returned an empty image." % view, "Switch the editor to that view first, or capture \"editor\".")
+		return WingmanError.new("EMPTY_IMAGE", "The %s view returned an empty image." % view, "Switch the editor to that view first, or capture \"editor\".")
 
 	return encode_image(image, params)
 
@@ -223,7 +223,7 @@ func _get_class_info(params: Dictionary) -> Variant:
 			"signals": script_signals,
 		}
 
-	return PilotError.new(
+	return WingmanError.new(
 		"CLASS_NOT_FOUND",
 		"No class named '%s' exists in the engine, in GDExtensions or in scripts with class_name." % requested_class,
 		"Class names are case-sensitive. Use search_docs to find the right name."

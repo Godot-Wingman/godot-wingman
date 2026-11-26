@@ -4,7 +4,7 @@ extends RefCounted
 ## presets (export_presets.cfg) and checking that export templates are installed.
 ## The export itself runs in a separate Godot process started by the MCP server.
 
-const PilotError := preload("../utils/pilot_error.gd")
+const WingmanError := preload("../utils/wingman_error.gd")
 
 const EXPORT_PRESETS_PATH := "res://export_presets.cfg"
 ## Platform names exactly as Godot writes them in export_presets.cfg, with the usual
@@ -54,17 +54,17 @@ func _list_export_presets(_params: Dictionary) -> Variant:
 func _add_export_preset(params: Dictionary) -> Variant:
 	var platform := String(params.get("platform", ""))
 	if not PLATFORM_EXTENSIONS.has(platform):
-		return PilotError.new("INVALID_PLATFORM", "Unknown platform '%s'." % platform, "Use one of: %s." % ", ".join(PLATFORM_EXTENSIONS.keys()))
+		return WingmanError.new("INVALID_PLATFORM", "Unknown platform '%s'." % platform, "Use one of: %s." % ", ".join(PLATFORM_EXTENSIONS.keys()))
 	var preset_name := String(params.get("name", platform))
 	var config := ConfigFile.new()
 	config.load(EXPORT_PRESETS_PATH)
 	var sections := _preset_sections(config)
 	for section in sections:
 		if String(config.get_value(section, "name", "")) == preset_name:
-			return PilotError.new("ALREADY_EXISTS", "There already is an export preset named '%s'." % preset_name)
+			return WingmanError.new("ALREADY_EXISTS", "There already is an export preset named '%s'." % preset_name)
 	var export_path := String(params.get("export_path", "build/%s/%s.%s" % [platform.to_snake_case(), _safe_file_name(), PLATFORM_EXTENSIONS[platform]]))
 	if export_path.begins_with("res://"):
-		return PilotError.new("INVALID_PATH", "export_path is relative to the project folder, for example \"build/windows/game.exe\"; do not use res://.")
+		return WingmanError.new("INVALID_PATH", "export_path is relative to the project folder, for example \"build/windows/game.exe\"; do not use res://.")
 
 	var section := "preset.%d" % sections.size()
 	config.set_value(section, "name", preset_name)
@@ -79,7 +79,7 @@ func _add_export_preset(params: Dictionary) -> Variant:
 	# No ".options" section: the platform uses its default value for every option.
 	var save_error := config.save(ProjectSettings.globalize_path(EXPORT_PRESETS_PATH))
 	if save_error != OK:
-		return PilotError.new("SAVE_FAILED", "Could not write export_presets.cfg: %s." % error_string(save_error))
+		return WingmanError.new("SAVE_FAILED", "Could not write export_presets.cfg: %s." % error_string(save_error))
 	return {
 		"added": preset_name,
 		"platform": platform,

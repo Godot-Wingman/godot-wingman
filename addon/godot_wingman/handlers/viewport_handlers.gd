@@ -6,7 +6,7 @@ extends RefCounted
 ## render_view does not move the person's editor camera. It renders a copy of the scene
 ## in a hidden viewport with its own camera, framed around the chosen node.
 
-const PilotError := preload("../utils/pilot_error.gd")
+const WingmanError := preload("../utils/wingman_error.gd")
 const CoreHandlers := preload("core_handlers.gd")
 const FrameWaiter := preload("../utils/frame_waiter.gd")
 
@@ -34,17 +34,17 @@ func register_methods(dispatcher: RefCounted) -> void:
 func _set_main_screen(params: Dictionary) -> Variant:
 	var screen_name := String(params.get("screen", ""))
 	if not MAIN_SCREENS.has(screen_name):
-		return PilotError.new("UNKNOWN_SCREEN", "Unknown screen '%s'. Use one of: %s." % [screen_name, ", ".join(MAIN_SCREENS)])
+		return WingmanError.new("UNKNOWN_SCREEN", "Unknown screen '%s'. Use one of: %s." % [screen_name, ", ".join(MAIN_SCREENS)])
 	EditorInterface.set_main_screen_editor(screen_name)
 	return {"main_screen": screen_name}
 
 
 func _render_view(params: Dictionary) -> Variant:
 	if DisplayServer.get_name() == "headless":
-		return PilotError.new("NO_DISPLAY", "This editor runs headless and cannot render.", "Open the project in a normal editor window.")
+		return WingmanError.new("NO_DISPLAY", "This editor runs headless and cannot render.", "Open the project in a normal editor window.")
 	var scene_root: Node = _context.get_edited_scene_root()
 	var target: Variant = _context.find_node_in_edited_scene(String(params.get("node_path", ".")))
-	if target is PilotError:
+	if target is WingmanError:
 		return target
 
 	var render_viewport := SubViewport.new()
@@ -67,7 +67,7 @@ func _render_view(params: Dictionary) -> Variant:
 	var image := render_viewport.get_texture().get_image()
 	render_viewport.queue_free()
 	if image == null or image.is_empty():
-		return PilotError.new("EMPTY_IMAGE", "The render was empty.")
+		return WingmanError.new("EMPTY_IMAGE", "The render was empty.")
 	var encoded := CoreHandlers.encode_image(image, params)
 	encoded["mode"] = "3d" if is_3d else "2d"
 	return encoded

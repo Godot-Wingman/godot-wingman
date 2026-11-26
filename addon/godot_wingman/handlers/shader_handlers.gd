@@ -4,7 +4,7 @@ extends RefCounted
 ## when a renderer is available), reading their uniforms, and setting the uniform values
 ## of ShaderMaterials.
 
-const PilotError := preload("../utils/pilot_error.gd")
+const WingmanError := preload("../utils/wingman_error.gd")
 const ValueCodec := preload("../utils/value_codec.gd")
 
 ## Starting code for a new shader of each type.
@@ -45,15 +45,15 @@ func register_methods(dispatcher: RefCounted) -> void:
 func _write_shader(params: Dictionary) -> Variant:
 	var shader_path := String(params.get("path", ""))
 	if not shader_path.begins_with("res://") or shader_path.get_extension() != "gdshader":
-		return PilotError.new("INVALID_PATH", "The path must be a res:// path ending in .gdshader, for example \"res://shaders/outline.gdshader\".")
+		return WingmanError.new("INVALID_PATH", "The path must be a res:// path ending in .gdshader, for example \"res://shaders/outline.gdshader\".")
 	var code := String(params.get("code", ""))
 	if code == "":
 		var template_name := String(params.get("template", "canvas_item"))
 		if not SHADER_TEMPLATES.has(template_name):
-			return PilotError.new("INVALID_TEMPLATE", "Unknown template '%s'." % template_name, "Use one of: %s, or pass code." % ", ".join(SHADER_TEMPLATES.keys()))
+			return WingmanError.new("INVALID_TEMPLATE", "Unknown template '%s'." % template_name, "Use one of: %s, or pass code." % ", ".join(SHADER_TEMPLATES.keys()))
 		code = SHADER_TEMPLATES[template_name]
 	if _shader_type_pattern.search(code) == null:
-		return PilotError.new("MISSING_SHADER_TYPE", "The code must start with a shader_type line, for example \"shader_type canvas_item;\".")
+		return WingmanError.new("MISSING_SHADER_TYPE", "The code must start with a shader_type line, for example \"shader_type canvas_item;\".")
 
 	var shader: Shader = load(shader_path) if ResourceLoader.exists(shader_path) else Shader.new()
 	var first_log_id: int = _context.get_next_log_id()
@@ -63,7 +63,7 @@ func _write_shader(params: Dictionary) -> Variant:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(shader_path.get_base_dir()))
 	var save_error := ResourceSaver.save(shader, shader_path)
 	if save_error != OK:
-		return PilotError.new("SAVE_FAILED", "Could not save '%s': %s." % [shader_path, error_string(save_error)])
+		return WingmanError.new("SAVE_FAILED", "Could not save '%s': %s." % [shader_path, error_string(save_error)])
 	shader.take_over_path(shader_path)
 	EditorInterface.get_resource_filesystem().update_file(shader_path)
 
@@ -72,11 +72,11 @@ func _write_shader(params: Dictionary) -> Variant:
 
 	if params.get("assign_to") is Dictionary:
 		var node: Variant = _context.find_node_in_edited_scene(String(params["assign_to"].get("node_path", "")))
-		if node is PilotError:
+		if node is WingmanError:
 			return node
 		var property_name := String(params["assign_to"].get("property", _default_material_property(node)))
 		if property_name == "":
-			return PilotError.new("NO_MATERIAL_PROPERTY", "%s (%s) has no obvious material property." % [node.name, node.get_class()], "Pass assign_to.property, for example \"material\" or \"material_override\".")
+			return WingmanError.new("NO_MATERIAL_PROPERTY", "%s (%s) has no obvious material property." % [node.name, node.get_class()], "Pass assign_to.property, for example \"material\" or \"material_override\".")
 		var material := ShaderMaterial.new()
 		material.shader = shader
 		var undo_redo: EditorUndoRedoManager = _context.get_undo_redo()
@@ -94,7 +94,7 @@ func _get_shader_info(params: Dictionary) -> Variant:
 	if params.has("path"):
 		var resource_path := String(params["path"])
 		if not ResourceLoader.exists(resource_path):
-			return PilotError.new("FILE_NOT_FOUND", "No file at '%s'." % resource_path)
+			return WingmanError.new("FILE_NOT_FOUND", "No file at '%s'." % resource_path)
 		var resource := load(resource_path)
 		if resource is ShaderMaterial:
 			material = resource
@@ -102,10 +102,10 @@ func _get_shader_info(params: Dictionary) -> Variant:
 		elif resource is Shader:
 			shader = resource
 		else:
-			return PilotError.new("NOT_A_SHADER", "'%s' is a %s, not a Shader or ShaderMaterial." % [resource_path, resource.get_class()])
+			return WingmanError.new("NOT_A_SHADER", "'%s' is a %s, not a Shader or ShaderMaterial." % [resource_path, resource.get_class()])
 	else:
 		var found_material: Variant = _find_node_material(params)
-		if found_material is PilotError:
+		if found_material is WingmanError:
 			return found_material
 		material = found_material
 		shader = material.shader
@@ -135,14 +135,14 @@ func _set_shader_parameters(params: Dictionary) -> Variant:
 		var material_path := String(params["path"])
 		material = load(material_path) as ShaderMaterial if ResourceLoader.exists(material_path) else null
 		if material == null:
-			return PilotError.new("NOT_A_SHADER_MATERIAL", "'%s' is not a ShaderMaterial file." % material_path)
+			return WingmanError.new("NOT_A_SHADER_MATERIAL", "'%s' is not a ShaderMaterial file." % material_path)
 	else:
 		var found_material: Variant = _find_node_material(params)
-		if found_material is PilotError:
+		if found_material is WingmanError:
 			return found_material
 		material = found_material
 	if material.shader == null:
-		return PilotError.new("NO_SHADER", "The ShaderMaterial has no shader yet.", "Use write_shader with assign_to first.")
+		return WingmanError.new("NO_SHADER", "The ShaderMaterial has no shader yet.", "Use write_shader with assign_to first.")
 
 	var uniforms_by_name := {}
 	for uniform in _parse_uniforms(material.shader.code):
@@ -151,7 +151,7 @@ func _set_shader_parameters(params: Dictionary) -> Variant:
 	var parameter_values: Dictionary = params.get("parameters", {}) if params.get("parameters") is Dictionary else {}
 	for parameter_name in parameter_values:
 		if not uniforms_by_name.has(parameter_name):
-			return PilotError.new("UNKNOWN_UNIFORM", "The shader has no uniform '%s'." % parameter_name, "Uniforms: %s." % ", ".join(uniforms_by_name.keys()))
+			return WingmanError.new("UNKNOWN_UNIFORM", "The shader has no uniform '%s'." % parameter_name, "Uniforms: %s." % ", ".join(uniforms_by_name.keys()))
 		var uniform: Dictionary = uniforms_by_name[parameter_name]
 		var value_type: int = UNIFORM_VALUE_TYPES.get(uniform["type"], TYPE_NIL)
 		var hints := String(uniform["hints"])
@@ -159,10 +159,10 @@ func _set_shader_parameters(params: Dictionary) -> Variant:
 			value_type = TYPE_COLOR
 		var conversion := ValueCodec.from_json_value(parameter_values[parameter_name], value_type, "Texture" if value_type == TYPE_OBJECT else "", _context.get_edited_scene_root())
 		if not conversion["ok"]:
-			return PilotError.new("INVALID_VALUE", "%s (%s): %s" % [parameter_name, uniform["type"], conversion["error"]])
+			return WingmanError.new("INVALID_VALUE", "%s (%s): %s" % [parameter_name, uniform["type"], conversion["error"]])
 		new_values[parameter_name] = conversion["value"]
 	if new_values.is_empty():
-		return PilotError.new("NOTHING_TO_DO", "Pass parameters, for example {\"tint\": \"#ff8800\"}.")
+		return WingmanError.new("NOTHING_TO_DO", "Pass parameters, for example {\"tint\": \"#ff8800\"}.")
 
 	var undo_redo: EditorUndoRedoManager = _context.get_undo_redo()
 	undo_redo.create_action("Set shader parameters", UndoRedo.MERGE_DISABLE, _context.get_edited_scene_root())
@@ -180,12 +180,12 @@ func _set_shader_parameters(params: Dictionary) -> Variant:
 
 func _find_node_material(params: Dictionary) -> Variant:
 	var node: Variant = _context.find_node_in_edited_scene(String(params.get("node_path", "")))
-	if node is PilotError:
+	if node is WingmanError:
 		return node
 	var property_name := String(params.get("property", _default_material_property(node)))
 	var material: Variant = node.get(property_name) if property_name != "" else null
 	if not material is ShaderMaterial:
-		return PilotError.new("NO_SHADER_MATERIAL", "%s.%s is not a ShaderMaterial." % [node.name, property_name], "Put a shader on the node with write_shader (assign_to), or pass property.")
+		return WingmanError.new("NO_SHADER_MATERIAL", "%s.%s is not a ShaderMaterial." % [node.name, property_name], "Put a shader on the node with write_shader (assign_to), or pass property.")
 	return material
 
 

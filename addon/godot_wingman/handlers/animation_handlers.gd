@@ -7,7 +7,7 @@ extends RefCounted
 ## replaces the original in its library. That makes every change one undo step
 ## (Ctrl+Z puts the original back), exactly like edits in the Animation panel.
 
-const PilotError := preload("../utils/pilot_error.gd")
+const WingmanError := preload("../utils/wingman_error.gd")
 const ValueCodec := preload("../utils/value_codec.gd")
 const PropertyEditing := preload("../utils/property_editing.gd")
 
@@ -66,12 +66,12 @@ func register_methods(dispatcher: RefCounted) -> void:
 func _list_animations(params: Dictionary) -> Variant:
 	var scene_root: Node = _context.get_edited_scene_root()
 	if scene_root == null:
-		return PilotError.new("NO_OPEN_SCENE", "No scene is open in the editor.")
+		return WingmanError.new("NO_OPEN_SCENE", "No scene is open in the editor.")
 	var players: Array[Node] = []
 	var trees: Array[Node] = []
 	if params.has("node_path"):
 		var player: Variant = _find_animation_player(String(params["node_path"]))
-		if player is PilotError:
+		if player is WingmanError:
 			return player
 		players.append(player)
 	else:
@@ -104,7 +104,7 @@ func _list_animations(params: Dictionary) -> Variant:
 
 func _get_animation(params: Dictionary) -> Variant:
 	var player: Variant = _find_animation_player(String(params.get("node_path", "")))
-	if player is PilotError:
+	if player is WingmanError:
 		return player
 	var animation_name := String(params.get("animation", ""))
 	if not player.has_animation(animation_name):
@@ -124,24 +124,24 @@ func _get_animation(params: Dictionary) -> Variant:
 
 func _create_animation(params: Dictionary) -> Variant:
 	var player: Variant = _find_animation_player(String(params.get("node_path", "")))
-	if player is PilotError:
+	if player is WingmanError:
 		return player
 	var full_name := String(params.get("animation", ""))
 	var library_name := _library_name_of(full_name)
 	var animation_name := _short_name_of(full_name)
 	if animation_name == "" or animation_name.contains("/") or animation_name.contains(":") or animation_name.contains(","):
-		return PilotError.new("INVALID_NAME", "'%s' is not a valid animation name." % full_name, "Use a name like \"walk\", or \"library/walk\" for a named library.")
+		return WingmanError.new("INVALID_NAME", "'%s' is not a valid animation name." % full_name, "Use a name like \"walk\", or \"library/walk\" for a named library.")
 	var original: Animation = null
 	if player.has_animation(full_name):
 		if not bool(params.get("overwrite", false)):
-			return PilotError.new("ALREADY_EXISTS", "The animation '%s' already exists." % full_name, "Use edit_animation to change it, or pass overwrite: true.")
+			return WingmanError.new("ALREADY_EXISTS", "The animation '%s' already exists." % full_name, "Use edit_animation to change it, or pass overwrite: true.")
 		original = player.get_animation(full_name)
 
 	var animation := Animation.new()
 	animation.length = 1.0
 	var warnings: Array[String] = []
 	var edit_error: Variant = _apply_animation_edits(animation, params, player, warnings)
-	if edit_error is PilotError:
+	if edit_error is WingmanError:
 		return edit_error
 
 	var undo_redo: EditorUndoRedoManager = _context.get_undo_redo()
@@ -173,7 +173,7 @@ func _create_animation(params: Dictionary) -> Variant:
 
 func _edit_animation(params: Dictionary) -> Variant:
 	var player: Variant = _find_animation_player(String(params.get("node_path", "")))
-	if player is PilotError:
+	if player is WingmanError:
 		return player
 	var full_name := String(params.get("animation", ""))
 	if not player.has_animation(full_name):
@@ -182,7 +182,7 @@ func _edit_animation(params: Dictionary) -> Variant:
 	var edited: Animation = original.duplicate(true)
 	var warnings: Array[String] = []
 	var edit_error: Variant = _apply_animation_edits(edited, params, player, warnings)
-	if edit_error is PilotError:
+	if edit_error is WingmanError:
 		return edit_error
 
 	var library_name := _library_name_of(full_name)
@@ -203,7 +203,7 @@ func _edit_animation(params: Dictionary) -> Variant:
 
 func _delete_animation(params: Dictionary) -> Variant:
 	var player: Variant = _find_animation_player(String(params.get("node_path", "")))
-	if player is PilotError:
+	if player is WingmanError:
 		return player
 	var full_name := String(params.get("animation", ""))
 	if not player.has_animation(full_name):
@@ -228,7 +228,7 @@ func _delete_animation(params: Dictionary) -> Variant:
 ## get_properties show that pose. "RESET" (when it exists) brings the scene back.
 func _preview_animation(params: Dictionary) -> Variant:
 	var player: Variant = _find_animation_player(String(params.get("node_path", "")))
-	if player is PilotError:
+	if player is WingmanError:
 		return player
 	var full_name := String(params.get("animation", ""))
 	if not player.has_animation(full_name):
@@ -269,20 +269,20 @@ func _preview_animation(params: Dictionary) -> Variant:
 ## animations, and transitions between them (with conditions or expressions).
 func _setup_animation_state_machine(params: Dictionary) -> Variant:
 	var tree: Variant = _context.find_node_in_edited_scene(String(params.get("node_path", "")))
-	if tree is PilotError:
+	if tree is WingmanError:
 		return tree
 	if not tree is AnimationTree:
-		return PilotError.new("NOT_AN_ANIMATION_TREE", "%s is a %s, not an AnimationTree." % [tree.name, tree.get_class()], "Add one with add_node (type AnimationTree) next to the AnimationPlayer.")
+		return WingmanError.new("NOT_AN_ANIMATION_TREE", "%s is a %s, not an AnimationTree." % [tree.name, tree.get_class()], "Add one with add_node (type AnimationTree) next to the AnimationPlayer.")
 
 	var player_path: NodePath = tree.anim_player
 	if params.has("animation_player"):
 		var player_node: Variant = _context.find_node_in_edited_scene(String(params["animation_player"]))
-		if player_node is PilotError:
+		if player_node is WingmanError:
 			return player_node
 		player_path = tree.get_path_to(player_node)
 	var player: AnimationPlayer = tree.get_node_or_null(player_path) as AnimationPlayer
 	if player == null:
-		return PilotError.new("NO_ANIMATION_PLAYER", "The AnimationTree has no AnimationPlayer.", "Pass animation_player: the path of the AnimationPlayer whose animations the states play.")
+		return WingmanError.new("NO_ANIMATION_PLAYER", "The AnimationTree has no AnimationPlayer.", "Pass animation_player: the path of the AnimationPlayer whose animations the states play.")
 
 	var state_machine: AnimationNodeStateMachine
 	if bool(params.get("keep_existing", false)) and tree.tree_root is AnimationNodeStateMachine:
@@ -295,7 +295,7 @@ func _setup_animation_state_machine(params: Dictionary) -> Variant:
 	for state_index in states.size():
 		var state: Variant = states[state_index]
 		if not state is Dictionary or String(state.get("name", "")) == "":
-			return PilotError.new("INVALID_STATE", "Each state needs a name, for example {\"name\": \"Idle\", \"animation\": \"idle\"}.")
+			return WingmanError.new("INVALID_STATE", "Each state needs a name, for example {\"name\": \"Idle\", \"animation\": \"idle\"}.")
 		var state_name := StringName(String(state["name"]))
 		var animation_name := String(state.get("animation", state["name"]))
 		if not player.has_animation(animation_name):
@@ -322,7 +322,7 @@ func _setup_animation_state_machine(params: Dictionary) -> Variant:
 		var to_state := StringName(String(transition_description.get("to", "")))
 		for state_name in [from_state, to_state]:
 			if not state_machine.has_node(state_name):
-				return PilotError.new("STATE_NOT_FOUND", "There is no state '%s' for the transition %s -> %s." % [state_name, from_state, to_state], "Add it in states. \"Start\" and \"End\" always exist.")
+				return WingmanError.new("STATE_NOT_FOUND", "There is no state '%s' for the transition %s -> %s." % [state_name, from_state, to_state], "Add it in states. \"Start\" and \"End\" always exist.")
 		var transition := AnimationNodeStateMachineTransition.new()
 		transition.switch_mode = SWITCH_MODES_BY_NAME.get(String(transition_description.get("switch_mode", "immediate")), AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE)
 		var default_advance_mode := "enabled"
@@ -357,10 +357,10 @@ func _setup_animation_state_machine(params: Dictionary) -> Variant:
 
 func _get_animation_tree(params: Dictionary) -> Variant:
 	var tree: Variant = _context.find_node_in_edited_scene(String(params.get("node_path", "")))
-	if tree is PilotError:
+	if tree is WingmanError:
 		return tree
 	if not tree is AnimationTree:
-		return PilotError.new("NOT_AN_ANIMATION_TREE", "%s is a %s, not an AnimationTree." % [tree.name, tree.get_class()])
+		return WingmanError.new("NOT_AN_ANIMATION_TREE", "%s is a %s, not an AnimationTree." % [tree.name, tree.get_class()])
 	return _describe_animation_tree(tree)
 
 
@@ -413,14 +413,14 @@ func _list_child_node_names(animation_node: AnimationNode, prefix: String) -> Ar
 
 
 ## Applies length, loop mode, step, track/key additions and removals to `animation`.
-## Returns a PilotError, or null when everything worked.
+## Returns a WingmanError, or null when everything worked.
 func _apply_animation_edits(animation: Animation, params: Dictionary, player: AnimationPlayer, warnings: Array[String]) -> Variant:
 	if params.has("length"):
 		animation.length = maxf(float(params["length"]), 0.001)
 	if params.has("loop_mode"):
 		var loop_mode_name := String(params["loop_mode"])
 		if not LOOP_MODES_BY_NAME.has(loop_mode_name):
-			return PilotError.new("INVALID_LOOP_MODE", "Unknown loop mode '%s'." % loop_mode_name, "Use none, linear or pingpong.")
+			return WingmanError.new("INVALID_LOOP_MODE", "Unknown loop mode '%s'." % loop_mode_name, "Use none, linear or pingpong.")
 		animation.loop_mode = LOOP_MODES_BY_NAME[loop_mode_name]
 	if params.has("step"):
 		animation.step = maxf(float(params["step"]), 0.0)
@@ -451,9 +451,9 @@ func _apply_animation_edits(animation: Animation, params: Dictionary, player: An
 	var animation_root: Node = player.get_node_or_null(player.root_node)
 	for track_description: Variant in params.get("tracks", []):
 		if not track_description is Dictionary:
-			return PilotError.new("INVALID_TRACK", "Each track must be an object like {\"path\": \"Sprite2D:modulate\", \"keys\": [{\"time\": 0, \"value\": \"white\"}]}.")
+			return WingmanError.new("INVALID_TRACK", "Each track must be an object like {\"path\": \"Sprite2D:modulate\", \"keys\": [{\"time\": 0, \"value\": \"white\"}]}.")
 		var track_error: Variant = _apply_track_description(animation, track_description, animation_root, scene_root, warnings)
-		if track_error is PilotError:
+		if track_error is WingmanError:
 			return track_error
 	return null
 
@@ -462,14 +462,14 @@ func _apply_track_description(animation: Animation, track_description: Dictionar
 	var track_path := String(track_description.get("path", ""))
 	var type_name := String(track_description.get("type", "value"))
 	if not TRACK_TYPES_BY_NAME.has(type_name):
-		return PilotError.new("INVALID_TRACK_TYPE", "Unknown track type '%s'." % type_name, "Use one of: %s." % ", ".join(TRACK_TYPES_BY_NAME.keys()))
+		return WingmanError.new("INVALID_TRACK_TYPE", "Unknown track type '%s'." % type_name, "Use one of: %s." % ", ".join(TRACK_TYPES_BY_NAME.keys()))
 	var track_type: int = TRACK_TYPES_BY_NAME[type_name]
 	var node_path_part := String(NodePath(track_path).get_concatenated_names())
 	var property_part := String(NodePath(track_path).get_concatenated_subnames())
 	if track_path == "":
-		return PilotError.new("INVALID_TRACK_PATH", "A track needs a path.", "Value tracks: \"NodePath:property\" relative to the AnimationPlayer's root node (its parent by default), for example \"Sprite2D:modulate\" or \".:position\". Transform tracks (position_3d...) and method tracks: just the node path.")
+		return WingmanError.new("INVALID_TRACK_PATH", "A track needs a path.", "Value tracks: \"NodePath:property\" relative to the AnimationPlayer's root node (its parent by default), for example \"Sprite2D:modulate\" or \".:position\". Transform tracks (position_3d...) and method tracks: just the node path.")
 	if track_type in [Animation.TYPE_VALUE, Animation.TYPE_BEZIER, Animation.TYPE_BLEND_SHAPE] and property_part == "":
-		return PilotError.new("INVALID_TRACK_PATH", "The %s track path '%s' needs a property after ':'." % [type_name, track_path], "For example \"Sprite2D:modulate\" or \"Player:position:x\".")
+		return WingmanError.new("INVALID_TRACK_PATH", "The %s track path '%s' needs a property after ':'." % [type_name, track_path], "For example \"Sprite2D:modulate\" or \"Player:position:x\".")
 
 	var target: Node = null
 	if animation_root != null:
@@ -484,7 +484,7 @@ func _apply_track_description(animation: Animation, track_description: Dictionar
 	if track_description.has("interpolation"):
 		var interpolation_name := String(track_description["interpolation"])
 		if not INTERPOLATIONS_BY_NAME.has(interpolation_name):
-			return PilotError.new("INVALID_INTERPOLATION", "Unknown interpolation '%s'." % interpolation_name, "Use one of: %s." % ", ".join(INTERPOLATIONS_BY_NAME.keys()))
+			return WingmanError.new("INVALID_INTERPOLATION", "Unknown interpolation '%s'." % interpolation_name, "Use one of: %s." % ", ".join(INTERPOLATIONS_BY_NAME.keys()))
 		animation.track_set_interpolation_type(track_index, INTERPOLATIONS_BY_NAME[interpolation_name])
 	if track_description.has("update_mode") and track_type == Animation.TYPE_VALUE:
 		animation.value_track_set_update_mode(track_index, UPDATE_MODES_BY_NAME.get(String(track_description["update_mode"]), Animation.UPDATE_CONTINUOUS))
@@ -494,13 +494,13 @@ func _apply_track_description(animation: Animation, track_description: Dictionar
 
 	for key: Variant in track_description.get("keys", []):
 		if not key is Dictionary or not key.has("time"):
-			return PilotError.new("INVALID_KEY", "Each key needs a time, for example {\"time\": 0.5, \"value\": [10, 20]}.")
+			return WingmanError.new("INVALID_KEY", "Each key needs a time, for example {\"time\": 0.5, \"value\": [10, 20]}.")
 		var key_time := float(key["time"])
 		if key_time > animation.length + 0.0001:
 			warnings.append("Track '%s' has a key at %s s, after the animation's length (%s s)." % [track_path, key_time, animation.length])
 		var conversion := _convert_key_value(track_type, key.get("value"), target, property_part, scene_root)
 		if not conversion["ok"]:
-			return PilotError.new("INVALID_KEY_VALUE", "Track '%s' at %s s: %s" % [track_path, key_time, conversion["error"]])
+			return WingmanError.new("INVALID_KEY_VALUE", "Track '%s' at %s s: %s" % [track_path, key_time, conversion["error"]])
 		var value: Variant = conversion["value"]
 		var existing_key := animation.track_find_key(track_index, key_time, Animation.FIND_MODE_APPROX)
 		if existing_key != -1:
@@ -603,16 +603,16 @@ func _find_track_by_path(animation: Animation, track_path: String, type_name: St
 
 func _find_animation_player(node_path: String) -> Variant:
 	var node: Variant = _context.find_node_in_edited_scene(node_path)
-	if node is PilotError:
+	if node is WingmanError:
 		return node
 	if not node is AnimationPlayer:
-		return PilotError.new("NOT_AN_ANIMATION_PLAYER", "%s is a %s, not an AnimationPlayer." % [node.name, node.get_class()], "list_animations finds the AnimationPlayer nodes. Add one with add_node (type AnimationPlayer).")
+		return WingmanError.new("NOT_AN_ANIMATION_PLAYER", "%s is a %s, not an AnimationPlayer." % [node.name, node.get_class()], "list_animations finds the AnimationPlayer nodes. Add one with add_node (type AnimationPlayer).")
 	return node
 
 
-func _animation_not_found(player: AnimationPlayer, animation_name: String) -> PilotError:
+func _animation_not_found(player: AnimationPlayer, animation_name: String) -> WingmanError:
 	var known_names := ", ".join(Array(player.get_animation_list()))
-	return PilotError.new("ANIMATION_NOT_FOUND", "%s has no animation '%s'." % [player.name, animation_name], "Animations: %s. Use create_animation for a new one." % (known_names if known_names != "" else "none"))
+	return WingmanError.new("ANIMATION_NOT_FOUND", "%s has no animation '%s'." % [player.name, animation_name], "Animations: %s. Use create_animation for a new one." % (known_names if known_names != "" else "none"))
 
 
 ## When the library is its own file (.tres/.res), the change is saved to that file too.

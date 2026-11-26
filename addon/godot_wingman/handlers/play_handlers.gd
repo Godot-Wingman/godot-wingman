@@ -4,7 +4,7 @@ extends RefCounted
 ## (looking at it, playing it, inspecting it). See runtime/game_bridge.gd for the
 ## game side.
 
-const PilotError := preload("../utils/pilot_error.gd")
+const WingmanError := preload("../utils/wingman_error.gd")
 
 const DEFAULT_GAME_REQUEST_TIMEOUT_SECONDS := 30.0
 const GAME_START_TIMEOUT_SECONDS := 30.0
@@ -25,7 +25,7 @@ func register_methods(dispatcher: RefCounted) -> void:
 func _run_game(params: Dictionary) -> Variant:
 	if EditorInterface.is_playing_scene():
 		if not bool(params.get("restart", false)):
-			return PilotError.new("ALREADY_RUNNING", "The game is already running.", "Use it as it is, or pass restart: true.")
+			return WingmanError.new("ALREADY_RUNNING", "The game is already running.", "Use it as it is, or pass restart: true.")
 		EditorInterface.stop_playing_scene()
 		await _context.get_scene_tree().create_timer(0.5).timeout
 
@@ -33,20 +33,20 @@ func _run_game(params: Dictionary) -> Variant:
 	match scene:
 		"main":
 			if String(ProjectSettings.get_setting("application/run/main_scene", "")) == "":
-				return PilotError.new("NO_MAIN_SCENE", "The project has no main scene.", "Set application/run/main_scene with set_project_settings, or pass scene: \"current\" or a scene path.")
+				return WingmanError.new("NO_MAIN_SCENE", "The project has no main scene.", "Set application/run/main_scene with set_project_settings, or pass scene: \"current\" or a scene path.")
 			EditorInterface.play_main_scene()
 		"current":
 			if _context.get_edited_scene_root() == null:
-				return PilotError.new("NO_OPEN_SCENE", "No scene is open to run.")
+				return WingmanError.new("NO_OPEN_SCENE", "No scene is open to run.")
 			EditorInterface.play_current_scene()
 		_:
 			if not ResourceLoader.exists(scene):
-				return PilotError.new("SCENE_NOT_FOUND", "No scene at '%s'." % scene)
+				return WingmanError.new("SCENE_NOT_FOUND", "No scene at '%s'." % scene)
 			EditorInterface.play_custom_scene(scene)
 
 	var is_connected: bool = await _context.game_bridge.wait_until_ready(float(params.get("wait_seconds", GAME_START_TIMEOUT_SECONDS)))
 	if not is_connected:
-		return PilotError.new(
+		return WingmanError.new(
 			"GAME_DID_NOT_CONNECT",
 			"The game started but did not connect within the time limit.",
 			"It may have crashed at startup: read get_logs (the editor shows game errors there too), or take_editor_screenshot to look at the Debugger panel."
@@ -68,7 +68,7 @@ func _game_request(params: Dictionary) -> Variant:
 	var answer: Dictionary = await _context.game_bridge.request(String(params.get("method", "")), params.get("params", {}), timeout_seconds)
 	if not answer["ok"]:
 		var error: Dictionary = answer["error"]
-		return PilotError.new(String(error.get("code", "GAME_ERROR")), String(error.get("message", "")), String(error.get("hint", "")), error.get("details"))
+		return WingmanError.new(String(error.get("code", "GAME_ERROR")), String(error.get("message", "")), String(error.get("hint", "")), error.get("details"))
 	return _encode_image_bytes(answer["result"])
 
 

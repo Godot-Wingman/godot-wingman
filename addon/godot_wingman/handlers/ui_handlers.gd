@@ -4,7 +4,7 @@ extends RefCounted
 ## (where every control is, and what looks wrong), anchor presets, theme overrides, and
 ## building a whole tree of controls in one undoable step.
 
-const PilotError := preload("../utils/pilot_error.gd")
+const WingmanError := preload("../utils/wingman_error.gd")
 const ValueCodec := preload("../utils/value_codec.gd")
 const PropertyEditing := preload("../utils/property_editing.gd")
 const SceneHandlers := preload("scene_handlers.gd")
@@ -64,7 +64,7 @@ func register_methods(dispatcher: RefCounted) -> void:
 ## warnings for common mistakes (zero size, off screen, text cut off).
 func _get_ui_layout(params: Dictionary) -> Variant:
 	var start_node: Variant = _context.find_node_in_edited_scene(String(params.get("node_path", ".")))
-	if start_node is PilotError:
+	if start_node is WingmanError:
 		return start_node
 	var screen_size := Vector2(
 		float(ProjectSettings.get_setting("display/window/size/viewport_width", 1152)),
@@ -122,22 +122,22 @@ func _describe_controls(node: Node, depth: int, screen_size: Vector2, layout_lin
 func _set_layout_preset(params: Dictionary) -> Variant:
 	var preset_name := String(params.get("preset", ""))
 	if not LAYOUT_PRESETS.has(preset_name):
-		return PilotError.new("INVALID_PRESET", "Unknown layout preset '%s'." % preset_name, "Use one of: %s." % ", ".join(LAYOUT_PRESETS.keys()))
+		return WingmanError.new("INVALID_PRESET", "Unknown layout preset '%s'." % preset_name, "Use one of: %s." % ", ".join(LAYOUT_PRESETS.keys()))
 	var resize_mode: int = RESIZE_MODES.get(String(params.get("resize_mode", "minsize")), Control.PRESET_MODE_MINSIZE)
 	var margin := int(params.get("margin", 0))
 	var node_paths: Array = params.get("node_paths", []) if params.get("node_paths") is Array else []
 	var controls: Array[Control] = []
 	for node_path: Variant in node_paths:
 		var node: Variant = _context.find_node_in_edited_scene(String(node_path))
-		if node is PilotError:
+		if node is WingmanError:
 			return node
 		if not node is Control:
-			return PilotError.new("NOT_A_CONTROL", "%s is a %s; layout presets are for Control nodes." % [node.name, node.get_class()])
+			return WingmanError.new("NOT_A_CONTROL", "%s is a %s; layout presets are for Control nodes." % [node.name, node.get_class()])
 		if node.get_parent() is Container:
-			return PilotError.new("INSIDE_CONTAINER", "%s is inside a %s, which places it; anchors are ignored there." % [node.name, node.get_parent().get_class()], "Change size_flags_horizontal / size_flags_vertical with set_properties instead (fill, expand, shrink_center...).")
+			return WingmanError.new("INSIDE_CONTAINER", "%s is inside a %s, which places it; anchors are ignored there." % [node.name, node.get_parent().get_class()], "Change size_flags_horizontal / size_flags_vertical with set_properties instead (fill, expand, shrink_center...).")
 		controls.append(node)
 	if controls.is_empty():
-		return PilotError.new("NOTHING_TO_DO", "Pass node_paths.")
+		return WingmanError.new("NOTHING_TO_DO", "Pass node_paths.")
 
 	var undo_redo: EditorUndoRedoManager = _context.get_undo_redo()
 	undo_redo.create_action("Layout preset %s" % preset_name, UndoRedo.MERGE_DISABLE, controls[0])
@@ -160,18 +160,18 @@ func _set_layout_preset(params: Dictionary) -> Variant:
 ## panel style...) without a Theme resource. null removes an override.
 func _set_theme_overrides(params: Dictionary) -> Variant:
 	var node: Variant = _context.find_node_in_edited_scene(String(params.get("node_path", "")))
-	if node is PilotError:
+	if node is WingmanError:
 		return node
 	if not node is Control:
-		return PilotError.new("NOT_A_CONTROL", "%s is a %s; theme overrides are for Control nodes." % [node.name, node.get_class()])
+		return WingmanError.new("NOT_A_CONTROL", "%s is a %s; theme overrides are for Control nodes." % [node.name, node.get_class()])
 	var override_values: Variant = _theme_overrides_to_properties(node, params)
-	if override_values is PilotError:
+	if override_values is WingmanError:
 		return override_values
 	if override_values.is_empty():
-		return PilotError.new("NOTHING_TO_DO", "Pass colors, constants, font_sizes, fonts, styles or icons.")
+		return WingmanError.new("NOTHING_TO_DO", "Pass colors, constants, font_sizes, fonts, styles or icons.")
 	var outcome := PropertyEditing.set_properties_with_undo(node, override_values, _context.get_undo_redo(), _context.get_edited_scene_root(), "Theme overrides of %s" % node.name)
 	if outcome.has("errors"):
-		return PilotError.new("INVALID_VALUE", "Nothing was changed. " + " ".join(outcome["errors"]))
+		return WingmanError.new("INVALID_VALUE", "Nothing was changed. " + " ".join(outcome["errors"]))
 	return {"node_path": _context.describe_node_path(node), "changed": outcome["changed"]}
 
 
@@ -186,7 +186,7 @@ func _theme_overrides_to_properties(control: Control, overrides: Dictionary) -> 
 		for item_name in overrides[group_name]:
 			var property_name := prefix + String(item_name)
 			if PropertyEditing.find_property_information(control, property_name).is_empty():
-				return PilotError.new("UNKNOWN_THEME_ITEM", "%s has no %s item '%s'." % [control.get_class(), group_name, item_name], "Items of this control: %s." % ", ".join(_list_theme_items(control, prefix)))
+				return WingmanError.new("UNKNOWN_THEME_ITEM", "%s has no %s item '%s'." % [control.get_class(), group_name, item_name], "Items of this control: %s." % ", ".join(_list_theme_items(control, prefix)))
 			property_values[property_name] = overrides[group_name][item_name]
 	return property_values
 
@@ -204,18 +204,18 @@ func _list_theme_items(control: Control, prefix: String) -> Array[String]:
 func _build_ui(params: Dictionary) -> Variant:
 	var scene_root: Node = _context.get_edited_scene_root()
 	var parent: Variant = _context.find_node_in_edited_scene(String(params.get("parent_path", ".")))
-	if parent is PilotError:
+	if parent is WingmanError:
 		return parent
 	var descriptions: Array = params.get("nodes", []) if params.get("nodes") is Array else []
 	if descriptions.is_empty():
-		return PilotError.new("NOTHING_TO_DO", "Pass nodes: a list of {\"type\", \"name\", \"properties\", \"children\"}.")
+		return WingmanError.new("NOTHING_TO_DO", "Pass nodes: a list of {\"type\", \"name\", \"properties\", \"children\"}.")
 
 	var built_roots: Array[Node] = []
 	var created_nodes: Array[Node] = []
 	var presets_to_apply: Array[Array] = []
 	for description: Variant in descriptions:
 		var built: Variant = _build_node(description, scene_root, created_nodes, presets_to_apply, "nodes")
-		if built is PilotError:
+		if built is WingmanError:
 			for built_root in built_roots:
 				built_root.free()
 			return built
@@ -242,9 +242,9 @@ func _build_ui(params: Dictionary) -> Variant:
 
 func _build_node(description: Variant, scene_root: Node, created_nodes: Array[Node], presets_to_apply: Array[Array], location: String) -> Variant:
 	if not description is Dictionary or not description.has("type"):
-		return PilotError.new("INVALID_NODE", "%s: each node needs a type, for example {\"type\": \"Button\", \"name\": \"Play\", \"properties\": {\"text\": \"Play\"}}." % location)
+		return WingmanError.new("INVALID_NODE", "%s: each node needs a type, for example {\"type\": \"Button\", \"name\": \"Play\", \"properties\": {\"text\": \"Play\"}}." % location)
 	var node: Variant = SceneHandlers.instantiate_node_type(String(description["type"]))
-	if node is PilotError:
+	if node is WingmanError:
 		node.message = "%s: %s" % [location, node.message]
 		return node
 	if description.has("name"):
@@ -252,7 +252,7 @@ func _build_node(description: Variant, scene_root: Node, created_nodes: Array[No
 	var property_values: Dictionary = description.get("properties", {}).duplicate() if description.get("properties") is Dictionary else {}
 	if node is Control and description.get("theme_overrides") is Dictionary:
 		var override_values: Variant = _theme_overrides_to_properties(node, description["theme_overrides"])
-		if override_values is PilotError:
+		if override_values is WingmanError:
 			node.free()
 			return override_values
 		property_values.merge(override_values, true)
@@ -260,7 +260,7 @@ func _build_node(description: Variant, scene_root: Node, created_nodes: Array[No
 		var conversion := PropertyEditing.convert_for_property(node, String(property_path), property_values[property_path], scene_root)
 		if not conversion["ok"]:
 			node.free()
-			return PilotError.new("INVALID_PROPERTY", "%s (%s): %s" % [location, node.name, conversion["error"]])
+			return WingmanError.new("INVALID_PROPERTY", "%s (%s): %s" % [location, node.name, conversion["error"]])
 		node.set_indexed(NodePath(String(property_path)), conversion["value"])
 	created_nodes.append(node)
 
@@ -268,13 +268,13 @@ func _build_node(description: Variant, scene_root: Node, created_nodes: Array[No
 		var preset_name := String(description["layout_preset"])
 		if not LAYOUT_PRESETS.has(preset_name) or not node is Control:
 			node.free()
-			return PilotError.new("INVALID_PRESET", "%s (%s): layout_preset '%s' needs a Control and one of: %s." % [location, node.name, preset_name, ", ".join(LAYOUT_PRESETS.keys())])
+			return WingmanError.new("INVALID_PRESET", "%s (%s): layout_preset '%s' needs a Control and one of: %s." % [location, node.name, preset_name, ", ".join(LAYOUT_PRESETS.keys())])
 		presets_to_apply.append([node, LAYOUT_PRESETS[preset_name][0], RESIZE_MODES.get(String(description.get("resize_mode", "minsize")), Control.PRESET_MODE_MINSIZE), int(description.get("margin", 0))])
 
 	var children: Array = description.get("children", []) if description.get("children") is Array else []
 	for child_index in children.size():
 		var child: Variant = _build_node(children[child_index], scene_root, created_nodes, presets_to_apply, "%s > %s.children[%d]" % [location, node.name, child_index])
-		if child is PilotError:
+		if child is WingmanError:
 			node.free()
 			return child
 		node.add_child(child, true)

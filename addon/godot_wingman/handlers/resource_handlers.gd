@@ -6,7 +6,7 @@ extends RefCounted
 ## Resources inside a node (for example the shape of a CollisionShape2D) can also be
 ## changed with set_properties and paths like "shape:radius".
 
-const PilotError := preload("../utils/pilot_error.gd")
+const WingmanError := preload("../utils/wingman_error.gd")
 const ValueCodec := preload("../utils/value_codec.gd")
 const PropertyEditing := preload("../utils/property_editing.gd")
 
@@ -28,9 +28,9 @@ func register_methods(dispatcher: RefCounted) -> void:
 func _create_resource(params: Dictionary) -> Variant:
 	var resource_type := String(params.get("type", ""))
 	if not ClassDB.class_exists(resource_type) or not ClassDB.is_parent_class(resource_type, "Resource"):
-		return PilotError.new("UNKNOWN_RESOURCE_TYPE", "'%s' is not a resource class." % resource_type, "Examples: StandardMaterial3D, CircleShape2D, Theme, Gradient, AudioStreamRandomizer. Use search_docs to find others.")
+		return WingmanError.new("UNKNOWN_RESOURCE_TYPE", "'%s' is not a resource class." % resource_type, "Examples: StandardMaterial3D, CircleShape2D, Theme, Gradient, AudioStreamRandomizer. Use search_docs to find others.")
 	if not ClassDB.can_instantiate(resource_type):
-		return PilotError.new("ABSTRACT_CLASS", "%s is a base class and cannot be created directly." % resource_type)
+		return WingmanError.new("ABSTRACT_CLASS", "%s is a base class and cannot be created directly." % resource_type)
 
 	var resource: Resource = ClassDB.instantiate(resource_type)
 	var scene_root: Node = _context.get_edited_scene_root()
@@ -38,18 +38,18 @@ func _create_resource(params: Dictionary) -> Variant:
 	for property_path in initial_properties:
 		var conversion := PropertyEditing.convert_for_property(resource, String(property_path), initial_properties[property_path], scene_root)
 		if not conversion["ok"]:
-			return PilotError.new("INVALID_PROPERTY", String(conversion["error"]))
+			return WingmanError.new("INVALID_PROPERTY", String(conversion["error"]))
 		resource.set_indexed(NodePath(String(property_path)), conversion["value"])
 
 	var result := {"type": resource_type}
 	var save_path := String(params.get("path", ""))
 	if save_path != "":
 		if not save_path.begins_with("res://"):
-			return PilotError.new("INVALID_PATH", "The path must start with res://, for example \"res://materials/grass.tres\".")
+			return WingmanError.new("INVALID_PATH", "The path must start with res://, for example \"res://materials/grass.tres\".")
 		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(save_path.get_base_dir()))
 		var save_error := ResourceSaver.save(resource, save_path)
 		if save_error != OK:
-			return PilotError.new("SAVE_FAILED", "Could not save '%s': %s." % [save_path, error_string(save_error)])
+			return WingmanError.new("SAVE_FAILED", "Could not save '%s': %s." % [save_path, error_string(save_error)])
 		resource.take_over_path(save_path)
 		EditorInterface.get_resource_filesystem().update_file(save_path)
 		result["saved"] = save_path
@@ -57,19 +57,19 @@ func _create_resource(params: Dictionary) -> Variant:
 	if params.get("assign_to") is Dictionary:
 		var assignment: Dictionary = params["assign_to"]
 		var node: Variant = _context.find_node_in_edited_scene(String(assignment.get("node_path", ".")))
-		if node is PilotError:
+		if node is WingmanError:
 			return node
 		var property_name := String(assignment.get("property", ""))
 		var outcome := PropertyEditing.set_properties_with_undo(node, {property_name: resource}, _context.get_undo_redo(), scene_root, "Assign %s" % resource_type)
 		if outcome.has("errors"):
-			return PilotError.new("INVALID_PROPERTY", " ".join(outcome["errors"]))
+			return WingmanError.new("INVALID_PROPERTY", " ".join(outcome["errors"]))
 		result["assigned_to"] = "%s.%s" % [_context.describe_node_path(node), property_name]
 	return result
 
 
 func _get_resource_properties(params: Dictionary) -> Variant:
 	var resource: Variant = _find_resource(params)
-	if resource is PilotError:
+	if resource is WingmanError:
 		return resource
 	var include_defaults := bool(params.get("include_defaults", false))
 	var property_lines: Array[String] = []
@@ -85,13 +85,13 @@ func _get_resource_properties(params: Dictionary) -> Variant:
 
 func _set_resource_properties(params: Dictionary) -> Variant:
 	var resource: Variant = _find_resource(params)
-	if resource is PilotError:
+	if resource is WingmanError:
 		return resource
 	var outcome := PropertyEditing.set_properties_with_undo(
 		resource, params.get("properties", {}), _context.get_undo_redo(), _context.get_edited_scene_root(), "Change %s" % resource.get_class()
 	)
 	if outcome.has("errors"):
-		return PilotError.new("INVALID_PROPERTY", "Nothing was changed. " + " ".join(outcome["errors"]))
+		return WingmanError.new("INVALID_PROPERTY", "Nothing was changed. " + " ".join(outcome["errors"]))
 	# Resource files are saved right away; embedded resources are saved with their scene.
 	if resource.resource_path != "" and not resource.resource_path.contains("::"):
 		ResourceSaver.save(resource)
@@ -103,12 +103,12 @@ func _find_resource(params: Dictionary) -> Variant:
 	if params.has("path"):
 		var resource_path := String(params["path"])
 		if not ResourceLoader.exists(resource_path):
-			return PilotError.new("FILE_NOT_FOUND", "No resource at '%s'." % resource_path)
+			return WingmanError.new("FILE_NOT_FOUND", "No resource at '%s'." % resource_path)
 		return load(resource_path)
 	var node: Variant = _context.find_node_in_edited_scene(String(params.get("node_path", ".")))
-	if node is PilotError:
+	if node is WingmanError:
 		return node
 	var property_value: Variant = node.get_indexed(NodePath(String(params.get("property", ""))))
 	if not property_value is Resource:
-		return PilotError.new("NOT_A_RESOURCE", "%s.%s does not hold a resource." % [node.name, params.get("property", "")], "Pass path for a resource file, or node_path + property for a resource inside a node.")
+		return WingmanError.new("NOT_A_RESOURCE", "%s.%s does not hold a resource." % [node.name, params.get("property", "")], "Pass path for a resource file, or node_path + property for a resource inside a node.")
 	return property_value

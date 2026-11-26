@@ -1,14 +1,14 @@
 @tool
 extends RefCounted
 ## Requests about permissions, the activity list, checkpoints and messages between AIs
-## (session/pilot_session.gd).
+## (session/wingman_session.gd).
 ##
 ## The MCP server calls authorize_tool_call before every tool that changes something
 ## and finish_tool_call after it. tell_other_ais uses post_message_to_other_ais. The
 ## other methods exist for tests and for the server's own use.
 
-const PilotError := preload("../utils/pilot_error.gd")
-const PilotSession := preload("../session/pilot_session.gd")
+const WingmanError := preload("../utils/wingman_error.gd")
+const WingmanSession := preload("../session/wingman_session.gd")
 
 var _context: RefCounted
 
@@ -45,8 +45,8 @@ func _get_session_state(_params: Dictionary) -> Dictionary:
 
 func _set_editor_permission_mode(params: Dictionary) -> Variant:
 	var mode := String(params.get("mode", ""))
-	if not PilotSession.MODES.has(mode):
-		return PilotError.new("INVALID_MODE", "Unknown permission mode '%s'." % mode, "Use full, confirm or read-only.")
+	if not WingmanSession.MODES.has(mode):
+		return WingmanError.new("INVALID_MODE", "Unknown permission mode '%s'." % mode, "Use full, confirm or read-only.")
 	_context.session.set_editor_mode(mode)
 	return {"editor_mode": mode}
 
@@ -54,14 +54,14 @@ func _set_editor_permission_mode(params: Dictionary) -> Variant:
 func _go_back_to_before_step(params: Dictionary) -> Variant:
 	var outcome: Dictionary = await _context.session.go_back_to_before(int(params.get("activity_id", -1)))
 	if outcome.is_empty():
-		return PilotError.new("NO_CHECKPOINT", "That step has no checkpoint.", "Only changes made in this editor session can be undone this way.")
+		return WingmanError.new("NO_CHECKPOINT", "That step has no checkpoint.", "Only changes made in this editor session can be undone this way.")
 	return outcome
 
 
 func _post_message_to_other_ais(params: Dictionary) -> Variant:
 	var message := String(params.get("message", "")).strip_edges()
 	if message.is_empty():
-		return PilotError.new("EMPTY_MESSAGE", "The message is empty.", "Write what you are about to change, for example: \"I am rewriting res://player.gd\".")
+		return WingmanError.new("EMPTY_MESSAGE", "The message is empty.", "Write what you are about to change, for example: \"I am rewriting res://player.gd\".")
 	var caller: Dictionary = params.get("_caller", {}) if params.get("_caller") is Dictionary else {}
 	var connection_id := int(caller.get("connection_id", -1))
 	var sender := String(caller.get("ai_client", "AI"))
