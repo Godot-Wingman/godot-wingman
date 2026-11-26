@@ -19,7 +19,8 @@ export const TOOLSET_PROFILES: Record<string, ToolsetProfile> = {
     toolsets: DEFAULT_TOOLSET_NAMES,
   },
   edit: {
-    description: "Everything for building in the editor, without the playtesting tools.",
+    description:
+      "General editing (signals, resources, files, viewport) without playtesting or the specialised toolsets (animation, tilemap, ui, 3d...).",
     toolsets: [
       "core",
       "scene",
@@ -30,6 +31,48 @@ export const TOOLSET_PROFILES: Record<string, ToolsetProfile> = {
       "resources",
       "filesystem",
       "viewport",
+    ],
+  },
+  "2d": {
+    description:
+      "Building and testing a 2D game: editing, signals, resources, tilemaps, animation, UI and playtesting.",
+    toolsets: [
+      "core",
+      "scene",
+      "inspector",
+      "script",
+      "project",
+      "signals",
+      "resources",
+      "filesystem",
+      "animation",
+      "tilemap",
+      "ui",
+      "play",
+      "input",
+      "game_inspect",
+    ],
+  },
+  "3d": {
+    description:
+      "Building and testing a 3D game: editing, 3D helpers, materials and shaders, animation, UI and playtesting.",
+    toolsets: [
+      "core",
+      "scene",
+      "inspector",
+      "script",
+      "project",
+      "signals",
+      "resources",
+      "filesystem",
+      "viewport",
+      "3d",
+      "shader",
+      "animation",
+      "ui",
+      "play",
+      "input",
+      "game_inspect",
     ],
   },
   play: {
