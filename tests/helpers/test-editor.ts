@@ -38,6 +38,8 @@ export interface StartTestEditorOptions {
   permissionMode?: PermissionMode;
   initialToolsets?: string[];
   confirmationTimeoutSeconds?: number;
+  /** Open a real editor window instead of a headless editor (tests/windowed). */
+  windowed?: boolean;
 }
 
 export async function startTestEditor(options: StartTestEditorOptions = {}): Promise<TestEditor | null> {
@@ -55,22 +57,24 @@ export async function startTestEditor(options: StartTestEditorOptions = {}): Pro
     filter: (sourcePath) => !/[\\/](\.godot|addons)([\\/]|$)/.test(sourcePath),
   });
   process.env[HOME_OVERRIDE_ENVIRONMENT_VARIABLE] = homeDirectory;
-  // Games started by the test editor run without a window too (no screen on CI machines).
-  const projectFilePath = join(projectPath, "project.godot");
-  const projectFileText = await Bun.file(projectFilePath).text();
-  await Bun.write(
-    projectFilePath,
-    `${projectFileText}
+  // Games started by a headless test editor run without a window too (no screen on CI machines).
+  if (!options.windowed) {
+    const projectFilePath = join(projectPath, "project.godot");
+    const projectFileText = await Bun.file(projectFilePath).text();
+    await Bun.write(
+      projectFilePath,
+      `${projectFileText}
 [editor]
 
 run/main_run_args="--headless"
 `,
-  );
+    );
+  }
 
   const launchResult = await launchEditor({
     projectPath,
     godotExecutable: getConsoleVariant(godot.path),
-    headless: true,
+    headless: !options.windowed,
     waitSeconds: 180,
     environment: { [HOME_OVERRIDE_ENVIRONMENT_VARIABLE]: homeDirectory },
   });
