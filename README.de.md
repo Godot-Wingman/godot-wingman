@@ -5,19 +5,19 @@
 <h1 align="center">Godot Wingman</h1>
 
 <p align="center">
-  <img alt="Made for Godot 4.5 and newer" src="https://img.shields.io/badge/Godot-4.5%2B-478cbf?style=for-the-badge&logo=godotengine&logoColor=white&labelColor=1f2a3c">
-  <img alt="MCP server" src="https://img.shields.io/badge/MCP-server-8b5cf6?style=for-the-badge&logo=modelcontextprotocol&logoColor=white&labelColor=2a1f3d">
-  <img alt="GDScript and C#" src="https://img.shields.io/badge/GDScript-%26_C%23-e5534b?style=for-the-badge&logo=dotnet&logoColor=white&labelColor=3a1d1d">
-  <img alt="Bun runtime" src="https://img.shields.io/badge/Bun-runtime-f9a8d4?style=for-the-badge&logo=bun&logoColor=white&labelColor=3a1f2e">
-  <img alt="TypeScript, strict" src="https://img.shields.io/badge/TypeScript-strict-3178c6?style=for-the-badge&logo=typescript&logoColor=white&labelColor=1b2a40">
+  <img alt="Made for Godot 4.5 and newer" src="docs/images/badges/godot.svg">
+  <img alt="MCP server" src="docs/images/badges/mcp.svg">
+  <img alt="GDScript and C#" src="docs/images/badges/gdscript-csharp.svg">
+  <img alt="Bun runtime" src="docs/images/badges/bun.svg">
+  <img alt="TypeScript, strict" src="docs/images/badges/typescript.svg">
 </p>
 
 <p align="center">
-  <img alt="Windows" src="https://img.shields.io/badge/Windows-0078d4?style=for-the-badge&logo=data:image/svg%2Bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI%2BPHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0wIDBoMTF2MTFIMHpNMTMgMGgxMXYxMUgxM3pNMCAxM2gxMXYxMUgwek0xMyAxM2gxMXYxMUgxM3oiLz48L3N2Zz4%3D">
-  <img alt="macOS" src="https://img.shields.io/badge/macOS-e5e7eb?style=for-the-badge&logo=apple&logoColor=black">
-  <img alt="Linux" src="https://img.shields.io/badge/Linux-f0b400?style=for-the-badge&logo=linux&logoColor=black">
-  <img alt="No telemetry" src="https://img.shields.io/badge/telemetry-zero-22c55e?style=for-the-badge&labelColor=14301f">
-  <a href="LICENSE"><img alt="License: AGPL-3.0" src="https://img.shields.io/badge/license-AGPL--3.0-f97316?style=for-the-badge&logo=gnu&logoColor=white&labelColor=3a2414"></a>
+  <img alt="Windows" src="docs/images/badges/windows.svg">
+  <img alt="macOS" src="docs/images/badges/macos.svg">
+  <img alt="Linux" src="docs/images/badges/linux.svg">
+  <img alt="No telemetry" src="docs/images/badges/telemetry.svg">
+  <a href="LICENSE"><img alt="License: AGPL-3.0" src="docs/images/badges/license.svg"></a>
 </p>
 
 <p align="center">
