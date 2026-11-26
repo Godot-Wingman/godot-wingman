@@ -54,6 +54,29 @@ jobs:
           echo "GODOT_PATH=$RUNNER_TEMP/godot/${file_name}" >> "$GITHUB_ENV"
       - run: bun run test
 
+  windowed:
+    name: Editor window tests (virtual screen)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - name: Virtual screen and software graphics drivers
+        run: sudo apt-get update && sudo apt-get install --yes xvfb mesa-vulkan-drivers libgl1-mesa-dri
+      - name: Download Godot 4.7.2
+        run: |
+          file_name="Godot_v4.7.2-stable_linux.x86_64"
+          curl --fail --location --silent --show-error \
+            "https://github.com/godotengine/godot/releases/download/4.7.2-stable/${file_name}.zip" \
+            --output godot.zip
+          unzip -q godot.zip -d "$RUNNER_TEMP/godot"
+          chmod +x "$RUNNER_TEMP/godot/${file_name}"
+          echo "GODOT_PATH=$RUNNER_TEMP/godot/${file_name}" >> "$GITHUB_ENV"
+      - name: Screenshots, panel, approval dialog and a game window
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" bun test tests/windowed
+        env:
+          GODOT_PILOT_WINDOWED: "1"
+
   build:
     name: Build binaries
     runs-on: ubuntu-latest

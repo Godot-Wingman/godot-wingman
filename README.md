@@ -78,6 +78,7 @@ Requires [Bun](https://bun.sh) and Godot.
 bun install
 bun run test          # unit tests + end-to-end tests against a real headless Godot
 bun run test:unit     # only the unit tests, no Godot needed
+GODOT_PILOT_WINDOWED=1 bun test tests/windowed   # with a real editor window
 bun run lint          # Biome
 bun run typecheck
 bun run build         # standalone executables for every platform in dist/
