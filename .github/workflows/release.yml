@@ -20,6 +20,8 @@ jobs:
       - run: bun run build
       - name: Zip the addon for manual installation
         run: cd addon && zip -r ../dist/godot-pilot-addon.zip godot_pilot
+      - name: Write checksums (the update command checks downloads against them)
+        run: cd dist && sha256sum -- * > ../SHA256SUMS && mv ../SHA256SUMS .
       - name: Create the GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
