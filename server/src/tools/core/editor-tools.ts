@@ -103,7 +103,7 @@ export const tellOtherAisTool = defineTool({
   title: "Tell the other AIs",
   description: [
     "Sends a short message to the other AIs connected to this Godot editor (for example Claude Code and Cursor working on the same game), so you do not change the same things at the same time or undo each other's work.",
-    "They get it at the end of their next tool result. An AI that connects later gets the recent messages too. The person sees the messages in the Godot Pilot panel.",
+    "They get it at the end of their next tool result. An AI that connects later gets the recent messages too. The person sees the messages in the Godot Wingman panel.",
     "Use it before larger changes when other AIs are connected (you are told when they are), and when you finish: what you change, which files or nodes, and what the others should leave alone.",
     'Example: "I am rewriting res://player/player.gd and the Player scene. Please do not edit them until I say I am done."',
   ].join("\n"),

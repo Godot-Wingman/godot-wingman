@@ -1,6 +1,6 @@
 /**
  * Core tools for getting started: status, creating a project, starting the editor, installing the addon,
- * choosing an editor, switching toolsets on and off, and updating Godot Pilot.
+ * choosing an editor, switching toolsets on and off, and updating Godot Wingman.
  */
 import { resolve } from "node:path";
 import { z } from "zod";
@@ -204,7 +204,7 @@ export const installAddonTool = defineTool({
   name: "install_addon",
   title: "Install or update the addon",
   description:
-    "Copies the Godot Pilot addon into a project (res://addons/godot_pilot) and enables it in project.godot. launch_editor does this automatically; use this tool to update the addon in a project. An editor that already has the project open must be restarted (or the plugin turned off and on in Project Settings > Plugins) to load the new version.",
+    "Copies the Godot Wingman addon into a project (res://addons/godot_wingman) and enables it in project.godot. launch_editor does this automatically; use this tool to update the addon in a project. An editor that already has the project open must be restarted (or the plugin turned off and on in Project Settings > Plugins) to load the new version.",
   inputShape: {
     project_path: z.string().describe("Folder that contains project.godot."),
   },
@@ -226,11 +226,11 @@ export const installAddonTool = defineTool({
   },
 });
 
-export const updateGodotPilotTool = defineTool({
-  name: "update_godot_pilot",
-  title: "Update Godot Pilot",
+export const updateGodotWingmanTool = defineTool({
+  name: "update_godot_wingman",
+  title: "Update Godot Wingman",
   description:
-    "Downloads the newest Godot Pilot release from GitHub, checks its SHA-256 checksum and installs it in place of this program. Only call it when the person agreed to update. The new version runs after the person restarts the AI app (or reconnects the MCP server); then launch_editor updates the addon in the project.",
+    "Downloads the newest Godot Wingman release from GitHub, checks its SHA-256 checksum and installs it in place of this program. Only call it when the person agreed to update. The new version runs after the person restarts the AI app (or reconnects the MCP server); then launch_editor updates the addon in the project.",
   inputShape: {},
   access: "setup",
   async run() {

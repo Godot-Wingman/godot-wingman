@@ -12,9 +12,9 @@ import {
   defineEditorTool,
   defineTool,
   jsonResult,
-  type PilotTool,
   type ToolContext,
   textResult,
+  type WingmanTool,
 } from "../../mcp/tool-definition.ts";
 import { propertyValuesField } from "../shared-schemas.ts";
 
@@ -58,7 +58,7 @@ function defineGameTool<Shape extends z.ZodRawShape>(definition: {
   access: "read" | "write";
   gameMethod: string;
   timeoutSeconds?: (input: z.infer<z.ZodObject<Shape>>) => number;
-}): PilotTool {
+}): WingmanTool {
   return defineTool({
     ...definition,
     async run(input, context) {
