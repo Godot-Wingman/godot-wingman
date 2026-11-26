@@ -174,9 +174,10 @@ func _send(client: ClientConnection, payload: Dictionary) -> void:
 ## Godot's JSON.stringify leaves some control characters (like the ESC of terminal
 ## colors) unescaped, which makes the JSON invalid for other parsers.
 ## Compact JSON has no raw control characters outside strings, so replacing every one
-## of them with its \u escape is always safe.
+## of them with its \u escape is always safe. Code 0 is skipped: Godot strings cannot
+## contain it, and String.chr(0) itself logs a Unicode error.
 static func escape_control_characters(json_text: String) -> String:
-	for character_code in range(0, 32):
+	for character_code in range(1, 32):
 		var control_character := String.chr(character_code)
 		if json_text.contains(control_character):
 			json_text = json_text.replace(control_character, "\\u%04x" % character_code)
