@@ -5,12 +5,14 @@
  *   godot-pilot                     Start the MCP server (this is what AI clients run).
  *   godot-pilot install <project>   Install or update the addon in a Godot project.
  *   godot-pilot doctor              Check the setup: Godot executables, running editors.
+ *   godot-pilot update              Install the newest release from GitHub.
  *   godot-pilot --version | help
  *
  * Server options (also readable from environment variables):
  *   --mode full|confirm|read-only    GODOT_PILOT_MODE      (default: full)
  *   --toolsets a,b,c | <profile>     GODOT_PILOT_TOOLSETS  (default: core,scene,inspector,script,project)
  *   --project <path>                 GODOT_PILOT_PROJECT   (editor to use when several run)
+ *   --no-update-check                GODOT_PILOT_NO_UPDATE_CHECK=1 (do not look for new versions)
  *
  * Important: in server mode, stdout belongs to the MCP protocol. Everything meant for
  * people must go to stderr (console.error).
@@ -27,6 +29,7 @@ import { getProductHomeDirectory } from "./paths.ts";
 import { PRODUCT_DISPLAY_NAME, PRODUCT_NAME, PRODUCT_VERSION } from "./product.ts";
 import { DEFAULT_TOOLSET_NAMES, TOOLSET_PROFILES } from "./tools/toolset-profiles.ts";
 import { ALL_TOOLSETS } from "./tools/toolsets.ts";
+import { installNewestRelease, isUpdateCheckDisabled, removePreviousExecutable } from "./updates/updates.ts";
 
 const HELP_TEXT = `${PRODUCT_DISPLAY_NAME} ${PRODUCT_VERSION} - lets AI assistants use the Godot editor.
 
@@ -34,6 +37,7 @@ Usage:
   ${PRODUCT_NAME}                      Start the MCP server (add this command to your AI client)
   ${PRODUCT_NAME} install <project>    Install or update the Godot addon in a project
   ${PRODUCT_NAME} doctor               Check Godot executables and running editors
+  ${PRODUCT_NAME} update               Install the newest release from GitHub
   ${PRODUCT_NAME} --version
 
 Server options:
@@ -41,6 +45,7 @@ Server options:
   --toolsets <names or profile>        Toolsets enabled at start, comma-separated,
                                        or one of: ${Object.keys(TOOLSET_PROFILES).join(", ")}
   --project <path>                     Editor to use when several are running
+  --no-update-check                    Do not look for new versions on GitHub
 
 Docs: https://github.com/Albis0/godot-pilot#readme`;
 
@@ -52,6 +57,7 @@ async function main(): Promise<void> {
       mode: { type: "string" },
       toolsets: { type: "string" },
       project: { type: "string" },
+      "no-update-check": { type: "boolean" },
       version: { type: "boolean", short: "v" },
       help: { type: "boolean", short: "h" },
     },
@@ -74,6 +80,11 @@ async function main(): Promise<void> {
     await runDoctorCommand();
     return;
   }
+  if (command === "update") {
+    const outcome = await installNewestRelease();
+    console.log(outcome.message);
+    return;
+  }
   if (command !== undefined && command !== "serve") {
     console.error(`Unknown command '${command}'.\n\n${HELP_TEXT}`);
     process.exit(1);
@@ -83,14 +94,22 @@ async function main(): Promise<void> {
     mode: options.mode ?? process.env.GODOT_PILOT_MODE,
     toolsets: options.toolsets ?? process.env.GODOT_PILOT_TOOLSETS,
     project: options.project ?? process.env.GODOT_PILOT_PROJECT,
+    checkForUpdates: options["no-update-check"] !== true && !isUpdateCheckDisabled(),
   });
 }
 
-async function runServer(options: { mode?: string; toolsets?: string; project?: string }): Promise<void> {
+async function runServer(options: {
+  mode?: string;
+  toolsets?: string;
+  project?: string;
+  checkForUpdates: boolean;
+}): Promise<void> {
+  await removePreviousExecutable();
   const { server, editors } = createMcpServer({
     permissionMode: parsePermissionMode(options.mode),
     initialToolsets: resolveToolsetSelection(options.toolsets),
     preselectedProjectPath: options.project ? resolve(options.project) : undefined,
+    checkForUpdates: options.checkForUpdates,
   });
 
   const transport = new StdioServerTransport();

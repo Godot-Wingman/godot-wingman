@@ -25,3 +25,6 @@ export const HOME_OVERRIDE_ENVIRONMENT_VARIABLE = "GODOT_PILOT_HOME";
 
 /** Points to a Godot executable when it cannot be found automatically. */
 export const GODOT_PATH_ENVIRONMENT_VARIABLE = "GODOT_PATH";
+
+/** GitHub repository ("owner/name") whose releases are checked for updates. */
+export const PRODUCT_REPOSITORY = "Albis0/godot-pilot";
