@@ -27,6 +27,16 @@ Godot changes between versions. Do not guess method names.
 - After writing a script: check `get_logs` with levels ["error", "script_error"] for parse errors.
 - After visual changes: take a screenshot.
 - After gameplay changes: run the game and play it (play and input toolsets), then read the errors.
+- Levels: `get_tiles` draws a TileMapLayer as text, cheaper than a screenshot.
+- Menus and HUDs: `get_ui_layout` lists controls with zero size or off screen.
+- 3D placement: `get_bounds` gives sizes in meters; `render_view` shows the result.
+- Animations: `preview_animation` returns the animated values at a moment.
+
+## Building blocks worth knowing
+
+- One call builds a lot: `build_ui` (whole menu), `set_tiles` with rectangles (floors, walls), `create_animation` with all tracks and keys, `add_mesh` with `body` (mesh + collision), `setup_environment` (sky + sun).
+- Values accept natural forms everywhere: `[x, y]`, `"#ff8800"`, `"res://..."`, a class name for a new resource, or `{"type": "StyleBoxFlat", "properties": {...}}` for a new resource with settings.
+- Finished game: `list_export_presets`, `add_export_preset`, then `export_project`.
 
 ## 5. Keep the context small
 

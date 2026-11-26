@@ -14,7 +14,7 @@ Ayrıntılar için [İngilizce README](README.md) ve [kurulum rehberi](docs/INST
 - AI editörü, 2D/3D görünümü ve oyunu görür.
 - Oyunu gerçek input ile oynar: tuşu basılı tutma, zamanlama, kare kare ilerletme.
 - Kurulu Godot sürümünün kendi dokümantasyonunu okur; API uydurmaz.
-- Araçlar gruplar halindedir, AI ihtiyacı olanı açıp kapatır; bağlam şişmez.
+- Araçlar gruplar halindedir (20 grupta 118 araç: sahne, inspector, script, animasyon, tilemap, arayüz, 3D, shader, ses, export, oyunu oynama...), AI ihtiyacı olanı açıp kapatır; bağlam şişmez.
 - İzin modları: `full`, `confirm` (her değişiklikten önce Godot'ta İzin ver / Reddet), `read-only`.
 - GDScript, C# ve GDExtension (Rust, C++) projeleriyle çalışır.
 - Her şey senin bilgisayarında çalışır. Hesap yok, bulut yok, **veri toplama yok**.
