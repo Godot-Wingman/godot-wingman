@@ -9,10 +9,11 @@
     "start": "bun run server/src/main.ts",
     "bundle-addon": "bun run scripts/bundle-addon.ts",
     "build": "bun run bundle-addon && bun run scripts/build-binaries.ts",
-    "test": "bun run bundle-addon && bun test",
+    "test": "bun test",
     "lint": "biome check .",
     "format": "biome check --write .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:unit": "bun test tests/unit"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",
