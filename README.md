@@ -10,11 +10,23 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Godot-wingman/godot-wingman/releases"><img alt="Latest release" src="https://img.shields.io/github/v/release/Godot-wingman/godot-wingman?style=flat-square&color=478cbf"></a>
+  <img alt="MCP server" src="https://img.shields.io/badge/MCP-server-2ea043?style=flat-square&logo=modelcontextprotocol&logoColor=white">
+  <img alt="Made for Godot" src="https://img.shields.io/badge/made_for-Godot_4.5%2B-478cbf?style=flat-square&logo=godotengine&logoColor=white">
+  <img alt="Bun" src="https://img.shields.io/badge/Bun-runtime-000000?style=flat-square&logo=bun&logoColor=white">
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-server-3178c6?style=flat-square&logo=typescript&logoColor=white">
+  <img alt="GDScript" src="https://img.shields.io/badge/GDScript-addon-355570?style=flat-square&logo=godotengine&logoColor=white">
+  <img alt="Windows, macOS and Linux" src="https://img.shields.io/badge/platform-Windows_%7C_macOS_%7C_Linux-555555?style=flat-square">
+</p>
+
+<p align="center">
+  <a href="https://github.com/Godot-wingman/godot-wingman/releases"><img alt="Latest release" src="https://img.shields.io/github/v/release/Godot-wingman/godot-wingman?style=flat-square&color=478cbf&label=release"></a>
+  <a href="https://github.com/Godot-wingman/godot-wingman/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/Godot-wingman/godot-wingman/total?style=flat-square&color=478cbf"></a>
+  <a href="https://github.com/Godot-wingman/godot-wingman/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/Godot-wingman/godot-wingman/ci.yml?branch=main&style=flat-square&label=tests"></a>
+  <a href="https://github.com/Godot-wingman/godot-wingman/commits/main"><img alt="Last commit" src="https://img.shields.io/github/last-commit/Godot-wingman/godot-wingman?style=flat-square"></a>
+  <a href="https://github.com/Godot-wingman/godot-wingman/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/Godot-wingman/godot-wingman?style=flat-square&logo=github"></a>
+  <a href="https://github.com/Godot-wingman/godot-wingman/forks"><img alt="Forks" src="https://img.shields.io/github/forks/Godot-wingman/godot-wingman?style=flat-square&logo=github"></a>
   <a href="LICENSE"><img alt="License: AGPL-3.0" src="https://img.shields.io/badge/license-AGPL--3.0-478cbf?style=flat-square"></a>
-  <img alt="Godot 4.5 or newer" src="https://img.shields.io/badge/Godot-4.5%2B-478cbf?style=flat-square&logo=godotengine&logoColor=white">
   <img alt="No telemetry" src="https://img.shields.io/badge/telemetry-none-2ea043?style=flat-square">
-  <a href="https://github.com/Godot-wingman/godot-wingman/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/Godot-wingman/godot-wingman/actions/workflows/ci.yml/badge.svg"></a>
 </p>
 
 <p align="center">
