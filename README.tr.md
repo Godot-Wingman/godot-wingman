@@ -15,7 +15,7 @@ Ayrıntılar için [İngilizce README](README.md) ve [kurulum rehberi](docs/INST
 - Oyunu gerçek input ile oynar: tuşu basılı tutma, zamanlama, kare kare ilerletme, "şu olana kadar bekle".
 - Kurulu Godot sürümünün kendi dokümantasyonunu ve GDExtension sınıflarını okur.
 - Editörün altındaki Godot Pilot paneli AI'ın yaptığı her değişikliği listeler; script, sahne, kaynak ve ayarları istediğin adımdan önceki haline döndürebilir.
-- Araçlar gruplar halindedir (20 grupta 118 araç: sahne, inspector, script, animasyon, tilemap, arayüz, 3D, shader, ses, export, oyunu oynama...). AI sadece ihtiyacı olan grupları açar.
+- Araçlar gruplar halindedir (20 grupta 120 araç: sahne, inspector, script, animasyon, tilemap, arayüz, 3D, shader, ses, export, oyunu oynama...). AI sadece ihtiyacı olan grupları açar.
 
 ## İzin modları
 

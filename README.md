@@ -18,7 +18,7 @@ Godot Pilot works inside the open Godot editor, through an addon:
 - **Godot knowledge.** The class reference of the Godot version you have installed, plus the classes of your GDExtensions and scripts.
 - **Fallback.** When no tool fits, the AI can run GDScript inside the editor.
 - **You stay in control.** The Godot Pilot panel at the bottom of the editor lists every change the AI made and can put scripts, scenes, resources and settings back to how they were before any of them.
-- **Small context.** 118 tools in 20 toolsets: scene, inspector, script, project settings, signals, resources, file system, viewport, playing the game, input, live game inspection, debugging, animation, tile maps, UI, 3D, shaders, audio and export. The AI turns on only the groups it needs. See the [changelog](CHANGELOG.md).
+- **Small context.** 120 tools in 20 toolsets: scene, inspector, script, project settings, signals, resources, file system, viewport, playing the game, input, live game inspection, debugging, animation, tile maps, UI, 3D, shaders, audio and export. The AI turns on only the groups it needs. See the [changelog](CHANGELOG.md).
 
 ## Permission modes
 
