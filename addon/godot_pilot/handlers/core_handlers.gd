@@ -8,6 +8,7 @@ const ValueCodec := preload("../utils/value_codec.gd")
 const ConfirmationPrompt := preload("../ui/confirmation_prompt.gd")
 const ImageEncoding := preload("../utils/image_encoding.gd")
 const ScriptSource := preload("../utils/script_source.gd")
+const FrameWaiter := preload("../utils/frame_waiter.gd")
 
 const DEFAULT_LOG_LIMIT := 100
 const DEFAULT_SCREENSHOT_MAX_SIZE := 1280
@@ -139,7 +140,7 @@ func _take_screenshot(params: Dictionary) -> Variant:
 		)
 
 	# Wait until the current frame is drawn so the picture is up to date.
-	await RenderingServer.frame_post_draw
+	await FrameWaiter.wait_for_drawn_frame(_context.get_scene_tree())
 
 	var view := String(params.get("view", "editor"))
 	var image: Image

@@ -8,6 +8,7 @@ extends RefCounted
 
 const PilotError := preload("../utils/pilot_error.gd")
 const CoreHandlers := preload("core_handlers.gd")
+const FrameWaiter := preload("../utils/frame_waiter.gd")
 
 const DEFAULT_RENDER_WIDTH := 960
 const DEFAULT_RENDER_HEIGHT := 540
@@ -61,8 +62,8 @@ func _render_view(params: Dictionary) -> Variant:
 		_set_up_2d_camera(render_viewport, target, params)
 
 	# Two frames: one to process the new nodes, one to draw them.
-	await RenderingServer.frame_post_draw
-	await RenderingServer.frame_post_draw
+	await FrameWaiter.wait_for_drawn_frame(_context.get_scene_tree())
+	await FrameWaiter.wait_for_drawn_frame(_context.get_scene_tree())
 	var image := render_viewport.get_texture().get_image()
 	render_viewport.queue_free()
 	if image == null or image.is_empty():
