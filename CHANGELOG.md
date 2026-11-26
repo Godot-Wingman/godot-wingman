@@ -46,5 +46,9 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Fixed
 
+- The addon really stays out of exported games now: Godot's own GDScript export step packed the addon's scripts before the export filter could skip them. The addon folder now has a `.gdignore` file, and a test checks the exported pack.
+- The game bridge leaves `project.godot` as soon as the game runs, so an export made while the game runs cannot list it.
+- Screenshots and renders no longer wait forever when the editor is idle and draws no new frames.
+- Godot 4.7 no longer logs a Unicode error for every message the addon sends.
 - Taps are held for at least two physics ticks, so games that read `is_action_just_pressed()` in `_physics_process` do not miss them on high refresh rate screens.
 - `reimport_files` and `write_file` also work for files in folders the editor has not scanned yet.
