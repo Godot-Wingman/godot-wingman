@@ -23,7 +23,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
       - run: bun run bundle-addon
@@ -40,7 +40,7 @@ jobs:
         # Oldest supported version (log capture needs 4.5), the previous one and the newest.
         godot-version: ["4.5.2-stable", "4.6.3-stable", "4.7.2-stable"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
       - name: Download Godot ${{ matrix.godot-version }}
@@ -58,7 +58,7 @@ jobs:
     name: Editor window tests (virtual screen)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
       - name: Virtual screen and software graphics drivers
@@ -81,7 +81,7 @@ jobs:
     name: Build binaries
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
       - run: bun run build
