@@ -1,12 +1,12 @@
 @tool
 extends EditorPlugin
-## Entry point of the Godot Pilot addon.
+## Entry point of the Godot Wingman addon.
 ##
 ## When the editor loads the plugin, it:
 ## 1. starts capturing the editor's output (Godot 4.5+),
 ## 2. starts a WebSocket server on 127.0.0.1 with a random secret token,
 ## 3. writes a registry file so the MCP server can find this editor,
-## 4. adds the "Godot Pilot" panel (permission mode, activity list, going back).
+## 4. adds the "Godot Wingman" panel (permission mode, activity list, going back).
 ## Everything is undone when the plugin is disabled or the editor closes.
 ##
 ## The addon only lives in the editor: nothing from it runs in exported games.
@@ -40,12 +40,12 @@ const HANDLER_GROUP_SCRIPTS: Array[Script] = [
 
 const GameDebuggerBridge := preload("bridge/game_debugger_bridge.gd")
 const ExportFilter := preload("bridge/export_filter.gd")
-const PilotSession := preload("session/pilot_session.gd")
-const PilotDock := preload("ui/pilot_dock.gd")
+const WingmanSession := preload("session/wingman_session.gd")
+const WingmanDock := preload("ui/wingman_dock.gd")
 
 const TOKEN_BYTE_COUNT := 24
 ## Name of the temporary autoload that runs inside the game (runtime/game_bridge.gd).
-const GAME_BRIDGE_AUTOLOAD_NAME := "GodotPilotGameBridge"
+const GAME_BRIDGE_AUTOLOAD_NAME := "GodotWingmanGameBridge"
 
 var _addon_directory: String
 var _log_capture: Object
@@ -54,8 +54,8 @@ var _bridge_server: BridgeServer
 var _registry_file: EditorRegistryFile
 var _game_debugger_bridge: GameDebuggerBridge
 var _export_filter: ExportFilter
-var _session: PilotSession
-var _dock: PilotDock
+var _session: WingmanSession
+var _dock: WingmanDock
 
 
 func _enter_tree() -> void:
@@ -81,7 +81,7 @@ func _enter_tree() -> void:
 
 	var context := EditorContext.new(self, _log_capture, _read_addon_version(addon_directory), addon_directory)
 	context.game_bridge = _game_debugger_bridge
-	_session = PilotSession.new(get_tree(), addon_directory)
+	_session = WingmanSession.new(get_tree(), addon_directory)
 	context.session = _session
 	var dispatcher := RequestDispatcher.new()
 	for handler_group_script in HANDLER_GROUP_SCRIPTS:
@@ -95,7 +95,7 @@ func _enter_tree() -> void:
 
 	_bridge_server = BridgeServer.new(dispatcher, token, editor_information)
 	if _bridge_server.start_listening() != OK:
-		push_error("Godot Pilot: could not find a free port between %d and %d." % [BridgeServer.FIRST_PORT, BridgeServer.LAST_PORT])
+		push_error("Godot Wingman: could not find a free port between %d and %d." % [BridgeServer.FIRST_PORT, BridgeServer.LAST_PORT])
 		_bridge_server = null
 		return
 	add_child(_bridge_server)
@@ -105,8 +105,8 @@ func _enter_tree() -> void:
 	_bridge_server.take_notices = _session.notices.take_pending
 	scene_changed.connect(_on_scene_changed)
 	if DisplayServer.get_name() != "headless":
-		_dock = PilotDock.new(_session, context.addon_version)
-		add_control_to_bottom_panel(_dock, "Godot Pilot")
+		_dock = WingmanDock.new(_session, context.addon_version)
+		add_control_to_bottom_panel(_dock, "Godot Wingman")
 
 	var registry_information := editor_information.duplicate()
 	registry_information["port"] = _bridge_server.port
@@ -114,9 +114,9 @@ func _enter_tree() -> void:
 	_registry_file = EditorRegistryFile.new()
 	var registry_error := _registry_file.write(registry_information)
 	if registry_error != OK:
-		push_error("Godot Pilot: could not write the registry file (%s)." % error_string(registry_error))
+		push_error("Godot Wingman: could not write the registry file (%s)." % error_string(registry_error))
 
-	print("Godot Pilot %s: ready for AI connections on port %d." % [context.addon_version, _bridge_server.port])
+	print("Godot Wingman %s: ready for AI connections on port %d." % [context.addon_version, _bridge_server.port])
 
 
 ## Godot calls this right before the game starts (Play button or run_game). The game
@@ -208,8 +208,8 @@ func _on_scene_changed(_scene_root: Node) -> void:
 
 func _on_client_count_changed(authenticated_client_count: int) -> void:
 	if authenticated_client_count > 0:
-		print("Godot Pilot: %d AI connection(s) active." % authenticated_client_count)
+		print("Godot Wingman: %d AI connection(s) active." % authenticated_client_count)
 	else:
-		print("Godot Pilot: no AI connected.")
+		print("Godot Wingman: no AI connected.")
 	if _dock != null:
 		_dock.show_connected_clients(_bridge_server.get_client_descriptions())

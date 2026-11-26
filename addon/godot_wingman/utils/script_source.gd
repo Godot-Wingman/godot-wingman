@@ -45,7 +45,7 @@ static func clean_log_entries(entries: Array, line_offset: int) -> Array:
 		if entry.has("stack"):
 			var useful_frames: Array[String] = []
 			for frame in entry["stack"]:
-				if String(frame).contains("addons/godot_pilot/"):
+				if String(frame).contains("addons/godot_wingman/"):
 					continue
 				if String(frame).begins_with("gdscript://"):
 					var frame_line := int(String(frame).get_slice(":", 2).get_slice(" ", 0))

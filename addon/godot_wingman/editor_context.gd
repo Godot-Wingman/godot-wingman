@@ -5,7 +5,7 @@ extends RefCounted
 ## One instance is created by the plugin and passed to each handler group, so the
 ## handlers do not need to know how the plugin is put together.
 
-const PilotError := preload("utils/pilot_error.gd")
+const WingmanError := preload("utils/wingman_error.gd")
 const ValueCodec := preload("utils/value_codec.gd")
 const NodeSearch := preload("utils/node_search.gd")
 
@@ -13,11 +13,11 @@ var plugin: EditorPlugin
 ## Collects editor output. Null on Godot versions older than 4.5 (no Logger class).
 var log_capture: Object
 var addon_version: String
-## Folder of the addon, for example "res://addons/godot_pilot".
+## Folder of the addon, for example "res://addons/godot_wingman".
 var addon_directory: String
 ## Connection to the running game (bridge/game_debugger_bridge.gd). Set by the plugin.
 var game_bridge: EditorDebuggerPlugin
-## Permissions, activity list and checkpoints (session/pilot_session.gd). Set by the plugin.
+## Permissions, activity list and checkpoints (session/wingman_session.gd). Set by the plugin.
 var session: RefCounted
 
 
@@ -41,11 +41,11 @@ func get_scene_tree() -> SceneTree:
 
 
 ## Finds a node in the edited scene. `node_path` is relative to the scene root;
-## "." or "" means the root itself. Returns a PilotError when the node is missing.
+## "." or "" means the root itself. Returns a WingmanError when the node is missing.
 func find_node_in_edited_scene(node_path: String) -> Variant:
 	var scene_root := get_edited_scene_root()
 	if scene_root == null:
-		return PilotError.new("NO_OPEN_SCENE", "No scene is open in the editor.", "Open a scene first.")
+		return WingmanError.new("NO_OPEN_SCENE", "No scene is open in the editor.", "Open a scene first.")
 	if node_path == "" or node_path == "." or node_path == scene_root.name:
 		return scene_root
 	var found_node := scene_root.get_node_or_null(NodePath(node_path.trim_prefix("./")))
@@ -54,7 +54,7 @@ func find_node_in_edited_scene(node_path: String) -> Variant:
 		var hint := "Paths are relative to the scene root, for example \"Player/Sprite2D\". Use get_scene_tree to see the paths."
 		if not similar_paths.is_empty():
 			hint = "Did you mean: %s? " % ", ".join(similar_paths) + hint
-		return PilotError.new(
+		return WingmanError.new(
 			"NODE_NOT_FOUND",
 			"No node at '%s' in the scene '%s'." % [node_path, scene_root.scene_file_path],
 			hint
