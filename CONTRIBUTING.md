@@ -14,10 +14,10 @@ You need [Bun](https://bun.sh) and Godot 4.5 or newer.
 
 ```
 bun install
-bun test
+bun run test
 ```
 
-`bun test` also starts a real headless Godot editor. If Godot is not found automatically, set `GODOT_PATH` to the Godot executable.
+`bun run test` bundles the addon and also starts a real headless Godot editor. If Godot is not found automatically, set `GODOT_PATH` to the Godot executable.
 
 ## Project layout
 
@@ -54,6 +54,8 @@ To add a tool:
 
 Write readable code.
 
+### Rules for everyone
+
 - **Descriptive names everywhere.** No single letters or abbreviations: `node`, not `n`; `elapsedSeconds`, not `t`; `response`, not `res`. This includes loop variables and math.
 - **Small functions that do one thing.** Split long functions into named steps.
 - **Comments explain why**, not what. Every file starts with a short comment about its purpose.
@@ -61,6 +63,16 @@ Write readable code.
 - **GDScript:** static types (`var speed: float`), Godot's naming conventions (`snake_case`), tabs. Everything in the addon must work in the editor only and must never affect exported games.
 - **Changes in the editor go through `EditorUndoRedoManager`** so people can press Ctrl+Z.
 - **Do not depend on one Godot version.** Read classes and properties from `ClassDB` at runtime; check for features with `has_method` / `ClassDB.class_exists` instead of version numbers.
+
+### Rules for AI coding agents
+
+These rules are for AI agents (Claude Code, Codex, Cursor and others) that write code for this project. They come on top of the rules above.
+
+- **No shortcuts in names.** The naming rule also applies to small helpers, one-line callbacks and formulas. Do not shorten names to save space.
+- **Check the Godot API before using it.** Look the class up in the installed Godot version (`ClassDB` or the class reference). Do not guess method names, and do not use Godot 3 APIs.
+- **Follow the existing patterns.** New tools use `defineEditorTool` or `defineTool` and go into `server/src/tools/toolsets.ts`; new handler files go into `HANDLER_GROUP_SCRIPTS` in `plugin.gd`. Do not add dependencies, and never Python or npm packages.
+- **Keep the change focused.** Do not reformat, rename or rewrite code that the task does not need.
+- **Prove it works.** Run `bun run lint`, `bun run typecheck` and `bun run test` (not plain `bun test`, which skips rebuilding the bundled addon) before saying the work is done. Report failures as they are; do not hide or skip them.
 
 ## Commits and pull requests
 
