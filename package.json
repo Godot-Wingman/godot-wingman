@@ -12,7 +12,7 @@
     "test": "bun test",
     "lint": "biome check .",
     "format": "biome check --write .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "bun run bundle-addon && tsc --noEmit",
     "test:unit": "bun test tests/unit"
   },
   "dependencies": {
