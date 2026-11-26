@@ -137,7 +137,9 @@ describe("playing the game", () => {
     const testEditor = editor;
     const readTicks = async () =>
       parseJson<{ result: number }>(
-        await testEditor.callTool("execute_game_script", { code: 'return node("PhysicsFrameCounter").ticks' }),
+        await testEditor.callTool("execute_game_script", {
+          code: 'return node("PhysicsFrameCounter").ticks',
+        }),
       ).result;
     const ticksBefore = await readTicks();
     await editor.callTool("step_frames", { count: 5 });
