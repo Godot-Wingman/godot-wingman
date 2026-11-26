@@ -248,6 +248,8 @@ static func _parse_object(input: Variant, target_class: String, scene_root: Node
 		return _success(null)
 	if input is Object:
 		return _success(input)
+	if input is Dictionary and input.has("type"):
+		return build_resource(input, target_class, scene_root)
 	if input is Dictionary and input.has("node"):
 		input = String(input["node"])
 	if not input is String:
@@ -285,3 +287,35 @@ static func _success(value: Variant) -> Dictionary:
 
 static func _failure(error_message: String) -> Dictionary:
 	return {"ok": false, "error": error_message}
+
+
+## Creates a new resource from {"type": "StyleBoxFlat", "properties": {"bg_color": "#222"}}.
+## Property values are converted like any other value, so resources can be nested.
+static func build_resource(description: Dictionary, target_class: String = "", scene_root: Node = null) -> Dictionary:
+	var resource_type := String(description.get("type", ""))
+	if not ClassDB.class_exists(resource_type) or not ClassDB.is_parent_class(resource_type, "Resource"):
+		return _failure("'%s' is not a resource class." % resource_type)
+	if not ClassDB.can_instantiate(resource_type):
+		return _failure("%s is a base class and cannot be created directly." % resource_type)
+	if target_class != "" and ClassDB.class_exists(target_class) and not ClassDB.is_parent_class(resource_type, target_class):
+		return _failure("This property needs a %s, but %s is not one." % [target_class, resource_type])
+	var resource: Resource = ClassDB.instantiate(resource_type)
+	var properties: Variant = description.get("properties", {})
+	if not properties is Dictionary:
+		return _failure("\"properties\" of a %s must be an object." % resource_type)
+	for property_name in properties:
+		var property_information := {}
+		for property in resource.get_property_list():
+			if property["name"] == property_name:
+				property_information = property
+				break
+		if property_information.is_empty():
+			return _failure("%s has no property '%s'." % [resource_type, property_name])
+		var property_class := String(property_information.get("class_name", ""))
+		if int(property_information["type"]) == TYPE_OBJECT and int(property_information.get("hint", 0)) == PROPERTY_HINT_RESOURCE_TYPE:
+			property_class = String(property_information.get("hint_string", "")).get_slice(",", 0)
+		var conversion := from_json_value(properties[property_name], int(property_information["type"]), property_class, scene_root)
+		if not conversion["ok"]:
+			return _failure("%s.%s: %s" % [resource_type, property_name, conversion["error"]])
+		resource.set(property_name, conversion["value"])
+	return _success(resource)
