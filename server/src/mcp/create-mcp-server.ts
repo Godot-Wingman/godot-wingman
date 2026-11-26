@@ -14,6 +14,7 @@ import {
 import { GUIDES } from "../guides/guides.ts";
 import { PRODUCT_NAME, PRODUCT_VERSION } from "../product.ts";
 import { ALL_TOOLSETS } from "../tools/toolsets.ts";
+import { describeAvailableUpdate, findUpdateToAnnounce } from "../updates/updates.ts";
 import type { PermissionMode } from "./permission-mode.ts";
 import { SERVER_INSTRUCTIONS } from "./server-instructions.ts";
 import type { ToolContext } from "./tool-definition.ts";
@@ -28,6 +29,8 @@ export interface CreateServerOptions {
   toolsets?: Toolset[];
   /** How long the approval dialog waits in "confirm" mode; tests make it short. */
   confirmationTimeoutSeconds?: number;
+  /** Look for a newer release on GitHub and tell the AI (see updates/updates.ts). */
+  checkForUpdates?: boolean;
 }
 
 export interface CreatedServer {
@@ -70,6 +73,14 @@ export function createMcpServer(options: CreateServerOptions): CreatedServer {
     { confirmationTimeoutSeconds: options.confirmationTimeoutSeconds, getAiClientName },
   );
   toolsets.registerAll(options.initialToolsets);
+
+  if (options.checkForUpdates) {
+    void findUpdateToAnnounce().then((release) => {
+      if (release) {
+        editors.addNotice("update_available", describeAvailableUpdate(release));
+      }
+    });
+  }
 
   for (const guide of GUIDES) {
     server.registerResource(
