@@ -11,10 +11,13 @@ import { type SetupStep, setUpAiClients } from "../../server/src/setup/client-se
 const EXECUTABLE = "C:\\Tools\\godot-wingman.exe";
 let home = "";
 let applicationData = "";
+/** The commands the fake computer has on its PATH. */
+let commandsOnPath = new Map<string, string>();
 
 beforeEach(async () => {
   home = await mkdtemp(join(tmpdir(), "godot-wingman-setup-"));
   applicationData = join(home, "AppData");
+  commandsOnPath = new Map();
 });
 
 afterEach(async () => {
@@ -35,6 +38,8 @@ function runSetup(
     homeDirectory: home,
     applicationDataDirectory: applicationData,
     runClaudeCommand: async () => claudeExitCode,
+    findCommand: (commandName) => commandsOnPath.get(commandName) ?? null,
+    findProgramFolders: () => [],
   });
 }
 
@@ -47,6 +52,24 @@ test("apps that are not installed are skipped and nothing is written", async () 
   expect(outcomeOf(steps, "Codex")).toBe("skipped");
   expect(outcomeOf(steps, "Cursor")).toBe("skipped");
   expect(outcomeOf(steps, "Claude Code")).toBe("skipped");
+});
+
+test("folders left by other apps or by a removed app do not count as installed", async () => {
+  // Antigravity creates these, and they stay after Windsurf is removed.
+  await mkdir(join(home, ".gemini", "antigravity"), { recursive: true });
+  await mkdir(join(home, ".codeium", "windsurf"), { recursive: true });
+  await mkdir(join(home, ".cursor"));
+  const steps = await runSetup();
+  expect(outcomeOf(steps, "Gemini CLI")).toBe("skipped");
+  expect(outcomeOf(steps, "Windsurf")).toBe("skipped");
+  expect(outcomeOf(steps, "Cursor")).toBe("skipped");
+});
+
+test("an app whose command is on the PATH is set up even before its first run", async () => {
+  commandsOnPath.set("gemini", "C:\\Tools\\gemini.cmd");
+  expect(outcomeOf(await runSetup(), "Gemini CLI")).toBe("added");
+  const config = JSON.parse(await readFile(join(home, ".gemini", "settings.json"), "utf8"));
+  expect(config.mcpServers["godot-wingman"]).toEqual({ command: "C:/Tools/godot-wingman.exe" });
 });
 
 test("Codex gets a section with a longer tool timeout, once", async () => {
@@ -134,6 +157,8 @@ test("Claude Code gets the bundle command with its argument", async () => {
       commands.push(commandArguments);
       return commandArguments[1] === "remove" ? 1 : 0;
     },
+    findCommand: () => null,
+    findProgramFolders: () => [],
   });
   expect(commands[0]).toEqual(["mcp", "remove", "--scope", "user", "godot-wingman"]);
   expect(commands[1]).toEqual(["mcp", "add", "--scope", "user", "godot-wingman", "--", BUN, BUNDLE]);

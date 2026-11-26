@@ -2,7 +2,7 @@
  * `godot-wingman setup`: adds Godot Wingman to the AI apps installed on this computer, so
  * the person does not have to edit configuration files by hand.
  *
- * For each app whose configuration folder exists, the godot-wingman entry is added, or
+ * For each app that is installed, the godot-wingman entry is added, or
  * changed when it starts Godot Wingman in another way (for example the old executable
  * instead of the small bundle run by Bun). A copy of the file is saved next to it first
  * (".before-godot-wingman"). Claude Code is set up with its own `claude mcp` commands.
@@ -25,8 +25,15 @@ export interface SetupStep {
 
 interface JsonClient {
   name: string;
-  /** The app's folder: when it does not exist, the app is not installed. */
-  folder: string;
+  /**
+   * Paths that exist only while the app is installed: its program folder, or a file it
+   * writes on first use. A bare settings folder is not enough, because it stays after the
+   * app is removed, and other apps create the same folders (Antigravity creates ~/.gemini
+   * and ~/.codeium/windsurf).
+   */
+  installedMarkers: string[];
+  /** The app's command; when it is on the PATH, the app is installed. */
+  commandName?: string;
   configFile: string;
   /** Key of the server list in the JSON file. */
   serversKey: string;
@@ -39,6 +46,10 @@ export interface SetupOptions {
   applicationDataDirectory?: string;
   /** Runs `claude mcp ...`; returns the exit code, or null without Claude Code. Replaced in tests. */
   runClaudeCommand?: (commandArguments: string[]) => Promise<number | null>;
+  /** Finds a command on the PATH; returns null when it is not there. Replaced in tests. */
+  findCommand?: (commandName: string) => string | null;
+  /** The folders an app named like this is installed to. Replaced in tests. */
+  findProgramFolders?: (applicationName: string) => string[];
 }
 
 /** The "command" and "args" entries of a settings file; "args" only when there are any. */
@@ -50,40 +61,57 @@ interface LaunchEntry {
 export async function setUpAiClients(options: SetupOptions): Promise<SetupStep[]> {
   const home = options.homeDirectory ?? homedir();
   const applicationData = options.applicationDataDirectory ?? getOperatingSystemDataDirectory();
+  const findCommand = options.findCommand ?? ((commandName: string) => Bun.which(commandName));
+  const findProgramFolders =
+    options.findProgramFolders ?? ((applicationName: string) => listProgramFolders(applicationName, home));
   const launchEntry = describeLaunch(options.launch);
   const steps: SetupStep[] = [];
 
   steps.push(await setUpCodex(join(home, ".codex"), launchEntry));
   const claudeDesktopFolder =
     process.platform === "linux" ? join(home, ".config", "Claude") : join(applicationData, "Claude");
+  const cursorConfigFile = join(home, ".cursor", "mcp.json");
+  const geminiConfigFile = join(home, ".gemini", "settings.json");
+  const windsurfConfigFile = join(home, ".codeium", "windsurf", "mcp_config.json");
   const jsonClients: JsonClient[] = [
     {
       name: "Claude Desktop",
-      folder: claudeDesktopFolder,
+      installedMarkers: [claudeDesktopFolder],
       configFile: join(claudeDesktopFolder, "claude_desktop_config.json"),
       serversKey: "mcpServers",
     },
     {
       name: "Cursor",
-      folder: join(home, ".cursor"),
-      configFile: join(home, ".cursor", "mcp.json"),
+      installedMarkers: [cursorConfigFile, ...findProgramFolders("Cursor")],
+      commandName: "cursor",
+      configFile: cursorConfigFile,
       serversKey: "mcpServers",
     },
     {
       name: "Gemini CLI",
-      folder: join(home, ".gemini"),
-      configFile: join(home, ".gemini", "settings.json"),
+      // Gemini CLI writes settings.json when it is first set up.
+      installedMarkers: [geminiConfigFile],
+      commandName: "gemini",
+      configFile: geminiConfigFile,
       serversKey: "mcpServers",
     },
     {
       name: "Windsurf",
-      folder: join(home, ".codeium", "windsurf"),
-      configFile: join(home, ".codeium", "windsurf", "mcp_config.json"),
+      installedMarkers: [windsurfConfigFile, ...findProgramFolders("Windsurf")],
+      commandName: "windsurf",
+      configFile: windsurfConfigFile,
       serversKey: "mcpServers",
     },
   ];
   for (const client of jsonClients) {
-    steps.push(await setUpJsonClient(client, launchEntry));
+    const isInstalled =
+      client.installedMarkers.some((marker) => existsSync(marker)) ||
+      (client.commandName !== undefined && findCommand(client.commandName) !== null);
+    steps.push(
+      isInstalled
+        ? await setUpJsonClient(client, launchEntry)
+        : { client: client.name, outcome: "skipped", detail: "not installed" },
+    );
   }
   steps.push(await setUpClaudeCode(options));
   steps.push({
@@ -121,10 +149,23 @@ function withServerOptions(launchEntry: LaunchEntry, serverOptions: string[]): L
     : { command: launchEntry.command };
 }
 
-async function setUpJsonClient(client: JsonClient, launchEntry: LaunchEntry): Promise<SetupStep> {
-  if (!existsSync(client.folder)) {
-    return { client: client.name, outcome: "skipped", detail: "not installed" };
+/** Where desktop apps install themselves: per user on Windows, the Applications folders on macOS. */
+function listProgramFolders(applicationName: string, home: string): string[] {
+  if (process.platform === "win32") {
+    const localApplicationData = process.env.LOCALAPPDATA ?? join(home, "AppData", "Local");
+    return [join(localApplicationData, "Programs", applicationName)];
   }
+  if (process.platform === "darwin") {
+    return [
+      join("/Applications", `${applicationName}.app`),
+      join(home, "Applications", `${applicationName}.app`),
+    ];
+  }
+  // On Linux the command on the PATH is the sign.
+  return [];
+}
+
+async function setUpJsonClient(client: JsonClient, launchEntry: LaunchEntry): Promise<SetupStep> {
   let configuration: Record<string, unknown> = {};
   if (existsSync(client.configFile)) {
     const text = await readFile(client.configFile, "utf8");
