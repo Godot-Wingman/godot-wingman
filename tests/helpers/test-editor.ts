@@ -51,10 +51,14 @@ export interface StartTestEditorOptions {
   confirmationTimeoutSeconds?: number;
   /** Open a real editor window instead of a headless editor (tests/windowed). */
   windowed?: boolean;
+  /** Godot to use instead of the best one found (for example the .NET build). */
+  godotExecutable?: string;
+  /** Called with the copied project folder before the editor opens it. */
+  prepareProject?: (projectPath: string) => Promise<void>;
 }
 
 export async function startTestEditor(options: StartTestEditorOptions = {}): Promise<TestEditor | null> {
-  const godot = await findBestGodotExecutable();
+  const godot = options.godotExecutable ? { path: options.godotExecutable } : await findBestGodotExecutable();
   if (!godot) {
     console.warn("No Godot executable found (set GODOT_PATH): skipping editor tests.");
     return null;
@@ -81,6 +85,8 @@ run/main_run_args="--headless"
 `,
     );
   }
+
+  await options.prepareProject?.(projectPath);
 
   const launchResult = await launchEditor({
     projectPath,

@@ -1,0 +1,13 @@
+# A tiny GDExtension written in Rust (godot-rust), used by tests/languages/gdextension.test.ts
+# to check that Godot Pilot sees and uses classes that extensions add.
+[package]
+name = "pilot_extension"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+godot = ">=0.3"
