@@ -7,6 +7,7 @@ import { createHash } from "node:crypto";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { BUNDLE_ASSET_NAME } from "../../server/src/installation.ts";
 import { HOME_OVERRIDE_ENVIRONMENT_VARIABLE } from "../../server/src/product.ts";
 import {
   compareVersions,
@@ -20,6 +21,7 @@ import {
 } from "../../server/src/updates/updates.ts";
 
 const NEW_EXECUTABLE = new TextEncoder().encode("the new version");
+const NEW_BUNDLE = new TextEncoder().encode("the new bundle");
 const ASSET_NAME = getReleaseAssetName();
 
 function sha256(bytes: Uint8Array): string {
@@ -40,6 +42,7 @@ function fakeGitHub(options: { checksum?: string } = {}) {
           draft: false,
           assets: [
             { name: ASSET_NAME, browser_download_url: "https://example.test/download/executable" },
+            { name: BUNDLE_ASSET_NAME, browser_download_url: "https://example.test/download/bundle" },
             { name: "SHA256SUMS", browser_download_url: "https://example.test/download/sums" },
           ],
         },
@@ -47,10 +50,15 @@ function fakeGitHub(options: { checksum?: string } = {}) {
       ]);
     }
     if (url.endsWith("/sums")) {
-      return new Response(`${options.checksum ?? sha256(NEW_EXECUTABLE)}  ${ASSET_NAME}\n`);
+      return new Response(
+        `${options.checksum ?? sha256(NEW_EXECUTABLE)}  ${ASSET_NAME}\n${sha256(NEW_BUNDLE)}  ${BUNDLE_ASSET_NAME}\n`,
+      );
     }
     if (url.endsWith("/executable")) {
       return new Response(NEW_EXECUTABLE);
+    }
+    if (url.endsWith("/bundle")) {
+      return new Response(NEW_BUNDLE);
     }
     return new Response("not found", { status: 404 });
   };
@@ -162,7 +170,8 @@ describe("installing the newest release", () => {
     const outcome = await installNewestRelease({
       fetcher: fakeGitHub().fetcher,
       currentVersion: "0.1.0",
-      executablePath,
+      installedFilePath: executablePath,
+      installationKind: "executable",
     });
     expect(outcome.updated).toBe(true);
     expect(outcome.message).toContain("Installed Godot Wingman 0.3.0");
@@ -177,11 +186,25 @@ describe("installing the newest release", () => {
     const outcome = await installNewestRelease({
       fetcher: fakeGitHub({ checksum: "0".repeat(64) }).fetcher,
       currentVersion: "0.1.0",
-      executablePath,
+      installedFilePath: executablePath,
+      installationKind: "executable",
     });
     expect(outcome.updated).toBe(false);
     expect(outcome.message).toContain("does not match its checksum");
     expect(await readFile(executablePath, "utf8")).toBe("the old version");
+  });
+
+  test("a bundle installation downloads the bundle, not the executable", async () => {
+    const bundlePath = join(temporaryDirectory, BUNDLE_ASSET_NAME);
+    await writeFile(bundlePath, "the old bundle");
+    const outcome = await installNewestRelease({
+      fetcher: fakeGitHub().fetcher,
+      currentVersion: "0.1.0",
+      installedFilePath: bundlePath,
+      installationKind: "bundle",
+    });
+    expect(outcome.updated).toBe(true);
+    expect(await readFile(bundlePath, "utf8")).toBe("the new bundle");
   });
 
   test("nothing happens when this is already the newest version", async () => {

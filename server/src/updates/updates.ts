@@ -7,7 +7,8 @@
  *   with its next tool result and can offer the update. Turn it off with
  *   --no-update-check or GODOT_WINGMAN_NO_UPDATE_CHECK=1.
  * - Installing (the update_godot_wingman tool, or `godot-wingman update`): downloads the
- *   executable for this computer from the newest release, checks it against the
+ *   same kind of file that is installed (the small godot-wingman.js run by Bun, or the
+ *   executable for this computer) from the newest release, checks it against the
  *   release's SHA256SUMS file, and swaps it in. A running program cannot be
  *   overwritten on Windows, but it can be renamed, so the old file is moved aside and
  *   deleted at the next start. The new version runs from the next start on.
@@ -15,6 +16,12 @@
 import { createHash } from "node:crypto";
 import { chmod, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
+import {
+  BUNDLE_ASSET_NAME,
+  getInstallationKind,
+  getInstalledFilePath,
+  type InstallationKind,
+} from "../installation.ts";
 import { getProductHomeDirectory } from "../paths.ts";
 import { PRODUCT_NAME, PRODUCT_REPOSITORY, PRODUCT_VERSION } from "../product.ts";
 
@@ -96,11 +103,6 @@ export function getReleaseAssetName(
   const architectureName = architecture === "arm64" ? "arm64" : "x64";
   const extension = platform === "win32" ? ".exe" : "";
   return `${PRODUCT_NAME}-${platformName}-${architectureName}${extension}`;
-}
-
-/** True for the single-file executable from a release; false when running from source with Bun. */
-export function isRunningAsExecutable(): boolean {
-  return !/^bun(\.exe)?$/i.test(basename(process.execPath));
 }
 
 export function isUpdateCheckDisabled(): boolean {
@@ -195,9 +197,9 @@ export interface UpdateOutcome {
   message: string;
 }
 
-/** Downloads and installs the newest release over the running executable. */
+/** Downloads and installs the newest release over the running bundle or executable. */
 export async function installNewestRelease(
-  options: UpdateOptions & { executablePath?: string } = {},
+  options: UpdateOptions & { installedFilePath?: string; installationKind?: InstallationKind } = {},
 ): Promise<UpdateOutcome> {
   const currentVersion = options.currentVersion ?? PRODUCT_VERSION;
   const fetcher = options.fetcher ?? fetch;
@@ -205,15 +207,16 @@ export async function installNewestRelease(
   if (release === null || compareVersions(release.version, currentVersion) <= 0) {
     return { updated: false, message: `Godot Wingman ${currentVersion} is the newest version.` };
   }
-  const executablePath = options.executablePath ?? process.execPath;
-  if (options.executablePath === undefined && !isRunningAsExecutable()) {
+  const installationKind = options.installationKind ?? getInstallationKind();
+  const executablePath = options.installedFilePath ?? getInstalledFilePath();
+  if (installationKind === "source") {
     return {
       updated: false,
       message: `Godot Wingman ${release.version} is available, but this copy runs from source code with Bun. Update it with "git pull" and "bun install" in its folder. Release: ${release.pageUrl}`,
     };
   }
 
-  const assetName = getReleaseAssetName();
+  const assetName = installationKind === "bundle" ? BUNDLE_ASSET_NAME : getReleaseAssetName();
   const executableAsset = release.assets.find((asset) => asset.name === assetName);
   const checksumsAsset = release.assets.find((asset) => asset.name === CHECKSUMS_ASSET_NAME);
   if (!executableAsset || !checksumsAsset) {
@@ -244,7 +247,7 @@ export async function installNewestRelease(
   const downloadPath = `${executablePath}.download`;
   const previousPath = getPreviousExecutablePath(executablePath);
   await writeFile(downloadPath, newExecutable);
-  if (process.platform !== "win32") {
+  if (process.platform !== "win32" && installationKind === "executable") {
     await chmod(downloadPath, 0o755);
   }
   await rm(previousPath, { force: true });
@@ -266,10 +269,10 @@ export async function installNewestRelease(
   };
 }
 
-/** Removes the executable left behind by the last update. Safe to call at every start. */
-export async function removePreviousExecutable(executablePath: string = process.execPath): Promise<void> {
-  if (isRunningAsExecutable()) {
-    await rm(getPreviousExecutablePath(executablePath), { force: true }).catch(() => {});
+/** Removes the file left behind by the last update. Safe to call at every start. */
+export async function removePreviousExecutable(): Promise<void> {
+  if (getInstallationKind() !== "source") {
+    await rm(getPreviousExecutablePath(getInstalledFilePath()), { force: true }).catch(() => {});
   }
 }
 
