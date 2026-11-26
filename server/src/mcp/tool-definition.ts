@@ -26,7 +26,7 @@ export interface ToolContext {
   permissionMode: PermissionMode;
 }
 
-export interface PilotTool {
+export interface WingmanTool {
   name: string;
   title: string;
   /** Written for the AI: when to use the tool, what it returns, an example. */
@@ -52,7 +52,7 @@ interface ToolDefinitionInput<Shape extends z.ZodRawShape> {
  * Defines a tool with a typed `run` function. The MCP SDK validates the input
  * against `inputShape` before `run` is called, which is why the cast below is safe.
  */
-export function defineTool<Shape extends z.ZodRawShape>(definition: ToolDefinitionInput<Shape>): PilotTool {
+export function defineTool<Shape extends z.ZodRawShape>(definition: ToolDefinitionInput<Shape>): WingmanTool {
   return {
     ...definition,
     destructive: definition.destructive ?? false,
@@ -129,7 +129,7 @@ interface EditorToolDefinitionInput<Shape extends z.ZodRawShape> {
  */
 export function defineEditorTool<Shape extends z.ZodRawShape>(
   definition: EditorToolDefinitionInput<Shape>,
-): PilotTool {
+): WingmanTool {
   const timeoutMilliseconds = definition.timeoutSeconds ? definition.timeoutSeconds * 1000 : undefined;
   return defineTool({
     ...definition,

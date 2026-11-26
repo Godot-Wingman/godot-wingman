@@ -1,7 +1,7 @@
 /**
  * Turns groups of tools ("toolsets") on and off while the server runs.
  *
- * Godot Pilot has well over a hundred tools. If all of them were visible at once,
+ * Godot Wingman has well over a hundred tools. If all of them were visible at once,
  * their descriptions alone would fill a large part of the AI's context. So tools are
  * grouped, and only the groups the AI needs are visible. The AI (or the person) can
  * switch groups with the toggle_toolsets tool; the MCP SDK then tells the client
@@ -11,14 +11,14 @@ import type { McpServer, RegisteredTool } from "@modelcontextprotocol/sdk/server
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { type EditorNotice, EditorRequestError } from "../godot/editor-connection.ts";
 import type { PermissionMode } from "./permission-mode.ts";
-import { errorResult, errorToResult, type PilotTool, type ToolContext } from "./tool-definition.ts";
+import { errorResult, errorToResult, type ToolContext, type WingmanTool } from "./tool-definition.ts";
 
 export interface Toolset {
   name: string;
   title: string;
   /** One or two sentences: what the group is for, so the AI knows when to enable it. */
   description: string;
-  tools: PilotTool[];
+  tools: WingmanTool[];
   /** The core toolset cannot be turned off. */
   alwaysEnabled?: boolean;
 }
@@ -43,7 +43,7 @@ export interface ToolsetControllerOptions {
   getAiClientName?: () => string;
 }
 
-/** The editor's answer to authorize_tool_call (addon/godot_pilot/session/pilot_session.gd). */
+/** The editor's answer to authorize_tool_call (addon/godot_wingman/session/wingman_session.gd). */
 interface EditorAuthorization {
   allowed: boolean;
   activity_id: number;
@@ -177,24 +177,24 @@ export class ToolsetController {
     return this.toolsets.find((toolset) => toolset.name === normalizedName);
   }
 
-  private isAllowedByPermissionMode(tool: PilotTool): boolean {
+  private isAllowedByPermissionMode(tool: WingmanTool): boolean {
     return !(this.permissionMode === "read-only" && tool.access === "write");
   }
 
   /**
    * Tools that only look run directly. Tools that change something first ask the
    * editor: it applies the stricter of the two permission modes (this server's and the
-   * one chosen in the Godot Pilot panel), shows the approval dialog in "confirm" mode,
+   * one chosen in the Godot Wingman panel), shows the approval dialog in "confirm" mode,
    * takes a checkpoint and lists the change in its activity panel.
    */
-  private async runTool(tool: PilotTool, input: Record<string, unknown>): Promise<CallToolResult> {
+  private async runTool(tool: WingmanTool, input: Record<string, unknown>): Promise<CallToolResult> {
     const context = this.getContext();
     const result = await this.runToolWithPermission(tool, input, context);
     return addNotices(result, context.editors.takeNotices());
   }
 
   private async runToolWithPermission(
-    tool: PilotTool,
+    tool: WingmanTool,
     input: Record<string, unknown>,
     context: ToolContext,
   ): Promise<CallToolResult> {
@@ -222,7 +222,7 @@ export class ToolsetController {
   }
 
   private async authorize(
-    tool: PilotTool,
+    tool: WingmanTool,
     input: Record<string, unknown>,
     context: ToolContext,
   ): Promise<Authorization> {
@@ -262,7 +262,7 @@ export class ToolsetController {
    * the editor). In "confirm" mode nothing may run without the person's approval.
    */
   private async authorizeWithoutEditor(
-    tool: PilotTool,
+    tool: WingmanTool,
     input: Record<string, unknown>,
     context: ToolContext,
     error: unknown,
@@ -291,7 +291,7 @@ export class ToolsetController {
 
   /** Older addons only know the plain confirm_action dialog. */
   private async askWithOlderAddon(
-    tool: PilotTool,
+    tool: WingmanTool,
     input: Record<string, unknown>,
     context: ToolContext,
   ): Promise<boolean> {
