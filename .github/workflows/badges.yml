@@ -1,4 +1,4 @@
-# Refreshes the live README badges (release, downloads, tests, stars, last commit).
+# Refreshes the live README badges (release, tests, stars).
 # GitHub's image proxy often times out on shields.io and then shows a broken image, so this
 # workflow downloads the badges itself and keeps them as SVG files on the "badges" branch,
 # which holds only that one commit. The READMEs load them from raw.githubusercontent.com.
@@ -29,19 +29,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download the badges
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           repository="${GITHUB_REPOSITORY}"
-          style="style=for-the-badge&logoColor=white"
+          # The same colors as the fixed badges in docs/images/badges.
+          style="style=for-the-badge&labelColor=2b3137&logoColor=white&color=478cbf"
           mkdir badges
           download_badge() {
             curl --fail --silent --show-error --retry 5 --retry-delay 5 --max-time 60 \
               --output "badges/$1.svg" "$2"
           }
-          download_badge release "https://img.shields.io/github/v/release/${repository}?include_prereleases&${style}&logo=github&color=8b5cf6&labelColor=2a1f3d&label=release"
-          download_badge downloads "https://img.shields.io/github/downloads/${repository}/total?${style}&logo=github&color=22c55e&labelColor=14301f"
-          download_badge tests "https://img.shields.io/github/actions/workflow/status/${repository}/ci.yml?branch=main&${style}&logo=githubactions&labelColor=1b2a40&label=tests"
-          download_badge stars "https://img.shields.io/github/stars/${repository}?${style}&logo=github&color=f0b400&labelColor=3a2f0a"
-          download_badge last-commit "https://img.shields.io/github/last-commit/${repository}?${style}&logo=git&color=e5534b&labelColor=3a1d1d"
+          # The newest CI run on main that really finished: a run cancelled by a newer push
+          # says nothing about the code, so it must not turn the badge into "failing".
+          tests_result=$(gh run list --repo "${repository}" --workflow ci.yml --branch main --status completed --limit 20 \
+            --json conclusion --jq 'map(select(.conclusion == "success" or .conclusion == "failure"))[0].conclusion')
+          if [[ "${tests_result}" == "failure" ]]; then tests_badge="failing-e5534b"; else tests_badge="passing-478cbf"; fi
+          download_badge release "https://img.shields.io/github/v/release/${repository}?include_prereleases&${style}&logo=github&label=release"
+          download_badge tests "https://img.shields.io/badge/tests-${tests_badge}?style=for-the-badge&labelColor=2b3137&logoColor=white&logo=githubactions"
+          download_badge stars "https://img.shields.io/github/stars/${repository}?${style}&logo=github"
       - name: Replace the badges branch with the new files
         run: |
           cd badges

@@ -21,16 +21,14 @@
   <img alt="Windows" src="docs/images/badges/windows.svg">
   <img alt="macOS" src="docs/images/badges/macos.svg">
   <img alt="Linux" src="docs/images/badges/linux.svg">
-  <img alt="No telemetry" src="docs/images/badges/telemetry.svg">
-  <a href="LICENSE"><img alt="License: AGPL-3.0" src="docs/images/badges/license.svg"></a>
 </p>
 
 <p align="center">
   <a href="https://github.com/Godot-Wingman/godot-wingman/releases"><img alt="Latest release" src="https://raw.githubusercontent.com/Godot-Wingman/godot-wingman/badges/release.svg"></a>
-  <a href="https://github.com/Godot-Wingman/godot-wingman/releases"><img alt="Downloads" src="https://raw.githubusercontent.com/Godot-Wingman/godot-wingman/badges/downloads.svg"></a>
   <a href="https://github.com/Godot-Wingman/godot-wingman/actions/workflows/ci.yml"><img alt="Tests" src="https://raw.githubusercontent.com/Godot-Wingman/godot-wingman/badges/tests.svg"></a>
   <a href="https://github.com/Godot-Wingman/godot-wingman/stargazers"><img alt="Stars" src="https://raw.githubusercontent.com/Godot-Wingman/godot-wingman/badges/stars.svg"></a>
-  <a href="https://github.com/Godot-Wingman/godot-wingman/commits/main"><img alt="Last commit" src="https://raw.githubusercontent.com/Godot-Wingman/godot-wingman/badges/last-commit.svg"></a>
+  <a href="LICENSE"><img alt="License: AGPL-3.0" src="docs/images/badges/license.svg"></a>
+  <img alt="No telemetry" src="docs/images/badges/telemetry.svg">
 </p>
 
 <p align="center">
