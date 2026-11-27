@@ -4,6 +4,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.4.5] - 2026-11-27
+
 ### Added
 
 - Permission mode per AI: every connected AI has its own mode (Full access, Ask first, Read-only) on its card in the Godot Wingman panel. Each AI app keeps the mode last chosen for it in the project; apps seen for the first time get the mode set under the panel's settings button. An AI is told when its mode changes. "Allow for this session" in the approval dialog now applies to that AI only.
