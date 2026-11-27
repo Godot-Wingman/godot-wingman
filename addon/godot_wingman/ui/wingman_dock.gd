@@ -157,12 +157,19 @@ func _build_main_area() -> Control:
 	_tab_bar.add_tab("Chat", _icon("Signals"))
 	_style_tab_bar()
 	_tab_bar.tab_changed.connect(_show_tab)
-	main_area.add_child(_tab_bar)
+	_tab_bar.clip_tabs = false
+	# The tabs and the chat's "To" buttons share one line, to leave the height to the
+	# conversation.
+	var header := HBoxContainer.new()
+	header.add_theme_constant_override("separation", int(8 * _editor_scale))
+	header.add_child(_tab_bar)
+	main_area.add_child(header)
 	main_area.add_child(_build_changes_view())
 	_chat_view = ChatView.new(_session)
 	_chat_view.unread_count_changed.connect(func(unread_count: int) -> void:
 		_tab_bar.set_tab_title(TAB_CHAT, "Chat" if unread_count <= 0 else "Chat (%d new)" % unread_count)
 	)
+	header.add_child(_chat_view.get_recipient_row())
 	main_area.add_child(_chat_view)
 	_tab_bar.set_tab_title(TAB_CHAT, "Chat" if _chat_view.get_unread_count() <= 0 else "Chat (%d new)" % _chat_view.get_unread_count())
 	_show_tab(TAB_CHANGES)
@@ -490,6 +497,7 @@ func _refresh_activity() -> void:
 func _show_tab(tab_index: int) -> void:
 	_changes_view.visible = tab_index == TAB_CHANGES
 	_chat_view.visible = tab_index == TAB_CHAT
+	_chat_view.get_recipient_row().visible = tab_index == TAB_CHAT
 
 
 ## Shows the Chat tab with the conversation with one AI.

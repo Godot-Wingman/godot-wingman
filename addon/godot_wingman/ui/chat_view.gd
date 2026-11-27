@@ -28,7 +28,7 @@ const MENU_SCREENSHOT := 2
 const MENU_COMPUTER_FILE := 3
 ## Widest a message bubble gets, before the editor scale.
 const MAXIMUM_BUBBLE_WIDTH := 720.0
-const MINIMUM_COMPOSER_LINES := 2
+const MINIMUM_COMPOSER_LINES := 1
 const MAXIMUM_COMPOSER_LINES := 8
 
 var _session: RefCounted
@@ -62,7 +62,6 @@ func _init(session: RefCounted) -> void:
 	add_theme_constant_override("separation", int(4 * _editor_scale))
 	_build_recipient_row()
 	_build_thread()
-	_build_status_row()
 	_build_composer()
 	_session.messages_changed.connect(refresh)
 	_session.connections_changed.connect(refresh)
@@ -80,6 +79,12 @@ func select_conversation(conversation_id: int) -> void:
 	_conversation_id = conversation_id
 	refresh()
 	_composer.grab_focus.call_deferred()
+
+
+## The "To" buttons. The panel puts them next to its tabs, so they take no row of
+## their own, and shows them while the Chat tab is open.
+func get_recipient_row() -> Control:
+	return _recipient_row
 
 
 func get_unread_count() -> int:
@@ -105,7 +110,9 @@ func refresh() -> void:
 func _build_recipient_row() -> void:
 	_recipient_row = HBoxContainer.new()
 	_recipient_row.add_theme_constant_override("separation", int(4 * _editor_scale))
-	add_child(_recipient_row)
+	_recipient_row.alignment = BoxContainer.ALIGNMENT_END
+	_recipient_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_recipient_row.clip_contents = true
 
 
 func _build_thread() -> void:
@@ -121,59 +128,79 @@ func _build_thread() -> void:
 	_thread_scroll.add_child(_thread_list)
 
 
-func _build_status_row() -> void:
-	var status_row := HBoxContainer.new()
-	add_child(status_row)
-	_status_label = Label.new()
-	_status_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_status_label.clip_text = true
-	_status_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_status_label.mouse_filter = Control.MOUSE_FILTER_PASS
-	status_row.add_child(_status_label)
-	_copy_request_button = Button.new()
-	_copy_request_button.text = "Copy request"
-	_copy_request_button.icon = _icon("ActionCopy")
-	_copy_request_button.flat = true
-	_copy_request_button.tooltip_text = "Copies \"%s\" to paste into the AI's own app." % LISTEN_REQUEST
-	_copy_request_button.pressed.connect(func() -> void: DisplayServer.clipboard_set(LISTEN_REQUEST))
-	status_row.add_child(_copy_request_button)
-
-
+## One box, like the message field of a chat app: the attachments, the text, and under
+## it a toolbar with the attach button, whether the AI hears the message right away,
+## and Send. Nothing of it takes a row outside the box.
 func _build_composer() -> void:
+	var composer_box := PanelContainer.new()
+	var box_style := _make_box(_composer_color(), 6, 6)
+	box_style.set_border_width_all(int(maxf(1.0, _editor_scale)))
+	box_style.border_color = Color(_color("font_color"), 0.12)
+	var focused_box_style := box_style.duplicate()
+	focused_box_style.border_color = _color("accent_color")
+	composer_box.add_theme_stylebox_override("panel", box_style)
+	add_child(composer_box)
+	var box_column := VBoxContainer.new()
+	box_column.add_theme_constant_override("separation", int(2 * _editor_scale))
+	composer_box.add_child(box_column)
+
 	_attachment_row = HFlowContainer.new()
 	_attachment_row.add_theme_constant_override("h_separation", int(4 * _editor_scale))
 	_attachment_row.visible = false
-	add_child(_attachment_row)
+	box_column.add_child(_attachment_row)
 
-	var composer_row := HBoxContainer.new()
-	composer_row.add_theme_constant_override("separation", int(4 * _editor_scale))
-	add_child(composer_row)
+	_composer = TextEdit.new()
+	_composer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_composer.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
+	for style_name: String in ["normal", "focus", "read_only"]:
+		_composer.add_theme_stylebox_override(style_name, StyleBoxEmpty.new())
+	_composer.gui_input.connect(_on_composer_input)
+	_composer.text_changed.connect(_fit_composer_height)
+	_composer.text_changed.connect(_refresh_send_button)
+	_composer.focus_entered.connect(func() -> void: composer_box.add_theme_stylebox_override("panel", focused_box_style))
+	_composer.focus_exited.connect(func() -> void: composer_box.add_theme_stylebox_override("panel", box_style))
+	_composer.set_drag_forwarding(Callable(), _can_drop_on_composer, _drop_on_composer)
+	box_column.add_child(_composer)
+
+	var toolbar := HBoxContainer.new()
+	toolbar.add_theme_constant_override("separation", int(4 * _editor_scale))
+	box_column.add_child(toolbar)
 	var add_button := MenuButton.new()
 	add_button.icon = _icon("Add")
-	add_button.flat = false
+	add_button.flat = true
 	add_button.tooltip_text = "Attach files, folders, nodes or a screenshot. You can also drag files and nodes onto the text field."
-	add_button.size_flags_vertical = Control.SIZE_SHRINK_END
 	var add_menu := add_button.get_popup()
 	add_menu.add_icon_item(_icon("Load"), "File or folder of the project...", MENU_PROJECT_FILE)
 	add_menu.add_icon_item(_icon("Node"), "Selected nodes", MENU_SELECTED_NODES)
 	add_menu.add_icon_item(_icon("Image"), "Screenshot of the editor", MENU_SCREENSHOT)
 	add_menu.add_icon_item(_icon("Folder"), "File from this computer...", MENU_COMPUTER_FILE)
 	add_menu.id_pressed.connect(_on_add_menu_pressed)
-	composer_row.add_child(add_button)
+	toolbar.add_child(add_button)
 
-	_composer = TextEdit.new()
-	_composer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_composer.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
-	_composer.gui_input.connect(_on_composer_input)
-	_composer.text_changed.connect(_fit_composer_height)
-	_composer.set_drag_forwarding(Callable(), _can_drop_on_composer, _drop_on_composer)
-	composer_row.add_child(_composer)
+	_status_label = Label.new()
+	_status_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_status_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_status_label.clip_text = true
+	_status_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_status_label.mouse_filter = Control.MOUSE_FILTER_PASS
+	_status_label.add_theme_font_size_override("font_size", _small_font_size())
+	toolbar.add_child(_status_label)
+	_copy_request_button = Button.new()
+	_copy_request_button.text = "Copy request"
+	_copy_request_button.icon = _icon("ActionCopy")
+	_copy_request_button.flat = true
+	_copy_request_button.add_theme_font_size_override("font_size", _small_font_size())
+	_copy_request_button.tooltip_text = "Copies \"%s\" to paste into the AI's own app." % LISTEN_REQUEST
+	_copy_request_button.pressed.connect(func() -> void: DisplayServer.clipboard_set(LISTEN_REQUEST))
+	toolbar.add_child(_copy_request_button)
+
 	_send_button = Button.new()
 	_send_button.text = "Send"
 	_send_button.icon = _icon("ArrowRight")
-	_send_button.size_flags_vertical = Control.SIZE_SHRINK_END
+	_send_button.icon_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_send_button.pressed.connect(_send)
-	composer_row.add_child(_send_button)
+	_style_send_button()
+	toolbar.add_child(_send_button)
 	_fit_composer_height()
 
 
@@ -398,43 +425,54 @@ func _build_attachment_list(attachments: Array, can_remove: bool) -> Control:
 func _refresh_status() -> void:
 	var has_ai: bool = not _session.connections.is_empty()
 	_composer.editable = has_ai
-	_send_button.disabled = not has_ai
 	_copy_request_button.visible = false
 	var status_color := _dim_text_color()
 	var status_text := ""
+	var status_tooltip := ""
 	if not has_ai:
-		status_text = "No AI is connected. Start your AI app and ask it to use Godot."
+		status_text = "No AI connected. Start your AI app and ask it to use Godot."
 		_composer.placeholder_text = ""
 	elif _conversation_id == WingmanSession.EVERYONE:
 		var listening_names := PackedStringArray()
 		for connection_id: int in _session.listening:
 			listening_names.append(_get_name(connection_id))
-		status_text = "Goes to every connected AI. %s" % ("Listening now: %s. The others read it with their next step." % ", ".join(listening_names) if not listening_names.is_empty() else "Each reads it with its next step.")
-		_composer.placeholder_text = "Write to every AI. Enter sends, Shift+Enter starts a new line."
+		if listening_names.is_empty():
+			status_text = "Each AI reads it with its next step"
+		else:
+			status_text = "Listening: %s. The others read it with their next step" % ", ".join(listening_names)
+			status_color = _color("success_color")
+		_composer.placeholder_text = "Write to every AI. Shift+Enter for a new line."
 	elif not _session.connections.has(_conversation_id):
-		status_text = "%s has left. Messages cannot reach it." % _get_name(_conversation_id)
+		status_text = "%s has left" % _get_name(_conversation_id)
 		_composer.editable = false
-		_send_button.disabled = true
 	else:
 		var ai_name := _get_name(_conversation_id)
-		_composer.placeholder_text = "Write to %s. Enter sends, Shift+Enter starts a new line." % ai_name
+		_composer.placeholder_text = "Write to %s. Shift+Enter for a new line." % ai_name
 		if _session.listening.has(_conversation_id):
-			status_text = "%s is listening and gets your message right away." % ai_name
+			status_text = "%s is listening" % ai_name
+			status_tooltip = "%s gets your message right away." % ai_name
 			status_color = _color("success_color")
 		elif _is_working(_conversation_id):
-			status_text = "%s is working and reads your message after its current step." % ai_name
+			status_text = "%s reads it after its current step" % ai_name
 		else:
-			status_text = "%s reads your message the next time it uses Godot. To talk to it from here, ask it once in its own app: \"%s\"" % [ai_name, LISTEN_REQUEST]
+			status_text = "%s reads it with its next step" % ai_name
+			status_tooltip = "%s reads your message the next time it uses Godot. To talk to it from here, ask it once in its own app: \"%s\"" % [ai_name, LISTEN_REQUEST]
 			_copy_request_button.visible = true
 	_status_label.text = status_text
-	_status_label.tooltip_text = status_text
+	_status_label.tooltip_text = status_tooltip if not status_tooltip.is_empty() else status_text
 	_status_label.add_theme_color_override("font_color", status_color)
+	_refresh_send_button()
+
+
+func _refresh_send_button() -> void:
+	_send_button.disabled = not _composer.editable or (_composer.text.strip_edges().is_empty() and _attachments.is_empty())
 
 
 func _refresh_attachment_row() -> void:
 	for child in _attachment_row.get_children():
 		child.queue_free()
 	_attachment_row.visible = not _attachments.is_empty()
+	_refresh_send_button()
 	if not _attachments.is_empty():
 		_attachment_row.add_child(_build_attachment_list(_attachments, true))
 
@@ -450,7 +488,7 @@ func _fit_bubbles() -> void:
 
 func _fit_composer_height() -> void:
 	var line_count := clampi(_composer.get_total_visible_line_count(), MINIMUM_COMPOSER_LINES, MAXIMUM_COMPOSER_LINES)
-	_composer.custom_minimum_size.y = line_count * _composer.get_line_height() + 10 * _editor_scale
+	_composer.custom_minimum_size.y = line_count * _composer.get_line_height() + 6 * _editor_scale
 
 
 func _scroll_to_bottom() -> void:
@@ -756,6 +794,31 @@ func _thread_color() -> Color:
 
 func _bubble_color() -> Color:
 	return _color("base_color").lerp(_color("font_color"), 0.08)
+
+
+func _composer_color() -> Color:
+	return _color("dark_color_2") if _is_dark_theme() else _color("base_color").lightened(0.6)
+
+
+## Send stands out in the accent color while there is something to send.
+func _style_send_button() -> void:
+	var normal_box := _make_box(_color("accent_color"), 4, 8)
+	normal_box.content_margin_top = 3 * _editor_scale
+	normal_box.content_margin_bottom = 3 * _editor_scale
+	var hover_box := normal_box.duplicate()
+	hover_box.bg_color = _color("accent_color").lightened(0.12)
+	var disabled_box := normal_box.duplicate()
+	disabled_box.bg_color = Color(_color("font_color"), 0.08)
+	_send_button.add_theme_stylebox_override("normal", normal_box)
+	_send_button.add_theme_stylebox_override("hover", hover_box)
+	_send_button.add_theme_stylebox_override("pressed", normal_box)
+	_send_button.add_theme_stylebox_override("disabled", disabled_box)
+	_send_button.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	var on_accent := Color.WHITE if _color("accent_color").get_luminance() < 0.6 else Color.BLACK
+	for color_name: String in ["font_color", "font_hover_color", "font_pressed_color", "icon_normal_color", "icon_hover_color", "icon_pressed_color"]:
+		_send_button.add_theme_color_override(color_name, on_accent)
+	_send_button.add_theme_color_override("font_disabled_color", _dim_text_color())
+	_send_button.add_theme_color_override("icon_disabled_color", _dim_text_color())
 
 
 func _code_background_color() -> Color:

@@ -4,6 +4,10 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Changed
+
+- Chat tab takes less height: the To buttons sit next to the tabs, and the attach button, the AI's listening state and Send are inside the message box, which starts one line high.
+
 ## [0.4.5] - 2026-11-27
 
 ### Added
