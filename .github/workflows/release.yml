@@ -38,8 +38,14 @@ jobs:
         with:
           name: windows-executable
           path: dist
-      - name: Zip the addon for manual installation
-        run: cd addon && zip -r ../dist/godot-wingman-addon.zip godot_wingman
+      - name: Zip the addon for manual installation and the Godot Asset Store
+        # The Asset Store wants addons/<name>/ at the root of the zip and a license file
+        # with a copyright line, which the addon's own LICENSE copy has.
+        run: |
+          mkdir -p addon-package/addons
+          cp -r addon/godot_wingman addon-package/addons/
+          cp addon/godot_wingman/LICENSE addon-package/LICENSE
+          cd addon-package && zip -r ../dist/godot-wingman-addon.zip addons LICENSE
       - name: Write checksums (the update command checks downloads against them)
         run: cd dist && sha256sum -- * > ../SHA256SUMS && mv ../SHA256SUMS .
       - name: Create the GitHub release
