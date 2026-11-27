@@ -46,7 +46,12 @@ Check it works: `godot-wingman doctor` lists the Godot versions it found.
 
 ### 2. Add it to your AI client
 
-`godot-wingman setup` does this for every AI app it finds. To do it by hand:
+`godot-wingman setup` does this for every AI app it finds. You can also do it one app at a time:
+
+- In Godot, open the **Godot Wingman** panel at the bottom and click **Connect AI apps**. It lists the AI apps on this computer, shows which ones are set up, and has a **Configure** button for each. For VS Code it writes `.vscode/mcp.json` in the open project.
+- In a terminal: `godot-wingman setup --status` shows the state of every app without changing anything, and `godot-wingman setup --client cursor` sets up one app (`codex`, `claude-desktop`, `cursor`, `gemini-cli`, `windsurf`, `claude-code`, or `vscode` with `--project <Godot project folder>`).
+
+To do it by hand:
 
 In the examples, replace `/path/to/godot-wingman` with the real path. On Windows, write paths in JSON with double backslashes (`C:\\Tools\\godot-wingman.exe`) or forward slashes (`C:/Tools/godot-wingman.exe`).
 
@@ -60,7 +65,7 @@ Add `--scope user` to use it in every project.
 
 #### Claude Desktop
 
-Settings → Developer → Edit Config, then add to `claude_desktop_config.json`:
+Settings → Developer → Edit Config, then add to `claude_desktop_config.json` (the packaged Windows version reads it from `%LOCALAPPDATA%\Packages\Claude_<id>\LocalCache\Roaming\Claude`, even though Edit Config opens the one in `%APPDATA%\Claude`):
 
 ```json
 {

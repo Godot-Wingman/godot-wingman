@@ -4,6 +4,16 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Added
+
+- **Connect AI apps** in the Godot Wingman panel: a window that lists the AI apps on this computer (Codex, Claude Desktop, Claude Code, Cursor, Gemini CLI, Windsurf, VS Code), shows whether Godot Wingman is set up in each, and has a **Configure** button per app. VS Code is set up for the open project (`.vscode/mcp.json`). When the Godot Wingman program is not installed, for example when only the addon was installed, the window shows the one-line installer with a Copy button and, on Windows and macOS, a button that runs it in a new terminal window.
+- `godot-wingman setup --status` shows which apps are set up without changing anything, `--client <app>` sets up one app, and `--json` prints the result for programs.
+- An installed Godot Wingman notes how to start it in `installation.json` in its data folder, so the panel can find it.
+
+### Fixed
+
+- `godot-wingman setup` writes the settings of the packaged (MSIX) Claude Desktop on Windows where that version reads them, `%LOCALAPPDATA%\Packages\Claude_<id>\LocalCache\Roaming\Claude`, instead of `%APPDATA%\Claude`, which it ignores ([anthropics/claude-code#26073](https://github.com/anthropics/claude-code/issues/26073)).
+
 ## [0.4.3] - 2026-11-27
 
 ### Fixed
