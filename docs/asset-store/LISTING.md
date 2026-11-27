@@ -23,17 +23,26 @@ at the root of the zip.
 
 **Summary:**
 
-Lets AI apps such as Claude, Codex, Cursor, Gemini CLI and VS Code use the Godot editor: they build scenes, write scripts, play the game with real input and fix the errors they find.
+Let your AI assistant work in the Godot editor with you: it builds scenes, writes scripts, plays your game and fixes the bugs it finds, and you can undo every step.
 
 **Description:**
 
-Godot Wingman connects AI apps to the Godot editor through the Model Context Protocol (MCP). The AI works in the open editor the way a person does: it builds scenes, changes properties in the inspector, writes GDScript and C# scripts (GDScript is checked by Godot's own parser), runs the game, plays it with real key presses, reads the errors and fixes them. Changes go through the editor's undo history, and the Godot Wingman panel lists every change, with a button to go back to how the project was before any step. Its Chat tab lets you talk to each connected AI from inside Godot, with files, nodes and screenshots attached.
+Godot Wingman lets AI assistants such as Claude, Codex, Cursor, Gemini CLI and GitHub Copilot work inside your open Godot editor, the same way you do.
 
-The addon is one half of Godot Wingman. The other half is a small program that your AI app starts. After enabling the plugin, open the Godot Wingman panel at the bottom of the editor and click Connect AI apps: it shows a one-line installer when the program is missing, and a Connect button for each AI app on your computer.
+Ask for a double jump, a main menu or a new level, and the AI builds the scenes, sets properties in the Inspector and writes the scripts. Then it runs the game, presses the keys to play it, reads the errors and fixes them.
 
-Everything runs on your computer. There are no accounts and no telemetry. The addon is an editor tool only and is never part of an exported game, so games you make with it are yours, under any license.
+You stay in control:
+- Every change goes through the editor's undo history, so Ctrl+Z works as usual.
+- The Godot Wingman panel lists everything the AI changed, and one button takes the project back to how it was before any step.
+- For each AI you choose how much it may do: everything, ask you before each change, or only look.
+- The Chat tab lets you talk to the AIs from inside Godot. Attach files, nodes or a screenshot, and read their answers with formatting.
+- Several AIs can work in the same editor and tell each other what they are changing.
 
-Godot Wingman is a community project. It is not made by, affiliated with or endorsed by the Godot Foundation.
+To start, enable the plugin, open the Godot Wingman panel at the bottom of the editor and click Connect AI apps. It shows a one-line installer for the small companion program and connects the AI apps on your computer.
+
+Everything runs on your computer: no accounts, no telemetry. The addon is an editor tool only and is never included in exported games, so what you make with it is yours, under any license.
+
+Works with Godot 4.5 and newer, with GDScript and C#. Godot Wingman is a community project, not made by, affiliated with or endorsed by the Godot Foundation.
 
 **AI usage disclosure** (mandatory; check that it is still true before submitting):
 
