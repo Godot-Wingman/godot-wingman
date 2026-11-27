@@ -5,8 +5,10 @@ extends VBoxContainer
 ## It shows which AIs are connected, lets the person choose the permission mode for
 ## this project, lists every change the AI made, and can put the project back to how
 ## it was before any of those changes. The person can also write to the AIs: they get
-## the message with their next tool result.
+## the message with their next tool result. "Connect AI apps" adds Godot Wingman to the
+## AI apps on this computer (see ai_apps_dialog.gd).
 
+const AiAppsDialog := preload("ai_apps_dialog.gd")
 const ConfirmationPrompt := preload("confirmation_prompt.gd")
 const WingmanSession := preload("../session/wingman_session.gd")
 
@@ -70,6 +72,15 @@ func _build_header() -> void:
 	_connection_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_connection_label.clip_text = true
 	header.add_child(_connection_label)
+	var ai_apps_button := Button.new()
+	ai_apps_button.text = "Connect AI apps"
+	ai_apps_button.tooltip_text = "Add Godot Wingman to Claude, Codex, Cursor, Gemini CLI, Windsurf or VS Code."
+	ai_apps_button.pressed.connect(func() -> void:
+		var ai_apps_dialog := AiAppsDialog.new()
+		EditorInterface.get_base_control().add_child(ai_apps_dialog)
+		ai_apps_dialog.open()
+	)
+	header.add_child(ai_apps_button)
 
 	_approvals_label = Label.new()
 	_approvals_label.clip_text = true
