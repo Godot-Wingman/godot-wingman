@@ -37,6 +37,7 @@ function runSetup(
     launch,
     homeDirectory: home,
     applicationDataDirectory: applicationData,
+    localApplicationDataDirectory: join(home, "LocalAppData"),
     runClaudeCommand: async () => claudeExitCode,
     findCommand: (commandName) => commandsOnPath.get(commandName) ?? null,
     findProgramFolders: () => [],
@@ -153,6 +154,7 @@ test("Claude Code gets the bundle command with its argument", async () => {
     launch: BUNDLE_LAUNCH,
     homeDirectory: home,
     applicationDataDirectory: applicationData,
+    localApplicationDataDirectory: join(home, "LocalAppData"),
     runClaudeCommand: async (commandArguments) => {
       commands.push(commandArguments);
       return commandArguments[1] === "remove" ? 1 : 0;
@@ -184,4 +186,108 @@ test("server options like --mode are kept when switching to the bundle", async (
   );
   const cursorConfig = JSON.parse(await readFile(join(home, ".cursor", "mcp.json"), "utf8"));
   expect(cursorConfig.mcpServers["godot-wingman"].args).toEqual([bundle, "--mode", "confirm"]);
+});
+
+test("checkOnly reports what would change and writes nothing", async () => {
+  await mkdir(join(home, ".codex"));
+  commandsOnPath.set("cursor", "C:Toolscursor.cmd");
+  const steps = await setUpAiClients({
+    launch: EXECUTABLE_LAUNCH,
+    homeDirectory: home,
+    applicationDataDirectory: applicationData,
+    localApplicationDataDirectory: join(home, "LocalAppData"),
+    runClaudeCommand: async () => 1,
+    findCommand: (commandName) => commandsOnPath.get(commandName) ?? null,
+    findProgramFolders: () => [],
+    checkOnly: true,
+  });
+  expect(outcomeOf(steps, "Codex")).toBe("would add");
+  expect(outcomeOf(steps, "Cursor")).toBe("would add");
+  expect(outcomeOf(steps, "Claude Code")).toBe("would add");
+  expect(outcomeOf(steps, "Windsurf")).toBe("skipped");
+  expect(steps.map((step) => step.id)).toEqual([
+    "codex",
+    "claude-desktop",
+    "cursor",
+    "gemini-cli",
+    "windsurf",
+    "claude-code",
+    "vscode",
+  ]);
+  expect(await Bun.file(join(home, ".codex", "config.toml")).exists()).toBe(false);
+  expect(await Bun.file(join(home, ".cursor", "mcp.json")).exists()).toBe(false);
+
+  // After a real setup the same check says it is done.
+  await runSetup();
+  const checkedAgain = await setUpAiClients({
+    launch: EXECUTABLE_LAUNCH,
+    homeDirectory: home,
+    applicationDataDirectory: applicationData,
+    localApplicationDataDirectory: join(home, "LocalAppData"),
+    runClaudeCommand: async () => 0,
+    findCommand: (commandName) => commandsOnPath.get(commandName) ?? null,
+    findProgramFolders: () => [],
+    checkOnly: true,
+  });
+  expect(outcomeOf(checkedAgain, "Codex")).toBe("already set up");
+  expect(outcomeOf(checkedAgain, "Cursor")).toBe("already set up");
+  expect(outcomeOf(checkedAgain, "Claude Code")).toBe("already set up");
+});
+
+test("onlyClientId sets up that one app and leaves the others alone", async () => {
+  await mkdir(join(home, ".codex"));
+  commandsOnPath.set("cursor", "C:Toolscursor.cmd");
+  const steps = await setUpAiClients({
+    launch: EXECUTABLE_LAUNCH,
+    homeDirectory: home,
+    applicationDataDirectory: applicationData,
+    localApplicationDataDirectory: join(home, "LocalAppData"),
+    runClaudeCommand: async () => 0,
+    findCommand: (commandName) => commandsOnPath.get(commandName) ?? null,
+    findProgramFolders: () => [],
+    onlyClientId: "cursor",
+  });
+  expect(steps).toHaveLength(1);
+  expect(steps[0]?.outcome).toBe("added");
+  expect(await Bun.file(join(home, ".codex", "config.toml")).exists()).toBe(false);
+});
+
+test("VS Code gets .vscode/mcp.json in the project folder", async () => {
+  commandsOnPath.set("code", "C:Toolscode.cmd");
+  const projectPath = join(home, "my-game");
+  const steps = await setUpAiClients({
+    launch: BUNDLE_LAUNCH,
+    homeDirectory: home,
+    applicationDataDirectory: applicationData,
+    localApplicationDataDirectory: join(home, "LocalAppData"),
+    findCommand: (commandName) => commandsOnPath.get(commandName) ?? null,
+    findProgramFolders: () => [],
+    onlyClientId: "vscode",
+    projectPath,
+  });
+  expect(steps[0]?.outcome).toBe("added");
+  const config = JSON.parse(await readFile(join(projectPath, ".vscode", "mcp.json"), "utf8"));
+  expect(config.servers["godot-wingman"]).toEqual({
+    type: "stdio",
+    command: "C:/Users/me/.bun/bin/bun.exe",
+    args: ["C:/Users/me/AppData/Local/Programs/godot-wingman/godot-wingman.js"],
+  });
+});
+
+test("Claude Desktop from the Microsoft Store gets its settings in its package folder", async () => {
+  if (process.platform !== "win32") return;
+  const storeFolder = join(
+    home,
+    "LocalAppData",
+    "Packages",
+    "Claude_pzs8sxrjxfjjc",
+    "LocalCache",
+    "Roaming",
+    "Claude",
+  );
+  await mkdir(storeFolder, { recursive: true });
+  expect(outcomeOf(await runSetup(), "Claude Desktop")).toBe("added");
+  const config = JSON.parse(await readFile(join(storeFolder, "claude_desktop_config.json"), "utf8"));
+  expect(config.mcpServers["godot-wingman"]).toEqual({ command: "C:/Tools/godot-wingman.exe" });
+  expect(await Bun.file(join(applicationData, "Claude", "claude_desktop_config.json")).exists()).toBe(false);
 });

@@ -24,12 +24,12 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { getBundledAddonVersion, installAddon } from "./addon/addon-installer.ts";
 import { readEditorRegistrations } from "./godot/editor-registry.ts";
 import { describeExecutable, findGodotExecutables } from "./godot/find-godot-executable.ts";
-import { getInstallationKind, getServerLaunchCommand } from "./installation.ts";
+import { getInstallationKind, getServerLaunchCommand, recordInstallation } from "./installation.ts";
 import { createMcpServer } from "./mcp/create-mcp-server.ts";
 import { PERMISSION_MODES, parsePermissionMode } from "./mcp/permission-mode.ts";
 import { getProductHomeDirectory } from "./paths.ts";
 import { PRODUCT_DISPLAY_NAME, PRODUCT_NAME, PRODUCT_VERSION } from "./product.ts";
-import { setUpAiClients } from "./setup/client-setup.ts";
+import { AI_CLIENTS, isAiClientId, setUpAiClients } from "./setup/client-setup.ts";
 import { DEFAULT_TOOLSET_NAMES, TOOLSET_PROFILES } from "./tools/toolset-profiles.ts";
 import { ALL_TOOLSETS } from "./tools/toolsets.ts";
 import { installNewestRelease, isUpdateCheckDisabled, removePreviousExecutable } from "./updates/updates.ts";
@@ -42,6 +42,9 @@ Usage:
   ${PRODUCT_NAME} doctor               Check Godot executables and running editors
   ${PRODUCT_NAME} update               Install the newest release from GitHub
   ${PRODUCT_NAME} setup                Add Godot Wingman to the AI apps on this computer
+  ${PRODUCT_NAME} setup --client <app> Only this app: ${AI_CLIENTS.map((client) => client.id).join(", ")}
+                                       (vscode also needs --project <Godot project folder>)
+  ${PRODUCT_NAME} setup --status       Show which apps are set up, without changing anything
   ${PRODUCT_NAME} --version
 
 Server options:
@@ -62,6 +65,9 @@ async function main(): Promise<void> {
       toolsets: { type: "string" },
       project: { type: "string" },
       "no-update-check": { type: "boolean" },
+      client: { type: "string" },
+      status: { type: "boolean" },
+      json: { type: "boolean" },
       version: { type: "boolean", short: "v" },
       help: { type: "boolean", short: "h" },
     },
@@ -85,7 +91,12 @@ async function main(): Promise<void> {
     return;
   }
   if (command === "setup") {
-    await runSetupCommand();
+    await runSetupCommand({
+      clientId: options.client,
+      checkOnly: options.status === true,
+      projectPath: options.project ? resolve(options.project) : undefined,
+      printJson: options.json === true,
+    });
     return;
   }
   if (command === "update") {
@@ -118,6 +129,7 @@ async function runServer(options: {
   checkForUpdates: boolean;
 }): Promise<void> {
   await removePreviousExecutable();
+  await recordInstallation().catch(() => undefined);
   const { server, editors } = createMcpServer({
     permissionMode: parsePermissionMode(options.mode),
     initialToolsets: resolveToolsetSelection(options.toolsets),
@@ -193,20 +205,50 @@ You do not need to open it yourself: your AI app starts it in the background.
   prompt("\nPress Enter to close.");
 }
 
-async function runSetupCommand(): Promise<void> {
+interface SetupCommandOptions {
+  clientId?: string;
+  checkOnly?: boolean;
+  projectPath?: string;
+  /** Print one JSON object instead of text; the editor panel reads it. */
+  printJson?: boolean;
+}
+
+async function runSetupCommand(options: SetupCommandOptions = {}): Promise<void> {
   if (getInstallationKind() === "source") {
     console.error(
       "setup adds an installed Godot Wingman to your AI apps. When running from source, follow docs/INSTALL.md.",
     );
     process.exit(1);
   }
+  const clientId = options.clientId;
+  if (clientId !== undefined && !isAiClientId(clientId)) {
+    console.error(
+      `Unknown app '${clientId}'. Known apps: ${AI_CLIENTS.map((client) => client.id).join(", ")}`,
+    );
+    process.exit(1);
+  }
+  await recordInstallation();
   const launch = getServerLaunchCommand();
+  const steps = await setUpAiClients({
+    launch,
+    onlyClientId: clientId,
+    checkOnly: options.checkOnly,
+    projectPath: options.projectPath,
+  });
+  if (options.printJson) {
+    console.log(JSON.stringify({ version: PRODUCT_VERSION, launch, steps }));
+    return;
+  }
   console.log(
-    `Adding ${PRODUCT_DISPLAY_NAME} (${[launch.command, ...launch.args].join(" ")}) to your AI apps:\n`,
+    options.checkOnly
+      ? `${PRODUCT_DISPLAY_NAME} (${[launch.command, ...launch.args].join(" ")}) in your AI apps:\n`
+      : `Adding ${PRODUCT_DISPLAY_NAME} (${[launch.command, ...launch.args].join(" ")}) to your AI apps:\n`,
   );
-  const steps = await setUpAiClients({ launch });
   for (const step of steps) {
     console.log(`  ${step.client.padEnd(18)} ${step.outcome.padEnd(15)} ${step.detail}`);
+  }
+  if (options.checkOnly) {
+    return;
   }
   console.log(
     '\nRestart the AI apps that were changed. Then ask the AI: "Create a new Godot game in C:/games/my-game".',

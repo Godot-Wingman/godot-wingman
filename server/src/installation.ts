@@ -9,8 +9,16 @@
  *   100 MB). Used when Bun cannot be used.
  * - "source": `bun run server/src/main.ts` in a clone of the repository.
  */
-import { basename } from "node:path";
-import { PRODUCT_NAME } from "./product.ts";
+import { mkdir, writeFile } from "node:fs/promises";
+import { basename, join } from "node:path";
+import { getProductHomeDirectory } from "./paths.ts";
+import { PRODUCT_NAME, PRODUCT_VERSION } from "./product.ts";
+
+/**
+ * Where an installed copy notes how to start it, so the editor panel can run
+ * `setup` for its Configure buttons. Read by addon/godot_wingman/ui/ai_apps_dialog.gd.
+ */
+export const INSTALLATION_FILE_NAME = "installation.json";
 
 /** Name of the JavaScript build in a release, as built by scripts/build-binaries.ts. */
 export const BUNDLE_ASSET_NAME = `${PRODUCT_NAME}.js`;
@@ -43,4 +51,20 @@ export function getServerLaunchCommand(): ServerLaunchCommand {
   return getInstallationKind() === "bundle"
     ? { command: process.execPath, args: [Bun.main] }
     : { command: process.execPath, args: [] };
+}
+
+/**
+ * Writes installation.json in the product folder: the launch command and the version.
+ * Copies run from source write nothing, so the panel never points AI apps at a clone.
+ */
+export async function recordInstallation(productHomeDirectory = getProductHomeDirectory()): Promise<void> {
+  if (getInstallationKind() === "source") {
+    return;
+  }
+  const launch = getServerLaunchCommand();
+  await mkdir(productHomeDirectory, { recursive: true });
+  await writeFile(
+    join(productHomeDirectory, INSTALLATION_FILE_NAME),
+    `${JSON.stringify({ ...launch, version: PRODUCT_VERSION }, null, 2)}\n`,
+  );
 }
