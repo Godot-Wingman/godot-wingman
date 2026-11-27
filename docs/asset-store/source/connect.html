@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; }
+  body { position: relative; background: #08090d; }
+  .backdrop {
+    position: absolute;
+    inset: 0;
+    background: url("editor-chat.png") top left / 1920px auto no-repeat;
+    filter: brightness(0.32) blur(3px);
+    transform: scale(1.02);
+  }
+  .dialog {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 14px;
+    overflow: hidden;
+    border: 2px solid #3a4352;
+    box-shadow: 0 50px 140px rgba(0, 0, 0, 0.7);
+    background: #21262e;
+  }
+  .title {
+    font: 500 26px/1 Inter, "Segoe UI", system-ui, sans-serif;
+    color: #c9d1dc;
+    text-align: center;
+    padding: 20px 0 18px;
+    background: #191d24;
+    border-bottom: 1px solid #2c3544;
+  }
+  .dialog img { display: block; width: 960px; height: 618px; }
+</style>
+</head>
+<body>
+  <div class="backdrop"></div>
+  <div class="dialog">
+    <div class="title">Connect AI apps to Godot Wingman</div>
+    <img src="connect-ai-apps-2x.png" alt="">
+  </div>
+</body>
+</html>

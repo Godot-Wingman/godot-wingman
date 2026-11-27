@@ -66,8 +66,10 @@ Godot Wingman was built with AI assistance: its code, tests and documentation we
 
 ## Media
 
-- Thumbnail (16:9, a real screenshot of the editor with the panel): `docs/asset-store/thumbnail.png`
-- Screenshots: `docs/images/editor.png` (Chat tab), `docs/asset-store/changes.png` (Changes tab), `docs/asset-store/connect-ai-apps.png`, `docs/images/level.png`, `docs/images/game-coins.png`, `docs/images/game-double-jump.png`
+The store wants images of at least 1280x720.
+
+- Thumbnail (1920x1080): `docs/asset-store/thumbnail.png`, made from `docs/asset-store/source/thumbnail.html` and a real capture of the editor.
+- Screenshots: `docs/images/editor.png` (Chat tab), `docs/asset-store/changes.png` (Changes tab), `docs/asset-store/connect-ai-apps.png` (the real dialog over the editor), `docs/images/game-coins.png`, `docs/images/game-double-jump.png`
 
 ## Versions
 
