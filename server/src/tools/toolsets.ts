@@ -16,8 +16,10 @@ import {
   executeEditorScriptTool,
   getEditorStateTool,
   getLogsTool,
+  replyToPersonTool,
   takeEditorScreenshotTool,
   tellOtherAisTool,
+  waitForPersonMessageTool,
 } from "./core/editor-tools.ts";
 import { getClassDocsTool, getGuideTool, searchDocsTool } from "./core/knowledge-tools.ts";
 import {
@@ -56,6 +58,8 @@ export const ALL_TOOLSETS: Toolset[] = [
       getLogsTool,
       takeEditorScreenshotTool,
       tellOtherAisTool,
+      replyToPersonTool,
+      waitForPersonMessageTool,
       getClassDocsTool,
       searchDocsTool,
       getGuideTool,

@@ -62,7 +62,7 @@ Details stehen im [englischen README](README.md) und im [Installationsleitfaden]
 - Sie liest die Dokumentation der installierten Godot-Version und die Klassen deiner GDExtensions.
 - Das Godot-Wingman-Panel unten im Editor listet jede Änderung der KI auf. Es kann Skripte, Szenen, Ressourcen und Einstellungen auf den Stand vor einem beliebigen Schritt zurücksetzen.
 - Wenn du Strg+Z drückst, selbst etwas änderst oder im Panel zurückgehst, erfährt die KI das mit ihrem nächsten Schritt. Sie arbeitet dann nicht weiter an einem Zustand, den es nicht mehr gibt.
-- KIs, die im selben Editor arbeiten (zum Beispiel Claude Code und Cursor), können einander sagen, was sie ändern wollen. Du kannst aus dem Panel an alle schreiben.
+- KIs, die im selben Editor arbeiten (zum Beispiel Claude Code und Cursor), können einander sagen, was sie ändern wollen. Im Chat-Tab des Panels schreibst du einer KI oder allen, hängst Dateien, Nodes und Screenshots an und liest ihre formatierten Antworten. Eine KI, die du bittest, dir dort zuzuhören, bekommt deine Nachrichten sofort.
 - Die Werkzeuge sind in Gruppen geordnet: 121 Werkzeuge in 20 Gruppen (Szene, Inspector, Skript, Animation, Tilemap, Oberfläche, 3D, Shader, Audio, Export, Spiel spielen ...). Die KI schaltet nur die Gruppen ein, die sie braucht.
 
 ## Berechtigungsmodi
@@ -73,7 +73,7 @@ Details stehen im [englischen README](README.md) und im [Installationsleitfaden]
 | `confirm` | Die KI darf frei lesen. Vor jeder Änderung zeigt Godot, was die KI tun will (bei GDScript den ganzen Code), und du klickst auf „Erlauben“ oder „Ablehnen“. |
 | `read-only` | Die KI darf nur ansehen. Werkzeuge, die Dateien ändern, GDScript ausführen, das Spiel starten oder Eingaben senden, werden ausgeblendet. |
 
-Den Modus legst du beim Hinzufügen von Godot Wingman zu deinem KI-Client fest (`--mode`) oder im Godot-Wingman-Panel in Godot. Wenn beide unterschiedlich sind, gilt der strengere. Im Bestätigungsfenster kannst du ein Werkzeug für den Rest der Sitzung erlauben. So fragt eine lange Reihe ähnlicher Änderungen nicht jedes Mal nach.
+Den Modus legst du beim Hinzufügen von Godot Wingman zu deinem KI-Client fest (`--mode`) oder im Godot-Wingman-Panel in Godot. Dort hat jede verbundene KI ihren eigenen Modus, zum Beispiel Nur-Lesen für eine KI, die plant, und vollen Zugriff für eine, die programmiert. Wenn beide unterschiedlich sind, gilt der strengere. Im Bestätigungsfenster kannst du ein Werkzeug für den Rest der Sitzung erlauben. So fragt eine lange Reihe ähnlicher Änderungen nicht jedes Mal nach.
 
 ## Sprachen
 

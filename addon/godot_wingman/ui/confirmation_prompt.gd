@@ -16,6 +16,31 @@ const ANSWER_ALLOW_FOR_SESSION := "allow_for_session"
 const ANSWER_DENY := "deny"
 const ANSWER_NO_ANSWER := "no_answer"
 
+## The approval dialog that is waiting for an answer, so the panel can bring it back to
+## the front when it is hidden behind other windows.
+static var _open_dialog: ConfirmationDialog = null
+## The answer slot of that dialog, so the panel can answer it too.
+static var _open_decision: Dictionary = {}
+
+
+## Answers the waiting approval dialog from outside it (the Allow and Deny buttons on
+## the AI's card in the panel). Returns false when no dialog is waiting.
+static func answer_open_dialog(answer: String) -> bool:
+	if _open_decision.is_empty() or _open_decision["answer"] != "":
+		return false
+	_open_decision["answer"] = answer
+	return true
+
+
+## Brings the waiting approval dialog to the front. Returns false when none is open.
+static func bring_open_dialog_to_front() -> bool:
+	if not is_instance_valid(_open_dialog):
+		return false
+	_open_dialog.grab_focus()
+	if _open_dialog.has_method("move_to_foreground"):
+		_open_dialog.call("move_to_foreground")
+	return true
+
 
 ## Shows the dialog and waits. Returns one of the ANSWER_* constants. Closing the
 ## dialog counts as "deny", waiting longer than `timeout_seconds` as "no_answer".
@@ -112,6 +137,9 @@ static func _show_and_wait(dialog: ConfirmationDialog, timeout_seconds: float, w
 	dialog.canceled.connect(remember_answer.bind(ANSWER_DENY))
 	dialog.custom_action.connect(func(action: StringName) -> void: remember_answer.call(String(action)))
 
+	# Not modal: a modal dialog swallows every click in the editor, and the person must
+	# be able to answer with the Allow and Deny buttons on the AI's card in the panel too.
+	dialog.exclusive = false
 	var base_control := EditorInterface.get_base_control()
 	base_control.add_child(dialog)
 	if wanted_size == Vector2i.ZERO:
@@ -122,10 +150,15 @@ static func _show_and_wait(dialog: ConfirmationDialog, timeout_seconds: float, w
 	if DisplayServer.has_method("window_request_attention"):
 		DisplayServer.window_request_attention()
 
+	_open_dialog = dialog
+	_open_decision = decision
 	var tree := base_control.get_tree()
 	var deadline_milliseconds := Time.get_ticks_msec() + int(timeout_seconds * 1000.0)
 	while decision["answer"] == "" and Time.get_ticks_msec() < deadline_milliseconds:
 		await tree.process_frame
 
+	if _open_dialog == dialog:
+		_open_dialog = null
+		_open_decision = {}
 	dialog.queue_free()
 	return decision["answer"] if decision["answer"] != "" else ANSWER_NO_ANSWER

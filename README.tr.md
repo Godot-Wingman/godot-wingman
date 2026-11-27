@@ -62,7 +62,7 @@ Ayrıntılar için [İngilizce README](README.md) ve [kurulum rehberi](docs/INST
 - Kurulu Godot sürümünün kendi dokümantasyonunu ve GDExtension sınıflarını okur.
 - Editörün altındaki Godot Wingman paneli AI'ın yaptığı her değişikliği listeler; script, sahne, kaynak ve ayarları istediğin adımdan önceki haline döndürebilir.
 - Sen Ctrl+Z'ye bastığında, elle bir şey değiştirdiğinde ya da panelden geri döndüğünde AI bunu bir sonraki adımında öğrenir; artık var olmayan bir hal üzerinde çalışmaya devam etmez.
-- Aynı editörde çalışan AI'lar (örneğin Claude Code ve Cursor) ne değiştireceklerini birbirlerine söyleyebilir; sen de panelden hepsine yazabilirsin.
+- Aynı editörde çalışan AI'lar (örneğin Claude Code ve Cursor) ne değiştireceklerini birbirlerine söyleyebilir. Panelin Chat sekmesinde bir AI ile ya da hepsiyle konuşur, dosya, node ve ekran görüntüsü ekler, cevaplarını biçimli okursun. Orada seni dinlemesini istediğin AI mesajlarını hemen alır.
 - Araçlar gruplar halindedir (20 grupta 121 araç: sahne, inspector, script, animasyon, tilemap, arayüz, 3D, shader, ses, export, oyunu oynama...). AI sadece ihtiyacı olan grupları açar.
 
 ## İzin modları
@@ -73,7 +73,7 @@ Ayrıntılar için [İngilizce README](README.md) ve [kurulum rehberi](docs/INST
 | `confirm` | Serbestçe bakar. Her değişiklikten önce Godot, AI'ın ne yapmak istediğini gösterir (GDScript ise kodun tamamını), sen İzin ver ya da Reddet dersin. |
 | `read-only` | Sadece bakar. Dosya değiştiren, GDScript çalıştıran, oyunu başlatan veya input gönderen araçlar gizlenir. |
 
-Modu AI istemcisine eklerken (`--mode`) ya da Godot'da Godot Wingman panelinden seçebilirsin. İkisi farklıysa sıkı olan geçerlidir. Onay penceresinde bir aracı oturumun sonuna kadar serbest bırakabilirsin; böylece art arda gelen benzer değişiklikler her seferinde sormaz.
+Modu AI istemcisine eklerken (`--mode`) ya da Godot'da Godot Wingman panelinden seçebilirsin. Panelde bağlı her AI'ın kendi modu vardır: örneğin plan yapan AI salt okunur, kod yazan AI tam yetkili olabilir. İkisi farklıysa sıkı olan geçerlidir. Onay penceresinde bir aracı oturumun sonuna kadar serbest bırakabilirsin; böylece art arda gelen benzer değişiklikler her seferinde sormaz.
 
 ## Diller
 

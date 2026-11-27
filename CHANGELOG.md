@@ -4,6 +4,23 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Added
+
+- Permission mode per AI: every connected AI has its own mode (Full access, Ask first, Read-only) on its card in the Godot Wingman panel. Each AI app keeps the mode last chosen for it in the project; apps seen for the first time get the mode set under the panel's settings button. An AI is told when its mode changes. "Allow for this session" in the approval dialog now applies to that AI only.
+- AIs can be renamed in the panel, for example after the model they use, so two sessions of the same app are easy to tell apart. The other AIs see the new name.
+- Chat with the AIs in Godot: the panel's Chat tab writes to every AI or to one of them (click its card), with attachments (project files and folders, selected nodes, a screenshot of the editor, files from the computer, also dragged in from the FileSystem and Scene docks). Messages show who wrote to whom, when, and whether the AI has read them; AI answers are shown as formatted Markdown with code blocks that can be copied, and res:// paths open the file. The chat is kept in `.godot/godot_wingman/chat.json` and stays out of exported games.
+- `wait_for_person_message`: an AI the person asked to listen to them in Godot waits there for the next chat message and gets it right away, attached pictures included. Its card says Listening. `reply_to_person`: the AI answers in the chat.
+- Connect AI apps links to the download page of apps that are not installed.
+
+### Changed
+
+- The Godot Wingman panel is redesigned: one card per connected AI on the left, with its name, app, connection time, changes, what it is doing now and its mode; the change list and the chat in two tabs on the right. The line "connected: claude-code (server mode: full)" is gone. Messages between AIs are no longer listed among the changes.
+- Connect AI apps says "Connected and ready", "Installed, not connected yet" (with a Connect button) or "Not installed on this computer" instead of "Set up" and a greyed-out Configure button.
+
+### Fixed
+
+- Godot could crash while quitting with the addon enabled (seen with `--quit`): the addon now stops watching the undo history before the editor frees it.
+
 ## [0.4.4] - 2026-11-27
 
 ### Added

@@ -2,8 +2,9 @@
 extends AcceptDialog
 ## The "Connect AI apps" window of the Godot Wingman panel.
 ##
-## It lists the AI apps on this computer (Claude, Codex, Cursor...) and whether Godot
-## Wingman is set up in each, with a Configure button per app. The work is done by the
+## It lists the AI apps (Claude, Codex, Cursor...) and whether Godot Wingman is set up
+## in each, with a Connect button for apps that are installed but not set up yet and a
+## download link for apps that are not installed. The work is done by the
 ## installed program: `godot-wingman setup --status --json` and
 ## `godot-wingman setup --client <app> --json`. The program notes where it is installed in
 ## installation.json (written by server/src/installation.ts). When that file is missing,
@@ -15,20 +16,30 @@ const EditorRegistryFile := preload("../bridge/editor_registry_file.gd")
 const INSTALLATION_FILE_NAME := "installation.json"
 const WINDOWS_INSTALL_COMMAND := "irm https://raw.githubusercontent.com/Godot-Wingman/godot-wingman/main/install/install.ps1 | iex"
 const UNIX_INSTALL_COMMAND := "curl -fsSL https://raw.githubusercontent.com/Godot-Wingman/godot-wingman/main/install/install.sh | sh"
-## What each outcome of `setup --status` means for the person, and the button it gets.
+## What each outcome of `setup --status` means for the person.
 const STATUS_TEXTS := {
-	"already set up": "Set up",
-	"would add": "Not set up",
-	"would update": "Set up with an older command",
-	"skipped": "Not installed",
-	"failed": "Cannot be changed automatically",
+	"already set up": "Connected and ready",
+	"would add": "Installed, not connected yet",
+	"would update": "Connected with an older setting",
+	"skipped": "Not installed on this computer",
+	"failed": "Cannot be connected automatically",
+}
+## Where people get each app (ids from `setup --status`).
+const DOWNLOAD_PAGES := {
+	"codex": "https://openai.com/codex",
+	"claude-desktop": "https://claude.com/download",
+	"claude-code": "https://claude.com/product/claude-code",
+	"cursor": "https://cursor.com/download",
+	"gemini-cli": "https://github.com/google-gemini/gemini-cli",
+	"windsurf": "https://windsurf.com/download",
+	"vscode": "https://code.visualstudio.com/download",
 }
 
 var _content: VBoxContainer
 var _setup_thread: Thread
-## True while the running setup is a Configure button's, not the status check.
+## True while the running setup is a Connect button's, not the status check.
 var _is_configuring := false
-## What the last Configure did, shown once above the list.
+## What the last Connect did, shown once above the list.
 var _note := ""
 
 
@@ -109,7 +120,7 @@ func _on_setup_finished(exit_code: int, output_text: String) -> void:
 		var steps: Array = result.get("steps", [])
 		var step: Dictionary = steps[0] if not steps.is_empty() else {}
 		if step.get("outcome", "") == "added" or step.get("outcome", "") == "updated":
-			_note = "%s is configured (%s). Restart it to use Godot Wingman." % [step.get("client", ""), step.get("detail", "")]
+			_note = "%s is connected (%s). Restart it to use Godot Wingman." % [step.get("client", ""), step.get("detail", "")]
 		else:
 			_note = "%s was not changed: %s" % [step.get("client", ""), step.get("detail", "")]
 		refresh()
@@ -133,19 +144,29 @@ func _show_apps(result: Dictionary) -> void:
 		_content.add_child(note_label)
 		_note = ""
 	var intro := Label.new()
-	intro.text = "Godot Wingman %s can be added to these AI apps. Restart an app after configuring it." % result.get("version", "")
+	intro.text = "Godot Wingman %s works with these AI apps. After you connect one, restart it." % result.get("version", "")
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_content.add_child(intro)
 
 	var grid := GridContainer.new()
-	grid.columns = 3
-	grid.add_theme_constant_override("h_separation", int(16 * EditorInterface.get_editor_scale()))
+	grid.columns = 4
+	var editor_scale := EditorInterface.get_editor_scale()
+	grid.add_theme_constant_override("h_separation", int(12 * editor_scale))
+	grid.add_theme_constant_override("v_separation", int(8 * editor_scale))
 	_content.add_child(grid)
-	var theme_source := EditorInterface.get_base_control()
+	var editor_theme := EditorInterface.get_editor_theme()
 	for step: Dictionary in result.get("steps", []):
 		var outcome := String(step.get("outcome", ""))
+		var client_id := String(step.get("id", ""))
+		var client_name := String(step.get("client", ""))
+		var status_icon := TextureRect.new()
+		status_icon.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+		status_icon.texture = editor_theme.get_icon(_status_icon_name(outcome), "EditorIcons")
+		grid.add_child(status_icon)
+
 		var name_label := Label.new()
-		name_label.text = String(step.get("client", ""))
+		name_label.text = client_name
+		name_label.add_theme_font_override("font", editor_theme.get_font("bold", "EditorFonts"))
 		grid.add_child(name_label)
 
 		var status_label := Label.new()
@@ -154,19 +175,11 @@ func _show_apps(result: Dictionary) -> void:
 		status_label.mouse_filter = Control.MOUSE_FILTER_PASS
 		status_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		if outcome == "already set up":
-			status_label.add_theme_color_override("font_color", theme_source.get_theme_color("success_color", "Editor"))
+			status_label.add_theme_color_override("font_color", editor_theme.get_color("success_color", "Editor"))
 		elif outcome == "skipped" or outcome == "failed":
-			status_label.modulate = Color(1, 1, 1, 0.55)
+			status_label.modulate = Color(1, 1, 1, 0.6)
 		grid.add_child(status_label)
-
-		var configure_button := Button.new()
-		configure_button.text = "Update" if outcome == "would update" else "Configure"
-		configure_button.disabled = outcome != "would add" and outcome != "would update"
-		if step.get("id", "") == "vscode":
-			configure_button.tooltip_text = "VS Code is set up per project: this writes .vscode/mcp.json in this Godot project."
-		var client_id := String(step.get("id", ""))
-		configure_button.pressed.connect(func() -> void: _configure(client_id))
-		grid.add_child(configure_button)
+		grid.add_child(_make_action(outcome, client_id, client_name))
 
 	var check_again_button := Button.new()
 	check_again_button.text = "Check again"
@@ -174,6 +187,38 @@ func _show_apps(result: Dictionary) -> void:
 	check_again_button.pressed.connect(refresh)
 	_content.add_child(check_again_button)
 	reset_size.call_deferred()
+
+
+## The button or link at the end of an app's row.
+func _make_action(outcome: String, client_id: String, client_name: String) -> Control:
+	match outcome:
+		"would add", "would update":
+			var connect_button := Button.new()
+			connect_button.text = "Connect" if outcome == "would add" else "Update"
+			if client_id == "vscode":
+				connect_button.tooltip_text = "VS Code is set up per project: this writes .vscode/mcp.json in this Godot project."
+			connect_button.pressed.connect(func() -> void: _configure(client_id))
+			return connect_button
+		"skipped":
+			if DOWNLOAD_PAGES.has(client_id):
+				var download_link := LinkButton.new()
+				download_link.text = "Get %s" % client_name
+				download_link.tooltip_text = DOWNLOAD_PAGES[client_id]
+				download_link.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+				download_link.pressed.connect(func() -> void: OS.shell_open(DOWNLOAD_PAGES[client_id]))
+				return download_link
+	return Control.new()
+
+
+static func _status_icon_name(outcome: String) -> String:
+	match outcome:
+		"already set up":
+			return "StatusSuccess"
+		"would add", "would update":
+			return "StatusWarning"
+		"failed":
+			return "StatusError"
+	return "Remove"
 
 
 func _configure(client_id: String) -> void:

@@ -9,7 +9,8 @@ extends RefCounted
 ##
 ## News is:
 ## - what the person did: undo or redo with Ctrl+Z, changes by hand, going back to
-##   before a step in the Godot Wingman panel, a message typed in the panel;
+##   before a step in the Godot Wingman panel, a message written in the panel's chat
+##   (to every AI or to one);
 ## - what other AIs said with tell_other_ais, and when they connect or leave.
 ##
 ## An AI that connects later gets the recent messages, so it knows what others are doing.
@@ -21,6 +22,8 @@ const KIND_PERSON_EDIT := "person_edit"
 const KIND_WENT_BACK := "went_back"
 const KIND_AI_CONNECTED := "ai_connected"
 const KIND_AI_LEFT := "ai_left"
+const KIND_PERMISSION_CHANGED := "permission_changed"
+const KIND_RENAMED := "renamed"
 
 ## Connection id used for news from the person at the editor.
 const PERSON := 0
@@ -50,6 +53,18 @@ func add_connection(connection_id: int, ai_client: String) -> void:
 		"%s connected to this editor and may change the same project. Tell it what you are working on with tell_other_ais." % ai_client))
 
 
+## The person gave a connected AI another name in the panel: other AIs see that name
+## from now on, and the AI itself is told.
+func rename_connection(connection_id: int, new_name: String) -> void:
+	var connection: Dictionary = _connections.get(connection_id, {})
+	if connection.is_empty():
+		return
+	var old_name := String(connection["ai_client"])
+	connection["ai_client"] = new_name
+	tell_one(connection_id, KIND_RENAMED, "The person named you \"%s\" in the Godot Wingman panel. The person and the other AIs see you under this name." % new_name)
+	_add(_make_notice(KIND_RENAMED, connection_id, new_name, "%s is now called \"%s\"." % [old_name, new_name]))
+
+
 func remove_connection(connection_id: int) -> void:
 	var connection: Dictionary = _connections.get(connection_id, {})
 	_connections.erase(connection_id)
@@ -71,16 +86,70 @@ func get_connected_ai_names(except_connection_id: int) -> PackedStringArray:
 	return names
 
 
-## A message from an AI (tell_other_ais) or from the person (the panel). Returns the
-## names of the AIs that will get it.
-func post_message(from_connection_id: int, from_name: String, text: String) -> PackedStringArray:
-	var sender := "the person at the editor" if from_connection_id == PERSON else from_name
-	var notice := _make_notice(KIND_MESSAGE, from_connection_id, from_name, "Message from %s: \"%s\"" % [sender, text])
+## A message to every AI, from an AI (tell_other_ais) or from the person (the panel's
+## chat). `message_id` is the chat message, so the panel can show who read it.
+## `attachments` are the files, nodes and pictures the person added. Returns the names
+## of the AIs that will get it.
+func post_message(from_connection_id: int, from_name: String, text: String, message_id: int = -1, attachments: Array = []) -> PackedStringArray:
+	var notice_text := "Message from %s: \"%s\"" % [from_name, text]
+	if from_connection_id == PERSON:
+		notice_text = "Message from the person at the editor to every AI: \"%s\"%s Answer the person with reply_to_person: they read it in the Godot Wingman panel." % [text, describe_attachments(attachments)]
+	var notice := _make_notice(KIND_MESSAGE, from_connection_id, from_name, notice_text)
+	notice["message_id"] = message_id
+	notice["attachments"] = attachments
 	_recent_messages.append(notice)
 	while _recent_messages.size() > RECENT_MESSAGE_COUNT:
 		_recent_messages.pop_front()
 	_add(notice)
 	return get_connected_ai_names(from_connection_id)
+
+
+## News for one AI only, for example that the person changed what it may do.
+func tell_one(connection_id: int, kind: String, text: String) -> void:
+	var connection: Dictionary = _connections.get(connection_id, {})
+	if not connection.is_empty():
+		_append_to_queue(connection["queue"], _make_notice(kind, PERSON, "", text))
+
+
+## A message the person wrote in the panel's chat to one AI only.
+func send_from_person(connection_id: int, text: String, message_id: int, attachments: Array) -> void:
+	var connection: Dictionary = _connections.get(connection_id, {})
+	if connection.is_empty():
+		return
+	var notice := _make_notice(KIND_MESSAGE, PERSON, "", "Message from the person at the editor, only to you: \"%s\"%s Answer with reply_to_person: the person reads it in the Godot Wingman panel." % [text, describe_attachments(attachments)])
+	notice["message_id"] = message_id
+	notice["attachments"] = attachments
+	_append_to_queue(connection["queue"], notice)
+
+
+## True when the person wrote to this AI (or to every AI) and it has not read it yet.
+func has_message_from_person(connection_id: int) -> bool:
+	var connection: Dictionary = _connections.get(connection_id, {})
+	if connection.is_empty():
+		return false
+	for notice: Dictionary in connection["queue"]:
+		if notice["kind"] == KIND_MESSAGE and int(notice["from_connection"]) == PERSON:
+			return true
+	return false
+
+
+## The attachments of a chat message as a sentence for the AI. Pictures are added to
+## the tool result as images by the MCP server.
+static func describe_attachments(attachments: Array) -> String:
+	if attachments.is_empty():
+		return ""
+	var descriptions := PackedStringArray()
+	for attachment: Dictionary in attachments:
+		match String(attachment.get("kind", "")):
+			"folder":
+				descriptions.append("folder %s" % attachment["path"])
+			"node":
+				descriptions.append("node \"%s\" in %s" % [attachment["path"], attachment.get("scene", "the open scene")])
+			"image":
+				descriptions.append("picture %s (shown below)" % attachment["path"])
+			_:
+				descriptions.append("file %s" % attachment["path"])
+	return " Attached: %s." % ", ".join(descriptions)
 
 
 ## The person undid or redid changes with Ctrl+Z / Ctrl+Y. made_by_connection_id is the
@@ -129,7 +198,12 @@ func take_pending(connection_id: int) -> Array:
 		return []
 	var texts := []
 	for notice: Dictionary in connection["queue"]:
-		texts.append({"time": notice["time"], "kind": notice["kind"], "text": _describe_for(notice, connection_id)})
+		var pending := {"time": notice["time"], "kind": notice["kind"], "text": _describe_for(notice, connection_id)}
+		if int(notice.get("message_id", -1)) != -1:
+			pending["message_id"] = notice["message_id"]
+		if not Array(notice.get("attachments", [])).is_empty():
+			pending["attachments"] = notice["attachments"]
+		texts.append(pending)
 	connection["queue"] = [] as Array[Dictionary]
 	return texts
 

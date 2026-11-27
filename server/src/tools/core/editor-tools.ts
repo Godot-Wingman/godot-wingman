@@ -1,6 +1,7 @@
 /**
  * Core tools that work inside the running editor: its state, running GDScript,
- * reading the Output panel, taking screenshots, and messages to other AIs.
+ * reading the Output panel, taking screenshots, messages to other AIs, and the chat
+ * with the person in the Godot Wingman panel.
  */
 import { z } from "zod";
 import { defineTool, forwardToEditor, imageResult, textResult } from "../../mcp/tool-definition.ts";
@@ -124,6 +125,68 @@ export const tellOtherAisTool = defineTool({
       receivers.length > 0
         ? `Sent to ${receivers.join(", ")}. They read it with their next tool result.`
         : "No other AI is connected right now. The message is kept, and an AI that connects in the next 30 minutes gets it.",
+    );
+  },
+});
+
+export const replyToPersonTool = defineTool({
+  name: "reply_to_person",
+  title: "Reply in the Godot chat",
+  description: [
+    "Writes to the person in the chat of the Godot Wingman panel in the editor. Use it to answer messages the person wrote there (they reach you as news, or from wait_for_person_message): the person may not be looking at your own app.",
+    "Markdown is shown formatted: headings, bold, lists, `code` and code blocks with a Copy button. res:// paths become links that open the file in Godot.",
+    "Keep it as short as a chat message: what you did or found, and a question if you need a decision.",
+  ].join("\n"),
+  inputShape: {
+    message: z.string().min(1).max(20_000).describe("The answer, in Markdown."),
+    files: z
+      .array(z.string())
+      .max(20)
+      .optional()
+      .describe(
+        "Project files you changed or want the person to look at, as res:// paths. Shown as buttons that open them.",
+      ),
+  },
+  access: "read",
+  run: async (input, context) => {
+    await context.editors.request("reply_to_person", { message: input.message, files: input.files ?? [] });
+    return textResult("Shown in the Godot Wingman chat.");
+  },
+});
+
+/** Longest wait per call. Codex is set up with a 300 second tool timeout. */
+const MAXIMUM_LISTEN_SECONDS = 280;
+
+export const waitForPersonMessageTool = defineTool({
+  name: "wait_for_person_message",
+  title: "Wait for the person in the Godot chat",
+  description: [
+    "Waits until the person writes to you in the chat of the Godot Wingman panel, and returns their message (with attached pictures, files and nodes).",
+    'Use it when the person asks you to listen to them in Godot, the Godot Wingman chat or the panel (for example "Listen to me in the Godot Wingman chat."). Then work in a loop: call this tool, do what the message asks, answer with reply_to_person, and call this tool again.',
+    'If it returns "No message yet", call it again right away to keep listening. Stop listening when the person tells you to, or writes to you in your own app.',
+  ].join("\n"),
+  inputShape: {
+    timeout_seconds: z
+      .number()
+      .int()
+      .min(5)
+      .max(MAXIMUM_LISTEN_SECONDS)
+      .optional()
+      .describe(`How long to wait in this call. Default: ${MAXIMUM_LISTEN_SECONDS}.`),
+  },
+  access: "read",
+  run: async (input, context) => {
+    const timeoutSeconds = input.timeout_seconds ?? MAXIMUM_LISTEN_SECONDS;
+    const answer = await context.editors.request<{ message_arrived: boolean }>(
+      "wait_for_person_message",
+      { timeout_seconds: timeoutSeconds },
+      (timeoutSeconds + 30) * 1000,
+    );
+    // The message itself comes as news at the end of this result.
+    return textResult(
+      answer.message_arrived
+        ? "The person wrote to you in the Godot Wingman chat (below). Do what it asks, answer with reply_to_person, then call wait_for_person_message again."
+        : "No message yet. Call wait_for_person_message again to keep listening.",
     );
   },
 });

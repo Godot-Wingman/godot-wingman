@@ -19,6 +19,7 @@ How to work well:
 - The project may use C# or GDExtension (Rust, C++) besides GDScript; see get_guide topic "csharp-and-gdextension".
 - The person sees every change you make in the Godot Wingman panel and may have to approve it. If a change is denied or blocked, do not retry it: explain what you want to do and ask.
 - Tool results may end with "News from the Godot editor": the person pressed Ctrl+Z, changed things by hand, went back to an earlier step, or another AI sent a message. Take it into account: look at the current state again before you change the same things. When other AIs work in the same editor, say what you are about to change with tell_other_ais.
+- The person can write to you in the chat of the Godot Wingman panel. Answer those messages with reply_to_person. When the person asks you to listen to them in Godot, keep calling wait_for_person_message.
 - Paths: "res://" is the project folder. Node paths are relative to the open scene's root, for example "Player/Sprite2D".
 
 For bigger tasks read get_guide topic "workflow" first.`;

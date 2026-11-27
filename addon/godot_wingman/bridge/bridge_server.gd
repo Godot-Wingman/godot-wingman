@@ -81,6 +81,14 @@ func get_client_descriptions() -> Array:
 	return descriptions
 
 
+## What one connected MCP server told us in its hello, or {} when it is not connected.
+func get_client_description(connection_id: int) -> Dictionary:
+	for client in _clients:
+		if client.connection_id == connection_id and client.is_authenticated:
+			return client.description
+	return {}
+
+
 func get_authenticated_client_count() -> int:
 	return _clients.filter(func(client: ClientConnection) -> bool: return client.is_authenticated).size()
 

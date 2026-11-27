@@ -27,9 +27,9 @@ Lets AI apps such as Claude, Codex, Cursor, Gemini CLI and VS Code use the Godot
 
 **Description:**
 
-Godot Wingman connects AI apps to the Godot editor through the Model Context Protocol (MCP). The AI works in the open editor the way a person does: it builds scenes, changes properties in the inspector, writes GDScript and C# scripts (GDScript is checked by Godot's own parser), runs the game, plays it with real key presses, reads the errors and fixes them. Changes go through the editor's undo history, and the Godot Wingman panel lists every change, with a button to go back to how the project was before any step.
+Godot Wingman connects AI apps to the Godot editor through the Model Context Protocol (MCP). The AI works in the open editor the way a person does: it builds scenes, changes properties in the inspector, writes GDScript and C# scripts (GDScript is checked by Godot's own parser), runs the game, plays it with real key presses, reads the errors and fixes them. Changes go through the editor's undo history, and the Godot Wingman panel lists every change, with a button to go back to how the project was before any step. Its Chat tab lets you talk to each connected AI from inside Godot, with files, nodes and screenshots attached.
 
-The addon is one half of Godot Wingman. The other half is a small program that your AI app starts. After enabling the plugin, open the Godot Wingman panel at the bottom of the editor and click Connect AI apps: it shows a one-line installer when the program is missing, and a Configure button for each AI app on your computer.
+The addon is one half of Godot Wingman. The other half is a small program that your AI app starts. After enabling the plugin, open the Godot Wingman panel at the bottom of the editor and click Connect AI apps: it shows a one-line installer when the program is missing, and a Connect button for each AI app on your computer.
 
 Everything runs on your computer. There are no accounts and no telemetry. The addon is an editor tool only and is never part of an exported game, so games you make with it are yours, under any license.
 

@@ -100,9 +100,15 @@ func _enter_tree() -> void:
 		return
 	add_child(_bridge_server)
 	_bridge_server.client_count_changed.connect(_on_client_count_changed)
-	_bridge_server.client_connected.connect(_session.notices.add_connection)
-	_bridge_server.client_disconnected.connect(_session.notices.remove_connection)
-	_bridge_server.take_notices = _session.notices.take_pending
+	_bridge_server.client_connected.connect(func(connection_id: int, ai_client: String) -> void:
+		_session.add_connection(connection_id, _bridge_server.get_client_description(connection_id))
+		_session.notices.add_connection(connection_id, _session.get_connection_name(connection_id, ai_client))
+	)
+	_bridge_server.client_disconnected.connect(func(connection_id: int) -> void:
+		_session.notices.remove_connection(connection_id)
+		_session.remove_connection(connection_id)
+	)
+	_bridge_server.take_notices = _session.take_notices
 	scene_changed.connect(_on_scene_changed)
 	if DisplayServer.get_name() != "headless":
 		_dock = WingmanDock.new(_session, context.addon_version)
@@ -211,5 +217,4 @@ func _on_client_count_changed(authenticated_client_count: int) -> void:
 		print("Godot Wingman: %d AI connection(s) active." % authenticated_client_count)
 	else:
 		print("Godot Wingman: no AI connected.")
-	if _dock != null:
-		_dock.show_connected_clients(_bridge_server.get_client_descriptions())
+

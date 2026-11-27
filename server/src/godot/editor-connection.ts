@@ -42,6 +42,17 @@ export interface EditorNotice {
   time: string;
   kind: string;
   text: string;
+  /** Chat message this notice comes from, so the editor can show it as read. */
+  message_id?: number;
+  /** Files, folders, nodes and pictures the person attached to a chat message. */
+  attachments?: EditorNoticeAttachment[];
+}
+
+export interface EditorNoticeAttachment {
+  kind: "file" | "folder" | "node" | "image";
+  /** res:// path, absolute path (pictures always), or node path for "node". */
+  path: string;
+  scene?: string;
 }
 
 interface PendingRequest {

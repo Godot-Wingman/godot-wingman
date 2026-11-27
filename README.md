@@ -79,7 +79,7 @@ Godot Wingman works inside the open Godot editor, through an addon:
 - **Fallback.** When no tool fits, the AI can run GDScript inside the editor.
 - **You stay in control.** The Godot Wingman panel at the bottom of the editor lists every change the AI made and can put scripts, scenes, resources and settings back to how they were before any of them.
 - **You and the AI stay in step.** When you press Ctrl+Z, change something by hand or go back in the panel, the AI is told with its next step, so it does not keep working on a state that is gone.
-- **Several AIs, one editor.** AIs working in the same editor (for example Claude Code and Cursor) can tell each other what they are about to change, and you can write to all of them from the panel.
+- **Several AIs, one editor.** AIs working in the same editor (for example Claude Code and Cursor) can tell each other what they are about to change. In the panel's Chat tab you talk to one AI or to all of them, attach files, nodes and screenshots, and read their answers with formatting. An AI you ask to listen to you there gets your messages right away.
 - **Small context.** 121 tools in 20 toolsets: scene, inspector, script, project settings, signals, resources, file system, viewport, playing the game, input, live game inspection, debugging, animation, tile maps, UI, 3D, shaders, audio and export. The AI turns on only the groups it needs. See the [changelog](CHANGELOG.md).
 
 ## Permission modes
@@ -90,7 +90,7 @@ Godot Wingman works inside the open Godot editor, through an addon:
 | `confirm` | Look freely. Before every change, Godot shows what the AI wants to do (for GDScript, the whole code) and you click Allow or Deny. |
 | `read-only` | Only look. Tools that change files, run GDScript, start the game or send input are hidden. |
 
-Set the mode when you add Godot Wingman to your AI client (`--mode`, see the [installation guide](docs/INSTALL.md)), or in Godot in the Godot Wingman panel. If the two differ, the stricter one applies. In the dialog you can also allow one tool for the rest of the session, so a long series of similar changes does not ask every time.
+Set the mode when you add Godot Wingman to your AI client (`--mode`, see the [installation guide](docs/INSTALL.md)), or in Godot in the Godot Wingman panel, where every connected AI has its own mode: for example one AI that plans with read-only and one that codes with full access. If the two differ, the stricter one applies. In the dialog you can also allow one tool for the rest of the session, so a long series of similar changes does not ask every time.
 
 ## Languages
 

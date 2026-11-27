@@ -62,7 +62,7 @@ Para mais detalhes, veja o [README em inglês](README.md) e o [guia de instalaç
 - Ela lê a documentação da versão do Godot instalada e as classes das suas GDExtensions.
 - O painel do Godot Wingman, embaixo do editor, lista cada mudança feita pela IA e pode devolver scripts, cenas, recursos e configurações ao estado que tinham antes do passo que você escolher.
 - Quando você aperta Ctrl+Z, mexe em algo manualmente ou volta pelo painel, a IA fica sabendo no próximo passo; assim ela não continua trabalhando sobre um estado que não existe mais.
-- Várias IAs no mesmo editor (por exemplo, Claude Code e Cursor) podem avisar umas às outras o que vão mudar, e você pode escrever para todas pelo painel.
+- Várias IAs no mesmo editor (por exemplo, Claude Code e Cursor) podem avisar umas às outras o que vão mudar. Na aba Chat do painel você conversa com uma IA ou com todas, anexa arquivos, nós e capturas de tela, e lê as respostas formatadas. Uma IA a quem você pede para te ouvir ali recebe suas mensagens na hora.
 - As ferramentas são organizadas em grupos (121 ferramentas em 20 grupos: cena, inspetor, script, animação, tilemap, interface, 3D, shader, áudio, exportação, jogar o jogo...). A IA ativa só os grupos de que precisa.
 
 ## Modos de permissão
@@ -73,7 +73,7 @@ Para mais detalhes, veja o [README em inglês](README.md) e o [guia de instalaç
 | `confirm` | Pode olhar livremente. Antes de cada mudança, o Godot mostra o que a IA quer fazer (em GDScript, o código inteiro) e você escolhe Permitir ou Negar. |
 | `read-only` | Só olha. As ferramentas que alteram arquivos, executam GDScript, iniciam o jogo ou enviam entradas ficam ocultas. |
 
-Você pode escolher o modo ao adicionar o Godot Wingman ao seu cliente de IA (`--mode`, veja o [guia de instalação](docs/INSTALL.md)) ou no Godot, no painel do Godot Wingman. Se os dois forem diferentes, vale o mais restrito. Na janela de confirmação, você também pode liberar uma ferramenta até o fim da sessão, para que uma série longa de mudanças parecidas não pergunte toda vez.
+Você pode escolher o modo ao adicionar o Godot Wingman ao seu cliente de IA (`--mode`, veja o [guia de instalação](docs/INSTALL.md)) ou no Godot, no painel do Godot Wingman, onde cada IA conectada tem o próprio modo: por exemplo, somente leitura para uma IA que planeja e acesso total para outra que programa. Se os dois forem diferentes, vale o mais restrito. Na janela de confirmação, você também pode liberar uma ferramenta até o fim da sessão, para que uma série longa de mudanças parecidas não pergunte toda vez.
 
 ## Idiomas
 

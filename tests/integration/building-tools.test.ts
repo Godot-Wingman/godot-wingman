@@ -354,6 +354,9 @@ describe("export", () => {
 
   test("export_project builds a pack in a separate Godot process", async () => {
     if (!editor) return;
+    // The chat is kept in .godot/godot_wingman/chat.json and must stay out of the game.
+    await editor.requestEditor("send_chat_message_as_person", { to: -1, text: "chat-marker-48151623" });
+    await editor.callTool("get_editor_state");
     const report = JSON.parse(
       await callAndExpectSuccess("export_project", {
         preset: "Linux",
@@ -373,6 +376,8 @@ describe("export", () => {
     // Only the editor_plugins setting may name the addon; games ignore editor plugins.
     expect(packText).not.toMatch(/godot_wingman\/[\w/]+\.(gd|gdc|remap|tscn|tres)\b/);
     expect(packText).not.toContain("GodotWingmanGameBridge");
+    expect(packText).not.toContain("chat-marker-48151623");
+    expect(packText).not.toContain("chat.json");
   }, 180_000);
 
   test("export_project explains missing export templates", async () => {

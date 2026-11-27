@@ -9,7 +9,7 @@ The other half is a small program that your AI app starts (an MCP server). The a
 1. Enable the plugin: Project > Project Settings > Plugins > Godot Wingman.
 2. Open the **Godot Wingman** panel at the bottom of the editor and click **Connect AI apps**.
 3. If the program is not installed yet, the window shows a one-line installer. Run it, then click **Check again**.
-4. Click **Configure** next to your AI app and restart that app.
+4. Click **Connect** next to your AI app and restart that app.
 
 The program can also install and update this addon in a project by itself, so you only need the Asset Store copy if you prefer to start from Godot.
 

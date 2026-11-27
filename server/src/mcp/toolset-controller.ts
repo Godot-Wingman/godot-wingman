@@ -7,6 +7,8 @@
  * switch groups with the toggle_toolsets tool; the MCP SDK then tells the client
  * that the tool list changed ("notifications/tools/list_changed").
  */
+import { readFileSync, statSync } from "node:fs";
+import { extname } from "node:path";
 import type { McpServer, RegisteredTool } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { type EditorNotice, EditorRequestError } from "../godot/editor-connection.ts";
@@ -338,8 +340,10 @@ ${JSON.stringify(input, null, 2)}`,
 }
 
 /**
- * Adds the editor's news (undo, changes by hand, going back, messages from other AIs)
- * at the end of a tool result, which is the only place the AI is sure to read it.
+ * Adds the editor's news (undo, changes by hand, going back, messages from other AIs
+ * and from the person's chat) at the end of a tool result, which is the only place the
+ * AI is sure to read it. Pictures the person attached to a chat message are added as
+ * images, so the AI sees them.
  */
 export function addNotices(result: CallToolResult, notices: EditorNotice[]): CallToolResult {
   if (notices.length === 0) {
@@ -347,5 +351,35 @@ export function addNotices(result: CallToolResult, notices: EditorNotice[]): Cal
   }
   const lines = notices.map((notice) => `- ${notice.time} ${notice.text}`);
   const text = ["News from the Godot editor since your last tool call:", ...lines].join("\n");
-  return { ...result, content: [...result.content, { type: "text", text }] };
+  return { ...result, content: [...result.content, { type: "text", text }, ...readAttachedImages(notices)] };
+}
+
+const IMAGE_MIME_TYPES: Record<string, string> = {
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".webp": "image/webp",
+  ".gif": "image/gif",
+};
+const MAXIMUM_ATTACHED_IMAGES = 5;
+const MAXIMUM_IMAGE_BYTES = 5 * 1024 * 1024;
+
+/** Pictures in the notices that can be read; others are named in the text only. */
+export function readAttachedImages(notices: EditorNotice[]): CallToolResult["content"] {
+  const images: CallToolResult["content"] = [];
+  for (const attachment of notices.flatMap((notice) => notice.attachments ?? [])) {
+    const mimeType = IMAGE_MIME_TYPES[extname(attachment.path).toLowerCase()];
+    if (attachment.kind !== "image" || !mimeType || images.length >= MAXIMUM_ATTACHED_IMAGES) {
+      continue;
+    }
+    try {
+      if (statSync(attachment.path).size > MAXIMUM_IMAGE_BYTES) {
+        continue;
+      }
+      images.push({ type: "image", data: readFileSync(attachment.path).toString("base64"), mimeType });
+    } catch {
+      // Deleted or moved since it was attached: the text still names it.
+    }
+  }
+  return images;
 }

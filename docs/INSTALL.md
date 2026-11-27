@@ -48,7 +48,7 @@ Check it works: `godot-wingman doctor` lists the Godot versions it found.
 
 `godot-wingman setup` does this for every AI app it finds. You can also do it one app at a time:
 
-- In Godot, open the **Godot Wingman** panel at the bottom and click **Connect AI apps**. It lists the AI apps on this computer, shows which ones are set up, and has a **Configure** button for each. For VS Code it writes `.vscode/mcp.json` in the open project.
+- In Godot, open the **Godot Wingman** panel at the bottom and click **Connect AI apps**. It lists the AI apps, shows which ones are connected, has a **Connect** button for apps that are installed but not set up yet, and a download link for the others. For VS Code it writes `.vscode/mcp.json` in the open project.
 - In a terminal: `godot-wingman setup --status` shows the state of every app without changing anything, and `godot-wingman setup --client cursor` sets up one app (`codex`, `claude-desktop`, `cursor`, `gemini-cli`, `windsurf`, `claude-code`, or `vscode` with `--project <Godot project folder>`).
 
 To do it by hand:
@@ -171,7 +171,7 @@ Example for Claude Desktop with confirmation and the playtesting tools:
 
 The same options can be set with the environment variables `GODOT_WINGMAN_MODE`, `GODOT_WINGMAN_TOOLSETS`, `GODOT_WINGMAN_PROJECT` and `GODOT_WINGMAN_NO_UPDATE_CHECK=1`.
 
-The permission mode can also be chosen in Godot: open the **Godot Wingman** panel at the bottom of the editor. That choice is saved for the project on your computer. If it differs from `--mode`, the stricter of the two applies.
+The permission mode can also be chosen in Godot, for each connected AI: open the **Godot Wingman** panel at the bottom of the editor, where every AI has a card with its mode. Each AI app keeps its mode for the project on your computer; apps that connect for the first time get the mode set under the panel's settings button. If it differs from `--mode`, the stricter of the two applies.
 
 ## Updating
 
@@ -185,7 +185,15 @@ The download is checked against the release's SHA-256 checksums before it replac
 
 ## Several AIs in one editor
 
-More than one AI app can work in the same editor at once. The Godot Wingman panel shows which AI made each change. The AIs hear about each other when they connect and can tell each other what they are about to change (`tell_other_ais`). You can write to all of them from the message field at the bottom of the panel; they read it with their next step.
+More than one AI app can work in the same editor at once. The Godot Wingman panel shows which AI made each change. The AIs hear about each other when they connect and can tell each other what they are about to change (`tell_other_ais`).
+
+## Talking to the AIs in Godot
+
+The **Chat** tab of the Godot Wingman panel lets you write to every AI or to one of them (click its card or its name at the top), attach project files, folders, selected nodes, a screenshot of the editor or files from your computer (also by dragging them from the FileSystem and Scene docks), and read their answers with formatting and code blocks. Each message shows who wrote it to whom, when, and whether the AI has read it.
+
+An MCP server cannot wake up an AI that is waiting for you in its own app. So an AI reads your message the next time it uses Godot, unless it is listening: ask it once in its own app, for example "Listen to me in the Godot Wingman chat." It then waits for your messages in Godot (`wait_for_person_message`) and answers there (`reply_to_person`) until you tell it to stop. Its card says **Listening** while it waits.
+
+The chat is kept in the project's `.godot/godot_wingman/chat.json`. Godot does not export the `.godot` folder's own files, so the chat never ends up in your game.
 
 When you press Ctrl+Z, change something by hand, or go back to an earlier step in the panel, every connected AI is told with its next tool result.
 

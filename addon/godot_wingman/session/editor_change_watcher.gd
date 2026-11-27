@@ -24,6 +24,11 @@ var _notices: NoticeBoard
 var _last_states: Dictionary = {}
 ## history id -> {version: {"connection_id": int, "client": String}}
 var _versions_made_by_ai: Dictionary = {}
+## The per-scene histories whose version_changed is connected, to disconnect them.
+var _watched_histories: Array[UndoRedo] = []
+## Set when the plugin stops. The editor frees scenes and histories while it quits and
+## can still send their signals; reading them then crashes Godot.
+var _is_stopped := false
 
 
 func _init(session: RefCounted, notices: NoticeBoard) -> void:
@@ -36,6 +41,11 @@ func _init(session: RefCounted, notices: NoticeBoard) -> void:
 
 
 func disconnect_from_editor() -> void:
+	_is_stopped = true
+	for history in _watched_histories:
+		if is_instance_valid(history) and history.version_changed.is_connected(check_for_changes):
+			history.version_changed.disconnect(check_for_changes)
+	_watched_histories.clear()
 	var undo_redo := EditorInterface.get_editor_undo_redo()
 	if undo_redo.history_changed.is_connected(check_for_changes):
 		undo_redo.history_changed.disconnect(check_for_changes)
@@ -55,6 +65,8 @@ func remember_current_state() -> void:
 
 
 func check_for_changes() -> void:
+	if _is_stopped:
+		return
 	var undo_redo := EditorInterface.get_editor_undo_redo()
 	for history_id in _watched_history_ids():
 		var history := undo_redo.get_history_undo_redo(history_id)
@@ -108,12 +120,13 @@ func _report_change(history_id: int, history: UndoRedo, last_state: Dictionary, 
 func _watch_history(history: UndoRedo) -> void:
 	if not history.version_changed.is_connected(check_for_changes):
 		history.version_changed.connect(check_for_changes)
+		_watched_histories.append(history)
 
 
 func _watched_history_ids() -> Array[int]:
 	var history_ids: Array[int] = [EditorUndoRedoManager.GLOBAL_HISTORY]
 	var scene_root := EditorInterface.get_edited_scene_root()
-	if scene_root != null:
+	if is_instance_valid(scene_root) and scene_root.is_inside_tree():
 		var scene_history_id := EditorInterface.get_editor_undo_redo().get_object_history_id(scene_root)
 		if not history_ids.has(scene_history_id):
 			history_ids.append(scene_history_id)
