@@ -42,8 +42,8 @@ Godot Wingman was built with AI assistance: its code, tests and documentation we
 ## Media
 
 - Thumbnail (16:9, a real screenshot of the editor with the panel): `docs/asset-store/thumbnail.png`
-- Screenshots: `docs/images/editor.png`, `docs/asset-store/connect-ai-apps.png`, `docs/images/level.png`, `docs/images/game-coins.png`, `docs/images/game-double-jump.png`
+- Screenshots: `docs/images/editor.png` (Chat tab), `docs/asset-store/changes.png` (Changes tab), `docs/asset-store/connect-ai-apps.png`, `docs/images/level.png`, `docs/images/game-coins.png`, `docs/images/game-double-jump.png`
 
 ## Versions
 
-For each release: the version number (for example 0.4.4), the zip from that release, minimum Godot version **4.5**, and the release's changelog section from `CHANGELOG.md`.
+For each release: the version number (for example 0.4.6), the zip from that release, minimum Godot version **4.5**, and the release's changelog section from `CHANGELOG.md`.

@@ -34,7 +34,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/images/editor.png" alt="The Godot editor with the Godot Wingman panel listing the AI's script edits" width="880">
+  <img src="docs/images/editor.png" alt="The Godot editor with the Godot Wingman panel: two connected AIs and a chat with one of them" width="880">
 </p>
 
 <p align="center"><sub>
